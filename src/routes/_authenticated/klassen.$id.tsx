@@ -472,6 +472,7 @@ function KlassenDetail() {
         open={Boolean(regelLoeschen)}
         title="Sitzregel löschen?"
         description="Die Regel wird entfernt und im Sitzplaneditor nicht mehr geprüft."
+        consequence="Bestehende Sitzpläne bleiben unverändert, nur der Hinweis entfällt."
         confirmLabel="Regel löschen"
         onConfirm={() => {
           if (regelLoeschen) dispatch({ type: "rule/remove", id: regelLoeschen });
