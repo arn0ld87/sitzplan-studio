@@ -1,90 +1,260 @@
+<div align="center">
+
 # Sitzplan Studio
 
-Baue eine Web-App für Lehrkräfte: **Sitzplan** — Klassen verwalten, Räume zeichnen, Sitzpläne erstellen. Deutschsprachige Oberfläche. Reine Frontend-Demo mit Fantasiedaten, kein Backend.
+**Klassen verwalten, Räume maßstabsgetreu zeichnen, Sitzpläne stellen — ein Werkzeug für Lehrkräfte, kein Dashboard.**
 
-Halte dich exakt an das folgende Designsystem. Es ist fertig entworfen — nicht neu interpretieren.
+[![GitHub Repo](https://img.shields.io/badge/GitHub-arn0ld87%2Fsitzplan--studio-111?style=for-the-badge&logo=github&logoColor=white)](https://github.com/arn0ld87/sitzplan-studio)
+[![Status](https://img.shields.io/badge/Status-Preview-orange?style=for-the-badge&logo=rocket&logoColor=white)](#aktueller-produktstatus)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://react.dev/)
+[![TanStack Start](https://img.shields.io/badge/TanStack_Start-v1-FF4154?style=for-the-badge&logo=reactquery&logoColor=white)](https://tanstack.com/start)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Tailwind](https://img.shields.io/badge/Tailwind-4.2-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![Supabase](https://img.shields.io/badge/Supabase-Postgres_%2B_RLS-3FCF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
 
-## Leitidee
-„Modernes Klassenatelier und digitaler Lehrertisch." Ruhig, warm, hochwertig, technisch präzise. Ein Werkzeug, kein Marketing.
+</div>
 
-## Verboten
-Kein generisches SaaS-Dashboard. Keine riesigen Karten für alles. Keine großen Radien überall. Keine Farbverläufe, kein Glassmorphism, kein Dark Mode, kein Violett/Indigo. Keine Emojis als Icons. Keine Hero-Bereiche in der App. Keine Überschrift über 26 px in Arbeitsansichten. Keine schwebenden Karten, keine Bounce-Animationen. Keine dekorativen Elemente ohne Funktion.
+---
 
-## Farben (exakt, als CSS-Variablen in index.css und im Tailwind-Theme)
-Flächen: canvas #F1EBE0 · panel #FCFAF6 · elevated #FFFFFF · sunken #F3EDE3 · plan #FDFBF7
-Text: primary #26211C · secondary #6A6157 · tertiary #8E8477 · disabled #A29888 · onMarke #15110D
-Linien: subtle #E4DACA · strong #D2C5AF · control #C3B49B · plan #5C5348
-Aktion (Terrakotta, höchstens EINE Primäraktion pro Ansicht): #A8501F · hover #8E4218 · soft #F5E3D3 · softInk #7A3B15
-Auswahl UND Fokus (Petrol, niemals Rot): #2F5D73 · soft #E1ECF1
-Status: success #33573C auf #E5EDE3 · warning #7A5010 auf #F7EDD8 · danger #A32E24 auf #F8E4E0 · info #2A5468 auf #E1ECF1
-Schülerfarben (index-stabil, Text darauf immer #15110D): #E08A6B #9DBFA8 #E3B56B #A99CCB #7CA9C2 #D88BA0 #B89970 #82B7A5
+## Inhalt
 
-Regel: Rot ist ausschließlich für Löschen und Fehler. Auswahl und Fokus sind Petrol. Terrakotta ist nur die Primäraktion.
+- [Was ist Sitzplan Studio](#was-ist-sitzplan-studio)
+- [Wofür es gedacht ist — und wofür nicht](#wofür-es-gedacht-ist--und-wofür-nicht)
+- [Funktionen](#funktionen)
+- [Schnellstart](#schnellstart)
+- [Architektur & Stack](#architektur--stack)
+- [Datenmodell](#datenmodell)
+- [Aktueller Produktstatus](#aktueller-produktstatus)
+- [Release-Weg](#release-weg)
+- [Sicherheit & Datenschutz](#sicherheit--datenschutz)
+- [Mitarbeit & Konventionen](#mitarbeit--konventionen)
+- [Lizenz & Herkunft](#lizenz--herkunft)
 
-## Typografie (Google Fonts)
-IBM Plex Sans für die gesamte Oberfläche. Source Serif 4 (600) nur für Seitentitel und Dialogüberschriften. IBM Plex Mono für Messwerte, Koordinaten, Zeitstempel.
-Größen: Seitentitel 26px Serif · Abschnitt 17px/600 · Bereichsmarke 11px/600 versal mit 0.1em Laufweite in #8E8477 · Fließtext 14px/21px · Hilfstext nie unter 12px. Fließtext maximal 68 Zeichen breit.
+---
 
-## Form
-Radien 3 / 6 / 8 / 10 px. Pillenform NUR für Personen-Chips. Genau zwei Schatten: `0 1px 2px rgba(38,33,28,.05)` für Panels und `0 22px 48px -16px rgba(38,33,28,.4)` für Overlays. Struktur entsteht durch 1-px-Hairlines und Flächenwechsel, nicht durch Höhe. Klickflächen mindestens 40 px, auf Touch 44 px. Globaler Fokusstil: `outline: 2px solid #2F5D73; outline-offset: 2px` auf `:focus-visible`. `prefers-reduced-motion` respektieren.
+## Was ist Sitzplan Studio
 
-## Icons
-lucide-react, 16 px, Strichstärke 1.5. Icon-only-Buttons brauchen `aria-label`.
+Sitzplan Studio ist eine Web-App, mit der Lehrkräfte drei Dinge zusammenbringen:
 
-## App-Shell
-Linke Seitenleiste 236 px auf #FCFAF6 mit rechter Hairline. Oben Wortmarke: 28-px-Quadrat in Terrakotta mit „S" in Serif, daneben „Sitzplan". Nav-Einträge 38 px hoch, Icon + Label + rechtsbündige Zahl in Mono. Aktiver Eintrag: Fläche #F5E3D3, Text #7A3B15, fett UND `box-shadow: inset 3px 0 0 #A8501F` — drei Merkmale, nicht nur Farbe. Bereiche: Übersicht, Klassen, Räume, Sitzpläne, dann Trennlinie, dann Papierkorb, Einstellungen. Unten abgesetzt der Nutzerblock. Unter 768 px: Seitenleiste weg, stattdessen untere Tab-Leiste mit vier Bereichen, 52 px hoch.
+1. **Klassen** — Schülerlisten mit stabilen Farben und Initialen, dazu Sitzregeln
+   („darf nicht neben", „muss neben").
+2. **Räume** — maßstabsgetreue Grundrisse als SVG-Zeichnung: Wände, Raster in
+   Zentimetern, Einzel- und Doppeltische, Lehrerpult, Tafel, Tür, Fenster.
+3. **Sitzpläne** — die Zuordnung Schüler → Sitzplatz, inklusive Konfliktprüfung
+   gegen die Sitzregeln und druckbarer Ansicht.
 
-## Seiten
+Ein Sitzplan friert die Raumgeometrie zum Zeitpunkt des Anlegens ein. Wer die
+Raumvorlage später umbaut, zerschießt damit keine bestehenden Pläne.
 
-**/ (Übersicht)** — Kopf „Guten Morgen" mit Datum, rechts Suchen + „Neuer Sitzplan". Zweispaltig: links „Zuletzt bearbeitet" als Liste von Zeilen (44-px-Planvorschau als kleines SVG, Titel, Metazeile „Klasse 7a · Raum B204 · 18 von 19 Plätzen belegt", Statusanzeige, Zeitstempel in Mono) und darunter Raumvorlagen als drei kompakte Karten mit Planvorschau plus eine gestrichelte „Raumvorlage anlegen"-Karte. Rechte Spalte: Klassenliste kompakt und ein Hinweiskasten „Datenstand — läuft mit Fantasiedaten", Badge „Testbetrieb".
+Die Oberfläche ist durchgängig deutschsprachig und folgt einem festen
+Designsystem — siehe [`docs/designsystem.md`](docs/designsystem.md). Leitidee:
+„Modernes Klassenatelier und digitaler Lehrertisch". Ruhig, warm, technisch
+präzise. Kein generisches SaaS-Dashboard, kein Dark Mode, keine Farbverläufe.
 
-**/klassen** — Seitenkopf mit Brotkrumen, Titel, Untertitel, Suchfeld, „Neue Klasse". Tabelle mit Spaltenkopf auf #F3EDE3: Klasse (Farbkreis mit Kürzel + Name + Notiz) · Schüler · Sitzregeln · Sitzpläne · Aktionen (Bearbeiten- und Löschen-Icon-Buttons, sichtbar bei Hover und immer bei Fokus). KEINE großen Karten. Leerzustand: kleine gezeichnete SVG-Illustration aus Linien und Kreisen, Überschrift „Noch keine Klasse angelegt", zwei Sätze Erklärung, „Erste Klasse anlegen" + „CSV importieren".
+## Wofür es gedacht ist — und wofür nicht
 
-**/klassen/:id** — Kopf mit Farbkreis, Name, Metazeile, rechts „Bearbeiten" und „Sitzplan erstellen". Darunter Tabs (Unterstreichung in Terrakotta): Schüler / Sitzregeln / Sitzpläne. Schüler als Chips: Pillenform, 34 px, Initialen-Kreis in der Schülerfarbe plus Name.
+| Anwendungsfall | Beschreibung | Nutzen |
+| --- | --- | --- |
+| **Klassenarbeit stellen** | Reihen mit maximalem Abstand, Regeln „nicht nebeneinander" | Weniger Abschreiben, in Minuten statt Freistunden |
+| **Gruppentische planen** | Doppeltische, Zusammensetzung nach Regel „muss neben" | Vorbereitete Kooperation statt Zufall |
+| **Vertretung übergeben** | Druckansicht mit Namen und Plätzen | Vertretungskraft kennt die Klasse ohne Vorlauf |
+| **Raum einmal erfassen** | Vorlage mit echten Maßen, mehrfach wiederverwendet | Einmal messen, jedes Halbjahr nutzen |
 
-**/raeume** — kompakte Karten mit SVG-Planvorschau, Name, Maße in Mono.
+> [!WARNING]
+> **Grenzen — bitte vor dem Produktiveinsatz lesen.**
+>
+> - **Schülerdaten sind personenbezogene Daten.** Namen von Minderjährigen in
+>   einer Cloud-Datenbank sind in Deutschland nicht ohne Weiteres zulässig.
+>   Vor dem Einsatz mit echten Klassen: Rücksprache mit Schulleitung und
+>   Datenschutzbeauftragtem, Verarbeitungsverzeichnis, ggf. AVV mit dem Hoster.
+>   Die App bringt dafür einen Hinweisbaustein mit, ersetzt aber keine Freigabe.
+> - **Kein Klassenbuch, kein Notenprogramm.** Es gibt keine Leistungsdaten,
+>   keine Fehlzeiten, keine Förderbedarfe — und das ist Absicht.
+> - **Der Sitzvorschlag ist ein Vorschlag.** Er ändert nichts ohne Bestätigung
+>   und ersetzt keine pädagogische Entscheidung.
+> - **Einzelnutzer-Modell.** Jeder Datensatz gehört genau einem Konto. Es gibt
+>   keine Freigabe an Kolleginnen und Kollegen, kein Team, keine Schulinstanz.
 
-**/raeume/:id — Raumeditor, das Kernstück.** Vier Zonen:
-1. Toolbar 52 px: Rücksprung „Räume", Trennstrich, Identität (Name + „720 × 520 cm · Raster 25 cm · 19 Plätze" in Mono), Undo/Redo, Raster-Checkbox, Zoom-Stepper, rechts Speicherstatus und „Raumdaten".
-2. Links Palette 212 px: Bereichsmarke „Möbel einfügen", darunter sechs Einträge mit maßstäblicher SVG-Vorschau, Label und Maßen: Einzeltisch 60×50, Doppeltisch 120×50, Lehrerpult 160×80, Tafel 400×15, Tür 90×20, Fenster 15×180.
-3. Mitte: der Raumplan als **SVG-Zeichnung**, `viewBox="0 0 720 520"`, zentriert, mit Bemaßungslinien außen. Wände 3 px #5C5348. Raster 25 cm als `<pattern>` in #E7DCC8. Tische weiß mit 2-px-Kontur, Doppeltisch mit Mittellinie. Lehrerpult mit 45°-Schraffur-Pattern und Beschriftung. Tafel als massiver Balken #3D4A41 mit Text „TAFEL" darunter. Tür mit gestricheltem Viertelkreis-Schwenkbogen. Fenster als Doppellinie mit #7CA9C2. Freie Sitzplätze als gestrichelte Kreise r=11. Jede Objektart muss auch in Graustufen unterscheidbar sein — Form vor Farbe.
-4. Rechts Inspector 296 px: Objekttyp mit Vorschau, Position X/Y editierbar, Maße gesperrt auf #F3EDE3, Drehung als 4er-Segmentleiste 0/90/180/270, Sitzplatzliste, Tastaturhinweise mit `<kbd>`.
-Ausgewähltes Objekt: 2.6-px-Kontur in Petrol, gestrichelter Auswahlrahmen, vier Eckgriffe, Drehgriff oben. Darüber schwebend am unteren Rand eine kontextuelle Aktionsleiste: Objektname, dann Drehen (R) · Duplizieren (D) · Löschen, Löschen in Rot.
+## Funktionen
 
-**/sitzplaene/:id — Sitzplaneditor.** Gleiche Toolbar, Speicherstatus „Änderungen — speichert in Kürze". Plan wie oben, aber Sitzplätze r=16: belegt = Schülerfarbe mit Initialen in #15110D und dunklerem Kontrastrand; frei = weiß, gestrichelt, Text „frei". Ein Konflikt: zusätzlicher gestrichelter Warnring r=21 in #8A5A12 PLUS kleine „!"-Marke — nie nur Farbe. Unten eine einklappbare Schülerablage: Bereichsmarke, Zähler „2 ohne Platz", gestrichelter Bereich mit 40-px-Chips; der ausgewählte Chip hat Petrol-Rand und Petrol-Glow. Rechte Spalte 320 px: oben „Prüfung" mit dem Konfliktkasten (Warndreieck, Titel, Erklärung, zwei Aktionen), darunter „Vorschlag" — Terrakotta-Stern-Icon, ein Satz Erklärung, zwei Tauschkarten mit Vorher/Nachher-Chips und Begründung, dann „Beide übernehmen" / „Verwerfen" und der Hinweis, dass der Vorschlag reproduzierbar ist. Kein Chatbot, kein Funkeln, keine Änderung ohne Bestätigung.
+- **Klassenverwaltung** — Schüler anlegen, Initialen und indexstabile Farbe
+  automatisch, Notizfeld je Klasse.
+- **Sitzregeln** — Paarregeln `nicht_neben` / `muss_neben` innerhalb einer Klasse.
+- **Raumeditor** — Palette mit maßstäblicher Vorschau, Raster ab 5 cm, Drehung in
+  90°-Schritten, Inspector mit editierbaren Koordinaten, Undo/Redo, Zoom.
+- **Sitzplaneditor** — Schülerablage, Zuweisung per Klick *oder* Drag-and-drop,
+  Konflikte als Warnring **plus** Marke (nie nur Farbe), Tauschvorschläge mit
+  Vorher/Nachher und Begründung.
+- **Druckansicht** — eigene Route `/sitzplaene/$id/drucken`.
+- **Papierkorb** — Soft-Delete über `deleted_at` für Klassen, Räume und Pläne;
+  Löschen ist rückholbar statt endgültig.
+- **Speicherstatus** — sechs Zustände (gespeichert, Änderungen, speichert,
+  offline gesichert, Serverkonflikt, nicht gespeichert), jeweils Symbol **und**
+  Text, mit `aria-live="polite"`.
+- **Barrierefreiheit** — Ziel WCAG 2.2 AA: Tastaturbedienung gleichwertig zu
+  Drag-and-drop, sichtbarer Fokusstil, Form vor Farbe, `prefers-reduced-motion`.
 
-**/signin** — zentriert, Wortmarke, Segmentumschalter Anmelden/Registrieren, zwei Felder, Primärbutton, darunter der Hinweis auf Fantasiedaten.
+## Schnellstart
 
-## Zustände — alle bauen
-Speicherstatus in sechs Ausprägungen, alle 30 px hoch, gleiche Position, kein Springen: Gespeichert (grün, Haken) · Änderungen (gelb, Uhr) · Speichert … (neutral, Spinner) · Offline gesichert (blau) · Konflikt mit Serverstand (gelb, Dreieck) · Nicht gespeichert (rot). Jeder Zustand hat Symbol UND Text.
-Ladezustand als Skeleton mit unterschiedlich breiten Zeilen und sanftem Puls. Fehlerzustand, der den lokalen Entwurf erwähnt statt nur zu scheitern, mit „Erneut versuchen" und „Entwurf ansehen". Bestätigungsdialog mit Folgenbeschreibung und Wiederherstellungsfrist — nie `window.confirm`.
-Formulare: Feldgruppen mit Bereichsmarke, Pflichtfeld als Text „· Pflichtfeld" statt Sternchen, Hilfetext unter dem Feld, Fehler AM Feld mit Symbol und Satz plus eine Zusammenfassung mit `role="alert"` oben. Felder so breit wie ihr Inhalt, nicht wie der Container.
+Voraussetzung: [Bun](https://bun.sh) (das Repo pflegt `bun.lock` und `bunfig.toml`)
+sowie ein Supabase-Projekt.
 
-## Daten
-Ausschließlich erfundene Namen. Klassen 7a, 9c, 5b, 6d, 8a, 10b. Schüler z. B. Alva Birkner, Bo Castellan, Cem Dorn, Dara Elm, Elif Fahr, Finn Gorlitz, Greta Halm, Hanno Isen, Ida Juhl, Jaro Kell, Kira Lund, Levi Moor, Mina Norr, Noe Ostwald, Ora Pels, Pino Quandt, Quirin Rasch, Suri Tavor. Räume B204, A101, C12. Sitzpläne „Deutsch 7a — Halbjahr 2", „Gruppentische — Projektwoche", „Klassenarbeit — Reihen", „Stuhlkreis — Klassenrat".
-
-## Interaktion
-Auswahl im Plan per Klick, Inspector reagiert. Schüler per Klick auswählen und auf freien Platz setzen; Drag-and-drop zusätzlich, aber die Tastaturbedienung ist gleichwertig, nicht Notlösung. Semantisches HTML, korrekte Überschriftenhierarchie, `aria-live="polite"` für den Speicherstatus, Ziel WCAG 2.2 AA.
-
-Beginne mit Designsystem und App-Shell, dann Übersicht und Klassen, dann der Raumeditor.
-
-This project was built with [Lovable](https://lovable.dev).
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/6f249ae9-eb8e-40db-8f19-9d697518a3df).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
+```bash
+git clone https://github.com/arn0ld87/sitzplan-studio.git
+cd sitzplan-studio
+bun install
 ```
+
+Umgebungsvariablen in `.env` — die App liest ausschließlich den **Publishable Key**
+(anon), niemals den Service-Role-Key:
+
+```dotenv
+VITE_SUPABASE_URL=https://<projekt>.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=<anon-key>
+VITE_SUPABASE_PROJECT_ID=<projekt-id>
+```
+
+Schema einspielen und starten:
+
+```bash
+supabase db push     # legt Tabellen, Trigger und RLS-Policies an
+bun run dev          # http://localhost:5173
+```
+
+| Befehl | Zweck |
+| --- | --- |
+| `bun run dev` | Entwicklungsserver mit HMR |
+| `bun run build` | Produktionsbuild |
+| `bun run preview` | Produktionsbuild lokal prüfen |
+| `bun run lint` | ESLint über das gesamte Projekt |
+| `bun run format` | Prettier schreibt Formatierung |
+
+## Architektur & Stack
+
+```mermaid
+flowchart LR
+  subgraph Client["Browser"]
+    UI["Routen /klassen /raeume /sitzplaene"]
+    Plan["RoomPlan.tsx — SVG-Zeichnung"]
+    Store["src/store/app.tsx"]
+  end
+  subgraph Server["TanStack Start — SSR"]
+    MW["auth-middleware · auth-attacher"]
+    SC["client.server.ts"]
+  end
+  subgraph Supabase["Supabase"]
+    Auth["Auth — auth.users"]
+    PG[("Postgres · RLS je user_id")]
+  end
+
+  UI --> Store --> SC
+  Plan --> Store
+  UI -.SSR.-> MW --> SC --> PG
+  MW --> Auth
+  Auth --> PG
+```
+
+| Schicht | Technik |
+| --- | --- |
+| Framework | TanStack Start (SSR) + TanStack Router, dateibasierte Routen |
+| UI | React 19, Tailwind CSS 4, Radix Primitives, shadcn-Konventionen |
+| Eigenes UI-Kit | `src/components/ui-kit/` — Chips, SaveStatus, StatusChip, Modal |
+| Zeichnung | handgeschriebenes SVG, keine Canvas- oder Diagrammbibliothek |
+| Datenhaltung | Supabase Postgres, Zugriff über `@supabase/supabase-js` |
+| Server-State | TanStack Query |
+| Formulare | React Hook Form + Zod |
+| Icons | `lucide-react`, 16 px, Strichstärke 1.5 |
+| Toolchain | Vite 8, TypeScript 5.8, ESLint 9, Prettier, Bun |
+
+Geometrie liegt als `canvas_document` (JSONB) an Raum und Sitzplan. Sitzplätze
+folgen dem festen Muster `<objektId>__sitz_<n>` — siehe `seatId()` in
+[`src/data/types.ts`](src/data/types.ts).
+
+## Datenmodell
+
+```mermaid
+erDiagram
+  auth_users  ||--o{ klassen    : besitzt
+  auth_users  ||--o{ raeume     : besitzt
+  auth_users  ||--o{ sitzplaene : besitzt
+  klassen     ||--o{ schueler   : "enthält"
+  klassen     ||--o{ sitzregeln : "definiert"
+  klassen     ||--o{ sitzplaene : "wird gestellt für"
+  raeume      ||--o{ sitzplaene : "Vorlage für"
+  schueler    ||--o{ sitzregeln : "Paar a/b"
+```
+
+| Tabelle | Kern-Spalten | Anmerkung |
+| --- | --- | --- |
+| `klassen` | `name`, `notizen` | |
+| `schueler` | `vorname`, `nachname`, `initialen`, `klasse_id` | |
+| `sitzregeln` | `schueler_a`, `schueler_b`, `art` | `art ∈ {nicht_neben, muss_neben}` |
+| `raeume` | `breite_cm`, `laenge_cm`, `raster_cm`, `canvas_document` | `raster_cm >= 5` |
+| `sitzplaene` | `klasse_id`, `raum_id`, `status`, `canvas_document` | `status ∈ {entwurf, aktiv, archiv}` |
+
+Jede Tabelle trägt `user_id` (FK auf `auth.users`, `ON DELETE CASCADE`),
+`created_at`, `updated_at` (Trigger `set_updated_at`) und `deleted_at` für den
+Papierkorb.
+
+## Aktueller Produktstatus
+
+| Bereich | Stand |
+| --- | --- |
+| Designsystem & App-Shell | ✅ umgesetzt |
+| Klassen, Schüler, Sitzregeln | ✅ umgesetzt |
+| Raumeditor | ✅ umgesetzt |
+| Sitzplaneditor inkl. Konfliktprüfung | ✅ umgesetzt |
+| Druckansicht | ✅ umgesetzt |
+| Papierkorb (Soft-Delete) | ✅ umgesetzt |
+| Auth + RLS | ✅ umgesetzt |
+| **Automatisierte Tests** | ❌ **keine vorhanden** |
+| CI-Pipeline | ❌ nicht eingerichtet |
+| CSV-Import für Schülerlisten | 🚧 in der Oberfläche angelegt, ohne Funktion |
+| Mehrbenutzer-/Schulbetrieb | ❌ nicht vorgesehen |
+
+## Release-Weg
+
+- **Preview → 0.1.0** — Testgerüst (Vitest + Playwright), CI mit `lint` und
+  `build`, CSV-Import fertigstellen.
+- **0.1.0 → 0.5.0** — Offline-Fähigkeit belastbar machen (der Speicherstatus
+  verspricht sie bereits), Serverkonflikt-Auflösung, Undo/Redo im Sitzplaneditor.
+- **0.5.0 → 1.0.0** — Datenschutzdokumentation, Export/Löschkonzept nach
+  Art. 15/17 DSGVO, Barrierefreiheits-Audit gegen WCAG 2.2 AA.
+
+## Sicherheit & Datenschutz
+
+- **Row Level Security** ist auf allen Tabellen aktiv. Jede Policy prüft
+  `user_id = auth.uid()`; abhängige Tabellen prüfen zusätzlich über
+  `EXISTS (SELECT 1 FROM klassen …)`, dass die Elternzeile demselben Konto gehört.
+- **Nur der Publishable Key** (anon) erreicht den Browser. Der Service-Role-Key
+  gehört nirgendwo in dieses Repo.
+- **`.env` ist derzeit eingecheckt.** Sie enthält ausschließlich Projekt-URL und
+  anon-Key — beides ist bei Supabase per Design öffentlich und ohne RLS-Lücke
+  wertlos. Trotzdem: Für abweichende Umgebungen `.env.local` nutzen und den
+  Eintrag in `.gitignore` nachziehen.
+- **Soft-Delete ist kein Löschen.** Zeilen mit `deleted_at` bleiben in der
+  Datenbank. Für eine DSGVO-konforme Löschung braucht es einen echten Purge-Job.
+
+## Mitarbeit & Konventionen
+
+- Arbeitsanweisungen für KI-Agenten: [`AGENTS.md`](AGENTS.md) (allgemein) und
+  [`CLAUDE.md`](CLAUDE.md) (Claude Code).
+- Verbindliche Gestaltung: [`docs/designsystem.md`](docs/designsystem.md).
+- Oberflächentexte, Bezeichner im Datenmodell und Routen sind **deutsch**
+  (`klassen`, `raeume`, `sitzplaene`). Code-Bezeichner in `src/data/types.ts`
+  sind historisch englisch — beim Anfassen angleichen, nicht großflächig umbauen.
+
+> [!IMPORTANT]
+> Dieses Repository ist mit [Lovable](https://lovable.dev) verbunden und
+> synchronisiert in beide Richtungen. Veröffentlichte Historie darf **nicht**
+> umgeschrieben werden — kein `--force`, kein Rebase, kein Amend auf bereits
+> gepushten Commits. Der Branch `main` muss jederzeit lauffähig sein.
+
+## Lizenz & Herkunft
+
+Für dieses Repository ist **keine Lizenz** hinterlegt. Damit gilt das
+gesetzliche Urheberrecht: alle Rechte vorbehalten, keine Nutzung oder
+Weitergabe ohne Zustimmung. Wer Open Source möchte, legt eine `LICENSE` an.
+
+Entstanden mit [Lovable](https://lovable.dev/projects/6f249ae9-eb8e-40db-8f19-9d697518a3df),
+gepflegt von [Alexander Schneider](https://github.com/arn0ld87).
