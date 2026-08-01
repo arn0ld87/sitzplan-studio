@@ -1,0 +1,86 @@
+name: Funktion vorschlagen
+description: Etwas fehlt oder ginge einfacher.
+title: "feat: "
+labels: ["typ: feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Der wichtigste Teil ist nicht der Vorschlag, sondern der Anlass: Welche
+        Arbeit ist heute mühsam? Aus einem gut beschriebenen Problem entstehen
+        oft bessere Lösungen als die zuerst gedachte.
+
+  - type: textarea
+    id: anlass
+    attributes:
+      label: Welches Problem soll gelöst werden?
+      description: >
+        Die konkrete Situation im Schulalltag, nicht die gewünschte Schaltfläche.
+      placeholder: |
+        Nach jedem Halbjahreswechsel baue ich für sechs Klassen dieselben
+        Sitzpläne neu auf, obwohl sich nur zwei Namen geändert haben.
+    validations:
+      required: true
+
+  - type: textarea
+    id: vorschlag
+    attributes:
+      label: Vorschlag
+      description: Wie könnte es aussehen? Auch eine grobe Idee hilft.
+      placeholder: Einen bestehenden Sitzplan als Grundlage für eine andere Klasse übernehmen.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: bereich
+    attributes:
+      label: Betroffener Bereich
+      options:
+        - Sitzplan-Zeichenfläche (Möbel, Sitzplätze, Raster)
+        - Klassen und Schüler
+        - Räume und Raumvorlagen
+        - Sitzregeln und Konflikte
+        - Papierkorb und Wiederherstellen
+        - Drucken und PDF
+        - Anmeldung und Konto
+        - Darstellung, Farben, Bedienung
+        - Übergreifend
+    validations:
+      required: true
+
+  - type: textarea
+    id: heutiger-weg
+    attributes:
+      label: Wie behelfen Sie sich heute?
+      description: >
+        Der Umweg verrät oft, wie dringend es ist — und manchmal, dass es schon
+        einen Weg gibt.
+      placeholder: Ich lege den Plan neu an und tippe die Namen ab.
+
+  - type: dropdown
+    id: haeufigkeit
+    attributes:
+      label: Wie oft tritt die Situation auf?
+      options:
+        - Mehrmals pro Woche
+        - Etwa monatlich
+        - Ein paar Mal im Schuljahr
+        - Einmalig
+    validations:
+      required: true
+
+  - type: textarea
+    id: abgrenzung
+    attributes:
+      label: Was wäre ausdrücklich nicht gemeint?
+      description: >
+        Optional, aber hilfreich: Eine klare Grenze verhindert, dass aus einem
+        kleinen Wunsch ein halbes Modul wird.
+
+  - type: checkboxes
+    id: gesucht
+    attributes:
+      label: Vorher geprüft
+      options:
+        - label: Ich habe die offenen Issues durchgesehen und keinen passenden gefunden.
+          required: true
