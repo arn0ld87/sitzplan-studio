@@ -1,13 +1,6 @@
-# Runbook: Branch, PR, Merge — und Lovable
+# Runbook: Branch, PR, Merge
 
-Dieses Repo hat eine Besonderheit, die jede Git-Gewohnheit schlägt:
-
-> **Lovable synchronisiert `main` in beide Richtungen.**
-
-Was in Lovable passiert, landet in `main`. Was in `main` liegt, sieht Lovable.
-Daraus folgt die härteste Regel des Projekts:
-
-## Kein History-Rewrite. Niemals.
+## Kein History-Rewrite auf Gepushtem
 
 Verboten auf allem, was gepusht ist:
 
@@ -16,9 +9,14 @@ Verboten auf allem, was gepusht ist:
 - `git commit --amend` nach dem Push
 - `git reset --hard` auf Gepushtes
 
-Wer die Historie umschreibt, zerlegt die Synchronisierung, und Lovable schreibt
-einen Stand zurück, den niemand mehr zuordnen kann. Ein falscher Commit wird mit
-einem weiteren Commit korrigiert, nicht wegretuschiert.
+Gepushte Commits sind nicht mehr allein deine: offene Pull Requests hängen an
+ihren SHAs, und die Review-Bots kommentieren Zeilen, die es nach einem Rewrite
+nicht mehr gibt. Ein falscher Commit wird mit einem weiteren Commit korrigiert,
+nicht wegretuschiert.
+
+Bis Juli 2026 war die Regel noch schärfer, weil Lovable `main` in beide
+Richtungen synchronisierte. Der Sync ist gekappt — die Regel bleibt, ihre
+Begründung ist nur eine mildere geworden.
 
 ## Ablauf
 
@@ -53,7 +51,7 @@ docs: ADR zur eingefrorenen Raumkopie
 
 Nicht: „Änderungen", „Update", „WIP".
 
-## Wenn Lovable und lokal auseinanderlaufen
+## Wenn `main` unter dem Branch weitergelaufen ist
 
 Erst `git pull` auf `main`, dann den eigenen Branch **mergen**, nicht rebasen:
 

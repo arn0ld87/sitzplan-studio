@@ -10,8 +10,8 @@ Antworten auf Deutsch, technische Bezeichner im Original.
 2. **RLS an jeder Tabelle.** Neue Migration ohne `user_id`-Policy wird nicht
    committet. Ausnahmslos.
 3. **`deleted_at IS NULL`** in jeder Leseabfrage auf Nutzdaten.
-4. **Kein History-Rewrite.** Lovable synchronisiert `main` in beide Richtungen.
-   `--force`, Rebase, Amend auf Gepushtem: verboten.
+4. **Kein History-Rewrite auf Gepushtem.** `--force`, Rebase, Amend: verboten.
+   Offene PRs und Review-Kommentare hängen an den Commit-SHAs.
 5. **Ein Sitzplatz heißt `<objektId>__sitz_<n>`.** Das Muster ist Vertrag
    zwischen `canvas_document` (JSONB) und UI — siehe `seatId()`.
 

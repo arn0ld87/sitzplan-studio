@@ -117,12 +117,6 @@ Das Repo ist im `code-review-graph` registriert (Alias `sitzplan_app`). Vor
 Codeänderungen zuerst dort fragen — 647 Knoten, 6082 Kanten und 44 Abläufe über
 128 Dateien sind billiger zu befragen als die Dateien zu lesen.
 
-## Wo Lovable mitspielt
-
-Lovable synchronisiert `main` in beide Richtungen. Deshalb: kein
-History-Rewrite, kein `--force`, kein Amend auf Gepushtem. Wer die Historie
-umschreibt, zerlegt die Synchronisierung.
-
 ## Entscheidungen
 
 - [ADR-0001](decisions/0001-supabase-als-backend.md) — Supabase statt eigenem Backend

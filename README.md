@@ -107,14 +107,40 @@ cd sitzplan-studio
 bun install
 ```
 
-Umgebungsvariablen in `.env` — die App liest ausschließlich den **Publishable Key**
-(anon), niemals den Service-Role-Key:
+Umgebungsvariablen in `.env` — Vorlage: `.env.example`. Die `VITE_`-Variablen
+liest der Browser, die gleichnamigen ohne Präfix der SSR-Teil; beide zeigen auf
+dasselbe Projekt und tragen denselben **Publishable Key**:
 
 ```dotenv
 VITE_SUPABASE_URL=https://<projekt>.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=<anon-key>
+VITE_SUPABASE_PUBLISHABLE_KEY=<publishable-key>
 VITE_SUPABASE_PROJECT_ID=<projekt-id>
+SUPABASE_URL=https://<projekt>.supabase.co
+SUPABASE_PUBLISHABLE_KEY=<publishable-key>
+SUPABASE_PROJECT_ID=<projekt-id>
 ```
+
+Vite liest `.env` nur beim Start — nach jeder Änderung den Dev-Server neu
+starten, sonst arbeitet die App weiter gegen das alte Projekt.
+
+### Nur auf dem Server: der Service-Role-Key
+
+**Einstellungen → Konto löschen** räumt alle Tabellen des Kontos ab und entfernt
+danach den Auth-Datensatz. Das geht bewusst an der RLS vorbei und braucht
+deshalb eine siebte Variable:
+
+```dotenv
+SUPABASE_SERVICE_ROLE_KEY=<service-role-key>
+```
+
+> [!CAUTION]
+> Dieser Schlüssel hebelt **jede** RLS-Policy aus. Er gehört ausschließlich in
+> die lokale, nicht versionierte `.env` und in die Secrets der Hosting-Umgebung.
+> Niemals in `.env.example`, niemals in eine `VITE_`-Variable — die schreibt
+> Vite beim Bauen in das ausgelieferte JavaScript — und niemals in einen Commit.
+
+Fehlt er, läuft die App vollständig; allein „Konto löschen" bricht mit
+`Fehlende Supabase-Umgebungsvariablen: SUPABASE_SERVICE_ROLE_KEY` ab.
 
 Schema einspielen und starten:
 
@@ -228,12 +254,12 @@ Papierkorb.
 - **Row Level Security** ist auf allen Tabellen aktiv. Jede Policy prüft
   `user_id = auth.uid()`; abhängige Tabellen prüfen zusätzlich über
   `EXISTS (SELECT 1 FROM klassen …)`, dass die Elternzeile demselben Konto gehört.
-- **Nur der Publishable Key** (anon) erreicht den Browser. Der Service-Role-Key
-  gehört nirgendwo in dieses Repo.
-- **`.env` ist derzeit eingecheckt.** Sie enthält ausschließlich Projekt-URL und
-  anon-Key — beides ist bei Supabase per Design öffentlich und ohne RLS-Lücke
-  wertlos. Trotzdem: Für abweichende Umgebungen `.env.local` nutzen und den
-  Eintrag in `.gitignore` nachziehen.
+- **Nur der Publishable Key** erreicht den Browser. Der Service-Role-Key wird
+  ausschließlich serverseitig in `client.server.ts` gelesen, einzig für das
+  Löschen eines Kontos — siehe [Schnellstart](#nur-auf-dem-server-der-service-role-key).
+  In das Repository gehört er nicht.
+- **`.env` ist nicht versioniert.** Sie steht in `.gitignore`; `.env.example`
+  ist die Vorlage und enthält nur Platzhalter, keine Werte.
 - **Soft-Delete ist kein Löschen.** Zeilen mit `deleted_at` bleiben in der
   Datenbank. Für eine DSGVO-konforme Löschung braucht es einen echten Purge-Job.
 
@@ -251,10 +277,10 @@ Papierkorb.
   sind historisch englisch — beim Anfassen angleichen, nicht großflächig umbauen.
 
 > [!IMPORTANT]
-> Dieses Repository ist mit [Lovable](https://lovable.dev) verbunden und
-> synchronisiert in beide Richtungen. Veröffentlichte Historie darf **nicht**
-> umgeschrieben werden — kein `--force`, kein Rebase, kein Amend auf bereits
-> gepushten Commits. Der Branch `main` muss jederzeit lauffähig sein.
+> Veröffentlichte Historie darf **nicht** umgeschrieben werden — kein `--force`,
+> kein Rebase, kein Amend auf bereits gepushten Commits. Offene Pull Requests
+> und die Kommentare der Review-Bots hängen an den Commit-SHAs. Der Branch
+> `main` muss jederzeit lauffähig sein.
 
 ## Lizenz & Herkunft
 
@@ -262,5 +288,7 @@ Für dieses Repository ist **keine Lizenz** hinterlegt. Damit gilt das
 gesetzliche Urheberrecht: alle Rechte vorbehalten, keine Nutzung oder
 Weitergabe ohne Zustimmung. Wer Open Source möchte, legt eine `LICENSE` an.
 
-Entstanden mit [Lovable](https://lovable.dev/projects/6f249ae9-eb8e-40db-8f19-9d697518a3df),
-gepflegt von [Alexander Schneider](https://github.com/arn0ld87).
+Der erste Aufschlag entstand mit [Lovable](https://lovable.dev); der
+Repository-Sync ist seit Juli 2026 gekappt, die Build-Konfiguration
+(`@lovable.dev/vite-tanstack-config`) blieb. Gepflegt von
+[Alexander Schneider](https://github.com/arn0ld87).
