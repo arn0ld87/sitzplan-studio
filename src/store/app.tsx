@@ -8,6 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { toast } from "sonner";
 import {
   newId,
   type Furniture,
@@ -19,10 +20,23 @@ import {
   type Student,
   type TrashItem,
 } from "@/data/types";
+import {
+  klasseZuRow,
+  planZuRow,
+  raumZuRow,
+  rowZuKlasse,
+  rowZuPlan,
+  rowZuRaum,
+  schuelerZuRow,
+  type KlasseRow,
+  type PlanRow,
+  type RaumRow,
+  type SchuelerRow,
+} from "@/data/mapping";
+import { supabase } from "@/integrations/supabase/client";
 import type { SaveState } from "@/components/ui-kit/SaveStatus";
 
 export const STORE_VERSION = 1;
-const STORAGE_KEY = "sitzplan.state";
 const HISTORY_LIMIT = 40;
 
 export type AppData = {
@@ -63,7 +77,7 @@ export type Action =
 const now = () => new Date().toISOString();
 
 function trashPush(state: AppData, item: Omit<TrashItem, "id" | "deletedAt">): TrashItem[] {
-  return [{ ...item, id: newId("trash"), deletedAt: now() }, ...state.trash];
+  return [{ ...item, id: item.payload.id, deletedAt: now() }, ...state.trash];
 }
 
 function touchPlan(p: SeatingPlan): SeatingPlan {
@@ -77,7 +91,7 @@ export function reducer(state: AppData, action: Action): AppData {
 
     case "class/add": {
       const cls: SchoolClass = {
-        id: newId("k"),
+        id: newId(),
         name: action.name,
         note: action.note,
         colorIndex: state.classes.length % 8,
@@ -99,10 +113,7 @@ export function reducer(state: AppData, action: Action): AppData {
       const betroffen = state.plans.filter((p) => p.classId === cls.id);
       let trash = trashPush(state, { kind: "klasse", name: cls.name, payload: cls });
       for (const p of betroffen) {
-        trash = [
-          { id: newId("trash"), kind: "sitzplan", name: p.title, deletedAt: now(), payload: p },
-          ...trash,
-        ];
+        trash = [{ id: p.id, kind: "sitzplan", name: p.title, deletedAt: now(), payload: p }, ...trash];
       }
       return {
         ...state,
@@ -118,7 +129,7 @@ export function reducer(state: AppData, action: Action): AppData {
         classes: state.classes.map((c) => {
           if (c.id !== action.classId) return c;
           const s: Student = {
-            id: newId("s"),
+            id: newId(),
             firstName: action.firstName,
             lastName: action.lastName,
             colorIndex: c.students.length % 8,
@@ -164,7 +175,7 @@ export function reducer(state: AppData, action: Action): AppData {
 
     case "room/add": {
       const room: Room = {
-        id: newId("r"),
+        id: newId(),
         name: action.name,
         width: action.width,
         height: action.height,
@@ -215,9 +226,10 @@ export function reducer(state: AppData, action: Action): AppData {
         furniture: action.room.furniture.map((f) => ({ ...f, seats: [...f.seats] })),
       };
       const plan: SeatingPlan = {
-        id: newId("p"),
+        id: newId(),
         title: action.title,
         classId: action.classId,
+        roomId: action.room.id,
         room: geometry,
         status: "entwurf",
         updated: now(),
@@ -257,38 +269,136 @@ export function reducer(state: AppData, action: Action): AppData {
         return { ...state, trash, rooms: [...state.rooms, item.payload as Room] };
       return { ...state, trash, plans: [item.payload as SeatingPlan, ...state.plans] };
     }
-    case "trash/purge":
-      return { ...state, trash: state.trash.filter((t) => t.id !== action.id) };
+    case "trash/purge": {
+      const item = state.trash.find((t) => t.id === action.id);
+      if (!item) return state;
+      // Abhängige Sitzpläne verschwinden mit — die Datenbank räumt gleich mit auf.
+      const haengtDran = (t: TrashItem) => {
+        if (t.id === item.id) return true;
+        if (t.kind !== "sitzplan") return false;
+        const p = t.payload as SeatingPlan;
+        return item.kind === "klasse" ? p.classId === item.id : p.roomId === item.id;
+      };
+      return {
+        ...state,
+        trash: state.trash.filter((t) => !haengtDran(t)),
+        plans: state.plans.filter((p) =>
+          item.kind === "klasse" ? p.classId !== item.id : p.roomId !== item.id,
+        ),
+      };
+    }
 
     default:
       return state;
   }
 }
 
-function load(): AppData | null {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as Partial<AppData>;
-    if (!parsed || typeof parsed !== "object") return null;
-    if (parsed.version !== STORE_VERSION) return null; // Formatwechsel: sauber neu starten
-    return {
-      version: STORE_VERSION,
-      classes: Array.isArray(parsed.classes) ? parsed.classes : [],
-      rooms: Array.isArray(parsed.rooms) ? parsed.rooms : [],
-      plans: Array.isArray(parsed.plans) ? parsed.plans : [],
-      trash: Array.isArray(parsed.trash) ? parsed.trash : [],
-    };
-  } catch {
-    return null;
+// ---------- Serverabgleich ----------
+
+type Rows = {
+  klassen: Record<string, KlasseRow>;
+  schueler: Record<string, SchuelerRow>;
+  raeume: Record<string, RaumRow>;
+  sitzplaene: Record<string, PlanRow>;
+};
+
+const leereRows = (): Rows => ({ klassen: {}, schueler: {}, raeume: {}, sitzplaene: {} });
+
+function buildRows(data: AppData, userId: string): Rows {
+  const rows = leereRows();
+  const klasse = (c: SchoolClass, del: string | null) => {
+    rows.klassen[c.id] = klasseZuRow(c, userId, del);
+    for (const s of c.students) rows.schueler[s.id] = schuelerZuRow(s, c.id, userId, del);
+  };
+  for (const c of data.classes) klasse(c, null);
+  for (const r of data.rooms) rows.raeume[r.id] = raumZuRow(r, userId, null);
+  for (const p of data.plans) rows.sitzplaene[p.id] = planZuRow(p, userId, null);
+  for (const t of data.trash) {
+    if (t.kind === "klasse") klasse(t.payload as SchoolClass, t.deletedAt);
+    else if (t.kind === "raum") rows.raeume[t.payload.id] = raumZuRow(t.payload as Room, userId, t.deletedAt);
+    else rows.sitzplaene[t.payload.id] = planZuRow(t.payload as SeatingPlan, userId, t.deletedAt);
   }
+  return rows;
+}
+
+const TABELLEN = ["klassen", "raeume", "schueler", "sitzplaene"] as const;
+
+async function pushRows(prev: Rows, next: Rows) {
+  for (const t of TABELLEN) {
+    const geaendert = Object.values(next[t]).filter(
+      (row) => JSON.stringify(prev[t][row.id]) !== JSON.stringify(row),
+    );
+    if (geaendert.length === 0) continue;
+    const { error } = await supabase.from(t).upsert(geaendert as never[]);
+    if (error) throw new Error(`${t}: ${error.message}`);
+  }
+  for (const t of [...TABELLEN].reverse()) {
+    const weg = Object.keys(prev[t]).filter((id) => !next[t][id]);
+    if (weg.length === 0) continue;
+    const { error } = await supabase.from(t).delete().in("id", weg);
+    if (error) throw new Error(`${t}: ${error.message}`);
+  }
+}
+
+async function ladeDaten(): Promise<AppData> {
+  const [k, s, r, p] = await Promise.all([
+    supabase.from("klassen").select("*").order("created_at", { ascending: true }),
+    supabase.from("schueler").select("*").order("created_at", { ascending: true }),
+    supabase.from("raeume").select("*").order("created_at", { ascending: true }),
+    supabase.from("sitzplaene").select("*").order("created_at", { ascending: false }),
+  ]);
+  const fehler = k.error || s.error || r.error || p.error;
+  if (fehler) throw new Error(fehler.message);
+
+  const klassen = (k.data ?? []) as unknown as KlasseRow[];
+  const schueler = (s.data ?? []) as unknown as SchuelerRow[];
+  const raeume = (r.data ?? []) as unknown as RaumRow[];
+  const plaene = (p.data ?? []) as unknown as PlanRow[];
+
+  const klasseObj = new Map<string, SchoolClass>();
+  klassen.forEach((row, i) =>
+    klasseObj.set(
+      row.id,
+      rowZuKlasse(
+        row,
+        schueler.filter((x) => x.klasse_id === row.id),
+        i % 8,
+      ),
+    ),
+  );
+  const raumObj = new Map<string, Room>(raeume.map((row) => [row.id, rowZuRaum(row)]));
+  const planObj = new Map<string, SeatingPlan>(
+    plaene.map((row) => [row.id, rowZuPlan(row, raumObj.get(row.raum_id)?.name ?? "Raum")]),
+  );
+
+  const trash: TrashItem[] = [];
+  for (const row of klassen)
+    if (row.deleted_at)
+      trash.push({ id: row.id, kind: "klasse", name: row.name, deletedAt: row.deleted_at, payload: klasseObj.get(row.id)! });
+  for (const row of raeume)
+    if (row.deleted_at)
+      trash.push({ id: row.id, kind: "raum", name: row.name, deletedAt: row.deleted_at, payload: raumObj.get(row.id)! });
+  for (const row of plaene)
+    if (row.deleted_at)
+      trash.push({ id: row.id, kind: "sitzplan", name: row.name, deletedAt: row.deleted_at, payload: planObj.get(row.id)! });
+  trash.sort((a, b) => b.deletedAt.localeCompare(a.deletedAt));
+
+  return {
+    version: STORE_VERSION,
+    classes: klassen.filter((row) => !row.deleted_at).map((row) => klasseObj.get(row.id)!),
+    rooms: raeume.filter((row) => !row.deleted_at).map((row) => raumObj.get(row.id)!),
+    plans: plaene.filter((row) => !row.deleted_at).map((row) => planObj.get(row.id)!),
+    trash,
+  };
 }
 
 type Ctx = {
   data: AppData;
   hydrated: boolean;
   saveState: SaveState;
+  online: boolean;
   dispatch: (a: Action) => void;
+  retry: () => void;
   undo: () => void;
   redo: () => void;
   canUndo: boolean;
@@ -297,30 +407,77 @@ type Ctx = {
 
 const StoreCtx = createContext<Ctx | null>(null);
 
-export function StoreProvider({ children }: { children: React.ReactNode }) {
+export function StoreProvider({ userId, children }: { userId: string; children: React.ReactNode }) {
   const [data, rawDispatch] = useReducer(reducer, emptyData);
   const [hydrated, setHydrated] = useState(false);
   const [saveState, setSaveState] = useState<SaveState>("gespeichert");
+  const [online, setOnline] = useState(true);
   const past = useRef<AppData[]>([]);
   const future = useRef<AppData[]>([]);
   const [historyTick, setHistoryTick] = useState(0);
   const current = useRef(data);
   current.current = data;
 
+  // Letzter vom Server bestätigter Stand — Grundlage für Rücksprung bei Fehlern.
+  const bestaetigt = useRef<AppData>(emptyData);
+  const serverRows = useRef<Rows>(leereRows());
+  const laeuft = useRef(false);
+  const [dirtyTick, setDirtyTick] = useState(0);
+
   useEffect(() => {
-    const loaded = load();
-    if (loaded) rawDispatch({ type: "hydrate", data: loaded });
-    setHydrated(true);
+    setOnline(navigator.onLine);
+    const an = () => setOnline(true);
+    const aus = () => setOnline(false);
+    window.addEventListener("online", an);
+    window.addEventListener("offline", aus);
+    return () => {
+      window.removeEventListener("online", an);
+      window.removeEventListener("offline", aus);
+    };
   }, []);
 
-  const dispatch = useCallback((a: Action) => {
-    if (a.type !== "hydrate") {
-      past.current = [...past.current, current.current].slice(-HISTORY_LIMIT);
-      future.current = [];
-      setHistoryTick((t) => t + 1);
-    }
-    rawDispatch(a);
-  }, []);
+  useEffect(() => {
+    let abgebrochen = false;
+    (async () => {
+      try {
+        const geladen = await ladeDaten();
+        if (abgebrochen) return;
+        bestaetigt.current = geladen;
+        serverRows.current = buildRows(geladen, userId);
+        rawDispatch({ type: "hydrate", data: geladen });
+      } catch (e) {
+        if (!abgebrochen) {
+          console.error(e);
+          toast.error("Daten konnten nicht geladen werden.");
+          setSaveState("ungespeichert");
+        }
+      } finally {
+        if (!abgebrochen) setHydrated(true);
+      }
+    })();
+    return () => {
+      abgebrochen = true;
+    };
+  }, [userId]);
+
+  const dispatch = useCallback(
+    (a: Action) => {
+      if (a.type !== "hydrate") {
+        if (!navigator.onLine) {
+          setSaveState("offline");
+          toast.error("Offline — Änderungen werden nicht gespeichert.");
+          return;
+        }
+        past.current = [...past.current, current.current].slice(-HISTORY_LIMIT);
+        future.current = [];
+        setHistoryTick((t) => t + 1);
+        setSaveState("aenderungen");
+        setDirtyTick((t) => t + 1);
+      }
+      rawDispatch(a);
+    },
+    [],
+  );
 
   const undo = useCallback(() => {
     const prev = past.current[past.current.length - 1];
@@ -328,6 +485,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     past.current = past.current.slice(0, -1);
     future.current = [current.current, ...future.current].slice(0, HISTORY_LIMIT);
     setHistoryTick((t) => t + 1);
+    setSaveState("aenderungen");
+    setDirtyTick((t) => t + 1);
     rawDispatch({ type: "hydrate", data: prev });
   }, []);
 
@@ -337,45 +496,64 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     future.current = future.current.slice(1);
     past.current = [...past.current, current.current].slice(-HISTORY_LIMIT);
     setHistoryTick((t) => t + 1);
+    setSaveState("aenderungen");
+    setDirtyTick((t) => t + 1);
     rawDispatch({ type: "hydrate", data: next });
   }, []);
 
-  // Persistenz: sofort schreiben, Status als Verlauf zeigen
-  const first = useRef(true);
+  const retry = useCallback(() => setDirtyTick((t) => t + 1), []);
+
+  // Schreibt den aktuellen Stand zum Server. Optimistisch: die Oberfläche zeigt
+  // die Änderung längst; bei einem Fehler springt sie auf den bestätigten Stand.
   useEffect(() => {
-    if (!hydrated) return;
-    if (first.current) {
-      first.current = false;
+    if (!hydrated || dirtyTick === 0 || laeuft.current) return;
+    if (!navigator.onLine) {
+      setSaveState("offline");
       return;
     }
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    } catch {
-      setSaveState("ungespeichert");
-      return;
-    }
-    setSaveState("aenderungen");
-    const t1 = setTimeout(() => setSaveState("speichert"), 220);
-    const t2 = setTimeout(() => setSaveState("gespeichert"), 560);
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-    };
-  }, [data, hydrated]);
+    const t = setTimeout(async () => {
+      const ziel = current.current;
+      const vorher = serverRows.current;
+      const nachher = buildRows(ziel, userId);
+      laeuft.current = true;
+      setSaveState("speichert");
+      try {
+        await pushRows(vorher, nachher);
+        serverRows.current = nachher;
+        bestaetigt.current = ziel;
+        setSaveState(current.current === ziel ? "gespeichert" : "aenderungen");
+      } catch (e) {
+        console.error(e);
+        rawDispatch({ type: "hydrate", data: bestaetigt.current });
+        past.current = [];
+        future.current = [];
+        setSaveState("ungespeichert");
+        toast.error("Speichern fehlgeschlagen — der letzte bestätigte Stand ist wiederhergestellt.", {
+          action: { label: "Erneut versuchen", onClick: () => setDirtyTick((x) => x + 1) },
+        });
+      } finally {
+        laeuft.current = false;
+        if (current.current !== ziel) setDirtyTick((x) => x + 1);
+      }
+    }, 400);
+    return () => clearTimeout(t);
+  }, [dirtyTick, hydrated, userId]);
 
   const value = useMemo<Ctx>(
     () => ({
       data,
       hydrated,
-      saveState,
+      saveState: !online ? "offline" : saveState,
+      online,
       dispatch,
+      retry,
       undo,
       redo,
       canUndo: past.current.length > 0,
       canRedo: future.current.length > 0,
     }),
     // historyTick hält canUndo/canRedo aktuell
-    [data, hydrated, saveState, dispatch, undo, redo, historyTick],
+    [data, hydrated, saveState, online, dispatch, retry, undo, redo, historyTick],
   );
 
   return <StoreCtx.Provider value={value}>{children}</StoreCtx.Provider>;
