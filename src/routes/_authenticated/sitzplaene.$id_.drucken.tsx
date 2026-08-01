@@ -5,7 +5,7 @@ import { RoomPlan } from "@/components/plan/RoomPlan";
 import { seatCount, studentName, type Student } from "@/data/types";
 import { useStore } from "@/store/app";
 
-export const Route = createFileRoute("/_authenticated/sitzplaene/$id/drucken")({
+export const Route = createFileRoute("/_authenticated/sitzplaene/$id_/drucken")({
   head: () => ({
     meta: [
       { title: "Sitzplan drucken — Sitzplan" },
