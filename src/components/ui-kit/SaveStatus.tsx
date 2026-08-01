@@ -1,4 +1,4 @@
-import { Check, Clock, Loader2, CloudOff, TriangleAlert, CircleX } from "lucide-react";
+import { Check, Clock, Loader2, CloudOff, TriangleAlert, CircleX, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type SaveState =
@@ -11,7 +11,7 @@ export type SaveState =
 
 const MAP: Record<
   SaveState,
-  { text: string; icon: React.ComponentType<{ size?: number; className?: string }>; cls: string; spin?: boolean }
+  { text: string; icon: LucideIcon; cls: string; spin?: boolean }
 > = {
   gespeichert: {
     text: "Gespeichert",
