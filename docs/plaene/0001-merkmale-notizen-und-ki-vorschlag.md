@@ -151,13 +151,47 @@ CREATE TABLE public.ki_aufrufe (
   token_aus int NOT NULL DEFAULT 0,
   created_at timestamptz NOT NULL DEFAULT now()
 );
+CREATE INDEX ki_aufrufe_nutzer_zeit_idx ON public.ki_aufrufe (user_id, created_at DESC);
+CREATE INDEX ki_aufrufe_zeit_idx        ON public.ki_aufrufe (created_at DESC);
+
+GRANT SELECT, INSERT ON public.ki_aufrufe TO authenticated;
+GRANT ALL ON public.ki_aufrufe TO service_role;
+ALTER TABLE public.ki_aufrufe ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "ki_aufrufe_select" ON public.ki_aufrufe FOR SELECT TO authenticated USING (user_id = auth.uid());
+CREATE POLICY "ki_aufrufe_insert" ON public.ki_aufrufe FOR INSERT TO authenticated WITH CHECK (user_id = auth.uid());
 ```
+
+**Bewusste Abweichung von Regel 3 in [`AGENTS.md`](../../AGENTS.md).** Diese
+Tabelle bekommt **kein** `updated_at`, **kein** `deleted_at`, keinen
+`set_updated_at`-Trigger und **keine** `UPDATE`- oder `DELETE`-Policy. Sie ist
+ein Protokoll, keine Nutzdatentabelle: Wer seine eigenen Zeilen ändern oder
+weich löschen darf, setzt damit sein Limit zurück. Die vier Policies der Regel
+wären hier genau die Lücke, die sie sonst schließen. Aufgeräumt wird
+serverseitig — alles älter als 30 Tage darf weg.
 
 Deckel: **100 Aufrufe pro Tag und Konto, 10 pro Minute, 300 pro Tag global.**
 Die Zahlen stehen als Konstanten in der Funktion. Sie sind nötig, weil die
 Registrierung offen ist ([`signin.tsx`](../../src/routes/signin.tsx) bietet
 `signUp` an) und ein Aufruf rund 1,9 Cent kostet — der globale Deckel greift bei
 etwa sechs US-Dollar am Tag.
+
+**Der globale Deckel lässt sich nicht mit dem JWT des Nutzers zählen.** Die
+RLS-Policy oben zeigt jedem nur die eigenen Zeilen; eine Abfrage über alle
+Konten liefert damit systematisch zu kleine Zahlen, und der Deckel griffe nie.
+Er braucht deshalb eine eigene Zählfunktion:
+
+```sql
+CREATE FUNCTION public.ki_aufrufe_heute_global() RETURNS bigint
+LANGUAGE sql SECURITY DEFINER SET search_path = public AS $$
+  SELECT count(*) FROM public.ki_aufrufe WHERE created_at > now() - interval '1 day';
+$$;
+REVOKE ALL ON FUNCTION public.ki_aufrufe_heute_global() FROM public;
+GRANT EXECUTE ON FUNCTION public.ki_aufrufe_heute_global() TO authenticated;
+```
+
+`SECURITY DEFINER` umgeht RLS gezielt und gibt **nur eine Zahl** zurück — keine
+Zeile, keine Kennung, kein fremder Sitzplan. Die nutzerbezogenen Deckel bleiben
+dagegen bei der gewöhnlichen Abfrage unter RLS.
 
 ### PR 3 — „Plan prüfen"
 
@@ -220,6 +254,15 @@ zurückfallen — es muss abschalten.
 **Offene Registrierung bleibt vorerst.** Daß jeder mit der URL ein Konto anlegen
 kann, ist ein eigenes Thema und wurde hier nur zum Anlass genommen, die Deckel
 nicht wegzulassen.
+
+Damit hängt eine Vertragsfrage zusammen, die vor der Freischaltung von PR 2 zu
+klären ist: Die Gemini Additional Terms verlangen ein Mindestalter von 18 Jahren
+und untersagen API-Clients, die sich an Minderjährige richten *oder
+voraussichtlich von ihnen benutzt werden*. Die App richtet sich an Lehrkräfte,
+aber die offene Registrierung stellt das nicht sicher. Entweder die
+Registrierung wird geschlossen, oder die KI-Funktion bleibt einem freigegebenen
+Personenkreis vorbehalten — die Freigabeliste, die beim Rate-Limit verworfen
+wurde, kommt hier als Zugangsfrage zurück.
 
 ## Was außerhalb des Codes zu erledigen ist
 

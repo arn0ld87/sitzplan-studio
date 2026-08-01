@@ -57,7 +57,15 @@ geraten; die Meßreihe steht im Plan. Kurz: der Default `medium` kostet 22–26
 Sekunden statt 7, ohne bessere Ergebnisse. `gemini-3.5-flash-lite` wäre
 viermal schneller und zehnmal billiger, überging in der Messung aber in zwei von
 drei Läufen eine Freitext-Notiz — also genau das, wofür die Notiz existiert.
-`store: false` verhindert, dass Google die Anfrage im Paid Tier 55 Tage vorhält.
+
+`store: false` schaltet **das Interaction-Logging** ab: ohne das Feld hielte
+Google die Anfrage im Paid Tier standardmäßig 55 Tage abrufbar vor. Es ist
+ausdrücklich **keine** Zusicherung, dass nichts gespeichert wird. Google
+protokolliert Prompts und Antworten daneben befristet zur Erkennung von
+Verstößen gegen die Nutzungsrichtlinien — das steht so in den Additional Terms
+und lässt sich per Feld nicht abschalten. Wer echte Nullspeicherung braucht,
+landet bei Zero Data Retention, und das ist eine Vertragsfrage, keine
+Codezeile.
 
 **Deckel:** 100 Aufrufe pro Tag und Konto, 10 pro Minute, 300 pro Tag über alle
 Konten, protokolliert in einer Tabelle `ki_aufrufe` mit RLS wie überall sonst.
