@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as SigninRouteImport } from './routes/signin'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedPapierkorbRouteImport } from './routes/_authenticated/papierkorb'
 import { Route as AuthenticatedKlassenIndexRouteImport } from './routes/_authenticated/klassen.index'
@@ -21,6 +22,11 @@ import { Route as AuthenticatedSitzplaeneIdRouteImport } from './routes/_authent
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SigninRoute = SigninRouteImport.update({
+  id: '/signin',
+  path: '/signin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
@@ -70,6 +76,7 @@ const AuthenticatedSitzplaeneIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
+  '/signin': typeof SigninRoute
   '/papierkorb': typeof AuthenticatedPapierkorbRoute
   '/klassen/$id': typeof AuthenticatedKlassenIdRoute
   '/raeume/$id': typeof AuthenticatedRaeumeIdRoute
@@ -79,6 +86,7 @@ export interface FileRoutesByFullPath {
   '/sitzplaene/': typeof AuthenticatedSitzplaeneIndexRoute
 }
 export interface FileRoutesByTo {
+  '/signin': typeof SigninRoute
   '/papierkorb': typeof AuthenticatedPapierkorbRoute
   '/': typeof AuthenticatedIndexRoute
   '/klassen/$id': typeof AuthenticatedKlassenIdRoute
@@ -91,6 +99,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/signin': typeof SigninRoute
   '/_authenticated/papierkorb': typeof AuthenticatedPapierkorbRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/klassen/$id': typeof AuthenticatedKlassenIdRoute
@@ -104,6 +113,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/signin'
     | '/papierkorb'
     | '/klassen/$id'
     | '/raeume/$id'
@@ -113,6 +123,7 @@ export interface FileRouteTypes {
     | '/sitzplaene/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/signin'
     | '/papierkorb'
     | '/'
     | '/klassen/$id'
@@ -124,6 +135,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_authenticated'
+    | '/signin'
     | '/_authenticated/papierkorb'
     | '/_authenticated/'
     | '/_authenticated/klassen/$id'
@@ -136,6 +148,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  SigninRoute: typeof SigninRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -145,6 +158,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signin': {
+      id: '/signin'
+      path: '/signin'
+      fullPath: '/signin'
+      preLoaderRoute: typeof SigninRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/': {
@@ -233,6 +253,7 @@ const AuthenticatedRouteRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  SigninRoute: SigninRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
