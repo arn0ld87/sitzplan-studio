@@ -15,6 +15,8 @@ import {
   type Room,
   type RoomGeometry,
   type SchoolClass,
+  type SeatRule,
+  type RuleKind,
   type SeatingPlan,
   type PlanStatus,
   type Student,
@@ -28,6 +30,9 @@ import {
   rowZuPlan,
   rowZuRaum,
   schuelerZuRow,
+  regelZuRow,
+  rowZuRegel,
+  type SitzregelRow,
   type KlasseRow,
   type PlanRow,
   type RaumRow,
@@ -44,6 +49,7 @@ export type AppData = {
   classes: SchoolClass[];
   rooms: Room[];
   plans: SeatingPlan[];
+  rules: SeatRule[];
   trash: TrashItem[];
 };
 
@@ -52,6 +58,7 @@ export const emptyData: AppData = {
   classes: [],
   rooms: [],
   plans: [],
+  rules: [],
   trash: [],
 };
 
@@ -71,6 +78,8 @@ export type Action =
   | { type: "plan/update"; id: string; patch: Partial<Pick<SeatingPlan, "title" | "status">> }
   | { type: "plan/assignments"; id: string; assignments: Record<string, string> }
   | { type: "plan/delete"; id: string }
+  | { type: "rule/add"; classId: string; a: string; b: string; kind: RuleKind }
+  | { type: "rule/remove"; id: string }
   | { type: "trash/restore"; id: string }
   | { type: "trash/purge"; id: string };
 
@@ -119,6 +128,7 @@ export function reducer(state: AppData, action: Action): AppData {
         ...state,
         classes: state.classes.filter((c) => c.id !== cls.id),
         plans: state.plans.filter((p) => p.classId !== cls.id),
+        rules: state.rules.filter((r) => r.classId !== cls.id),
         trash,
       };
     }
@@ -157,6 +167,7 @@ export function reducer(state: AppData, action: Action): AppData {
     case "student/remove":
       return {
         ...state,
+        rules: state.rules.filter((r) => r.a !== action.id && r.b !== action.id),
         classes: state.classes.map((c) =>
           c.id === action.classId
             ? { ...c, students: c.students.filter((s) => s.id !== action.id) }
@@ -259,6 +270,19 @@ export function reducer(state: AppData, action: Action): AppData {
       };
     }
 
+    case "rule/add": {
+      const regel: SeatRule = {
+        id: newId(),
+        classId: action.classId,
+        a: action.a,
+        b: action.b,
+        kind: action.kind,
+      };
+      return { ...state, rules: [...state.rules, regel] };
+    }
+    case "rule/remove":
+      return { ...state, rules: state.rules.filter((r) => r.id !== action.id) };
+
     case "trash/restore": {
       const item = state.trash.find((t) => t.id === action.id);
       if (!item) return state;
@@ -300,9 +324,16 @@ type Rows = {
   schueler: Record<string, SchuelerRow>;
   raeume: Record<string, RaumRow>;
   sitzplaene: Record<string, PlanRow>;
+  sitzregeln: Record<string, SitzregelRow>;
 };
 
-const leereRows = (): Rows => ({ klassen: {}, schueler: {}, raeume: {}, sitzplaene: {} });
+const leereRows = (): Rows => ({
+  klassen: {},
+  schueler: {},
+  raeume: {},
+  sitzplaene: {},
+  sitzregeln: {},
+});
 
 function buildRows(data: AppData, userId: string): Rows {
   const rows = leereRows();
@@ -311,6 +342,7 @@ function buildRows(data: AppData, userId: string): Rows {
     for (const s of c.students) rows.schueler[s.id] = schuelerZuRow(s, c.id, userId, del);
   };
   for (const c of data.classes) klasse(c, null);
+  for (const r of data.rules) rows.sitzregeln[r.id] = regelZuRow(r, userId, null);
   for (const r of data.rooms) rows.raeume[r.id] = raumZuRow(r, userId, null);
   for (const p of data.plans) rows.sitzplaene[p.id] = planZuRow(p, userId, null);
   for (const t of data.trash) {
@@ -321,7 +353,7 @@ function buildRows(data: AppData, userId: string): Rows {
   return rows;
 }
 
-const TABELLEN = ["klassen", "raeume", "schueler", "sitzplaene"] as const;
+const TABELLEN = ["klassen", "raeume", "schueler", "sitzregeln", "sitzplaene"] as const;
 
 async function pushRows(prev: Rows, next: Rows) {
   for (const t of TABELLEN) {
@@ -341,19 +373,21 @@ async function pushRows(prev: Rows, next: Rows) {
 }
 
 async function ladeDaten(): Promise<AppData> {
-  const [k, s, r, p] = await Promise.all([
+  const [k, s, r, p, rg] = await Promise.all([
     supabase.from("klassen").select("*").order("created_at", { ascending: true }),
     supabase.from("schueler").select("*").order("created_at", { ascending: true }),
     supabase.from("raeume").select("*").order("created_at", { ascending: true }),
     supabase.from("sitzplaene").select("*").order("created_at", { ascending: false }),
+    supabase.from("sitzregeln").select("*").order("created_at", { ascending: true }),
   ]);
-  const fehler = k.error || s.error || r.error || p.error;
+  const fehler = k.error || s.error || r.error || p.error || rg.error;
   if (fehler) throw new Error(fehler.message);
 
   const klassen = (k.data ?? []) as unknown as KlasseRow[];
   const schueler = (s.data ?? []) as unknown as SchuelerRow[];
   const raeume = (r.data ?? []) as unknown as RaumRow[];
   const plaene = (p.data ?? []) as unknown as PlanRow[];
+  const regeln = (rg.data ?? []) as unknown as SitzregelRow[];
 
   const klasseObj = new Map<string, SchoolClass>();
   klassen.forEach((row, i) =>
@@ -388,6 +422,7 @@ async function ladeDaten(): Promise<AppData> {
     classes: klassen.filter((row) => !row.deleted_at).map((row) => klasseObj.get(row.id)!),
     rooms: raeume.filter((row) => !row.deleted_at).map((row) => raumObj.get(row.id)!),
     plans: plaene.filter((row) => !row.deleted_at).map((row) => planObj.get(row.id)!),
+    rules: regeln.filter((row) => !row.deleted_at).map(rowZuRegel),
     trash,
   };
 }
