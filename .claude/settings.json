@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=\"$CLAUDE_TOOL_INPUT_FILE_PATH\"; case \"$FILE\" in *.ts|*.tsx|*.sql) : ;; *) exit 0 ;; esac; CRG=\"$HOME/.local/bin/code-review-graph\"; REPO=\"/Volumes/T7/Projekte/sitzplan_app\"; { [ -x \"$CRG\" ] && [ -d \"$REPO\" ]; } || exit 0; LOCK=\"/tmp/crg-sitzplan-update.lock\"; find /tmp -maxdepth 1 -name 'crg-sitzplan-update.lock' -mmin +5 -exec rmdir {} \\; 2>/dev/null; mkdir \"$LOCK\" 2>/dev/null || exit 0; ( cd \"$REPO\" && \"$CRG\" update >/dev/null 2>&1; rmdir \"$LOCK\" 2>/dev/null ) >/dev/null 2>&1 & exit 0"
+          }
+        ]
+      }
+    ]
+  }
+}

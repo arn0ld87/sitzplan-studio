@@ -17,11 +17,21 @@ Antworten auf Deutsch, technische Bezeichner im Original.
 
 ## Vor dem Ändern
 
-Dieses Repo ist **nicht** in `code-review-graph` registriert (`list_repos_tool`
-prüfen, falls sich das geändert hat). Also:
+Dieses Repo **ist** in `code-review-graph` registriert (Alias `sitzplan_app`,
+seit 2026-08-01). Also zuerst dort fragen — 393 Knoten und 3739 Kanten zu
+befragen ist billiger, als 100 Dateien zu lesen:
+
+- `semantic_search_nodes` statt `Grep`, `get_impact_radius` vor jeder Änderung
+  mit Reichweite, `query_graph` für Aufrufer und Tests.
+- `Grep`/`Read` erst danach, und nur für die Stellen, die CRG benannt hat.
+- Der Graph hält sich selbst frisch: global bei Session-Start, im Projekt per
+  PostToolUse-Hook in [`.claude/settings.json`](.claude/settings.json) nach
+  Änderungen an `.ts`, `.tsx`, `.sql`.
+
+Danach:
 
 - Einstieg über `src/routes/_authenticated/` — dateibasierte Routen zeigen die
-  Seitenstruktur direkt.
+  Seitenstruktur direkt ([ADR-0005](docs/decisions/0005-dateibasierte-routen.md)).
 - `Grep` nach dem Domänenbegriff auf Deutsch (`sitzregeln`, `raster_cm`,
   `canvas_document`), nicht auf Englisch.
 - Domänentypen zuerst lesen: [`src/data/types.ts`](src/data/types.ts).
@@ -31,15 +41,20 @@ prüfen, falls sich das geändert hat). Also:
 ## Gate vor Commit (sequentiell, kein Auto-Fix-Loop)
 
 ```bash
-bun run lint     # muss sauber sein
-bun run build    # muss durchlaufen
+bun run typecheck   # tsc --noEmit
+bun run lint        # muss sauber sein
+bun run test        # vitest run — ohne Netz, ohne Datenbank
+bun run build       # muss durchlaufen
 ```
 
-Bei Schemaänderung zusätzlich: `supabase db push` gegen eine Wegwerf-Instanz,
-danach Typen neu generieren statt `types.ts` von Hand zu pflegen.
+Kurzform: `/gate`. Einzelheiten und Schemasonderfälle:
+[`docs/runbooks/pre-push-gate.md`](docs/runbooks/pre-push-gate.md).
 
-Es gibt **keine Testsuite**. Solange das so ist, ersetzt sorgfältiges Lesen der
-betroffenen Stellen das grüne Häkchen — nicht die Hoffnung.
+Vier Testdateien decken `src/data/mapping.ts`, `src/data/types.ts`,
+`src/lib/zeit.ts` und `SaveStatus` ab — genau die Stellen, an denen stille
+Fehler teuer werden. Wer dort etwas ändert, erweitert die Tests, statt sie
+passend zu machen. Für Routing, Druckansicht und Anmeldung gibt es keine Tests;
+dort ersetzt sorgfältiges Lesen und einmal Durchklicken das grüne Häkchen.
 
 ## Häufige Fallen
 

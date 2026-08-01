@@ -209,15 +209,15 @@ Papierkorb.
 | Druckansicht | ✅ umgesetzt |
 | Papierkorb (Soft-Delete) | ✅ umgesetzt |
 | Auth + RLS | ✅ umgesetzt |
-| **Automatisierte Tests** | ❌ **keine vorhanden** |
+| Automatisierte Tests | 🚧 Vitest eingerichtet, Datenschicht abgedeckt, keine E2E |
 | CI-Pipeline | ❌ nicht eingerichtet |
 | CSV-Import für Schülerlisten | 🚧 in der Oberfläche angelegt, ohne Funktion |
 | Mehrbenutzer-/Schulbetrieb | ❌ nicht vorgesehen |
 
 ## Release-Weg
 
-- **Preview → 0.1.0** — Testgerüst (Vitest + Playwright), CI mit `lint` und
-  `build`, CSV-Import fertigstellen.
+- **Preview → 0.1.0** — E2E-Tests (Playwright) ergänzen, CI mit `typecheck`,
+  `lint`, `test` und `build`, CSV-Import fertigstellen.
 - **0.1.0 → 0.5.0** — Offline-Fähigkeit belastbar machen (der Speicherstatus
   verspricht sie bereits), Serverkonflikt-Auflösung, Undo/Redo im Sitzplaneditor.
 - **0.5.0 → 1.0.0** — Datenschutzdokumentation, Export/Löschkonzept nach
@@ -241,6 +241,10 @@ Papierkorb.
 
 - Arbeitsanweisungen für KI-Agenten: [`AGENTS.md`](AGENTS.md) (allgemein) und
   [`CLAUDE.md`](CLAUDE.md) (Claude Code).
+- Architektur und Datenfluss: [`docs/architecture.md`](docs/architecture.md).
+- Warum etwas so gebaut ist: [`docs/decisions/`](docs/decisions/) (ADRs).
+- Vor dem Push: [`docs/runbooks/pre-push-gate.md`](docs/runbooks/pre-push-gate.md),
+  Branch und Merge: [`docs/runbooks/pr-workflow.md`](docs/runbooks/pr-workflow.md).
 - Verbindliche Gestaltung: [`docs/designsystem.md`](docs/designsystem.md).
 - Oberflächentexte, Bezeichner im Datenmodell und Routen sind **deutsch**
   (`klassen`, `raeume`, `sitzplaene`). Code-Bezeichner in `src/data/types.ts`

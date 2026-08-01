@@ -20,6 +20,10 @@ in [`CLAUDE.md`](CLAUDE.md).
 | Frage | Quelle |
 | --- | --- |
 | Was ist das Produkt, wie starte ich es? | [`README.md`](README.md) |
+| Wie hängt das System zusammen? | [`docs/architecture.md`](docs/architecture.md) |
+| Warum ist etwas so gebaut? | [`docs/decisions/`](docs/decisions/) — ADRs |
+| Wie prüfe ich vor dem Push? | [`docs/runbooks/pre-push-gate.md`](docs/runbooks/pre-push-gate.md) |
+| Wie kommt Code nach `main`? | [`docs/runbooks/pr-workflow.md`](docs/runbooks/pr-workflow.md) |
 | Wie darf es aussehen? | [`docs/designsystem.md`](docs/designsystem.md) — **verbindlich** |
 | Wie sieht das Datenmodell aus? | `supabase/migrations/*.sql` |
 | Welche Typen gelten in der App? | [`src/data/types.ts`](src/data/types.ts) |
@@ -60,8 +64,12 @@ Sitzplänen.
 5. **Barrierefreiheit ist Teil der Definition of Done.** Ziel WCAG 2.2 AA:
    Tastaturbedienung gleichwertig zu Drag-and-drop, `aria-label` an
    Icon-only-Buttons, Zustände über Form **und** Farbe, sichtbarer Fokusstil.
-6. **Vor dem Abschluss prüfen:** `bun run lint` und `bun run build` müssen
-   fehlerfrei durchlaufen. Es gibt keine Tests — dafür wird gelesen, was man ändert.
+6. **Vor dem Abschluss das Gate durchlaufen:** `bun run typecheck`,
+   `bun run lint`, `bun run test`, `bun run build` — sequentiell, jeder Schritt
+   sauber, kein Auto-Fix-Loop. Ablauf und Sonderfälle:
+   [`docs/runbooks/pre-push-gate.md`](docs/runbooks/pre-push-gate.md).
+   Wer `src/data/` anfasst, ergänzt die Tests dort, statt sie anzupassen, bis
+   sie wieder grün sind.
 7. **Kleine Änderungen bleiben klein.** Kein ungefragter Refactor, keine
    Umbenennung großer Flächen, keine Abhängigkeit ohne Begründung.
 8. **Widersprich, wenn eine Anforderung dem Designsystem, dem Datenschutz oder
@@ -87,6 +95,9 @@ Sitzplänen.
 ## Referenzen
 
 - Produktüberblick, Schnellstart, Status: [`README.md`](README.md)
+- Architektur und Datenfluss: [`docs/architecture.md`](docs/architecture.md)
+- Architekturentscheidungen: [`docs/decisions/`](docs/decisions/)
+- Runbooks: [Gate](docs/runbooks/pre-push-gate.md) · [PR-Workflow](docs/runbooks/pr-workflow.md)
 - Gestaltung (SSoT): [`docs/designsystem.md`](docs/designsystem.md)
 - Claude Code: [`CLAUDE.md`](CLAUDE.md)
 - Lovable-Projekt: https://lovable.dev/projects/6f249ae9-eb8e-40db-8f19-9d697518a3df

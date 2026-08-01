@@ -23,6 +23,11 @@ coverage/
 .wrangler/
 .dev.vars
 
+# Claude Code: Konfiguration und Commands werden versioniert,
+# Arbeitskopien und persoenliche Einstellungen nicht
+.claude/worktrees/
+.claude/settings.local.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
