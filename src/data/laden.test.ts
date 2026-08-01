@@ -11,6 +11,8 @@ import {
 
 const NUTZER = "nutzer-1";
 const GELOESCHT = "2026-07-01T09:00:00Z";
+/** Vor der Klasse gegangen — der Unterschied entscheidet über das Zurückholen. */
+const FRUEHER = "2026-06-01T09:00:00Z";
 
 const ada = { id: "s1", firstName: "Ada", lastName: "Lovelace", colorIndex: 0 };
 const cem = { id: "s2", firstName: "Cem", lastName: "Yildiz", colorIndex: 5 };
@@ -85,20 +87,51 @@ describe("zeilenZuAppData", () => {
     expect(geladen?.students.map((s) => s.id)).toEqual(["s1"]);
   });
 
-  it("zählt gelöschte Schüler auch im Papierkorb-Abbild der Klasse nicht mit", () => {
-    // Wird die Klasse wiederhergestellt, darf der gelöschte Schüler nicht
-    // durch die Hintertür zurückkommen.
+  it("behält im Papierkorb-Abbild die Schüler, die mit der Klasse gelöscht wurden", () => {
+    // Wird eine Klasse gelöscht, bekommen alle ihre Schüler denselben
+    // Zeitstempel. Würde der Soft-Delete-Filter hier stur greifen, käme die
+    // Klasse leer zurück — der Papierkorb wäre wertlos.
+    const data = zeilenZuAppData(
+      zeilen({
+        klassen: [klasseZuRow(klasse, NUTZER, GELOESCHT)],
+        schueler: klasse.students.map((s) => schuelerZuRow(s, klasse.id, NUTZER, GELOESCHT)),
+      }),
+    );
+    const eintrag = data.trash.find((t) => t.kind === "klasse");
+    expect((eintrag?.payload as SchoolClass).students.map((s) => s.id)).toEqual(["s1", "s2"]);
+  });
+
+  it("lässt vorher einzeln gelöschte Schüler auch beim Wiederherstellen gelöscht", () => {
+    // Cem ging vor der Klasse und trägt deshalb einen älteren Zeitstempel. Er
+    // darf durch das Wiederherstellen nicht zurückkommen.
     const data = zeilenZuAppData(
       zeilen({
         klassen: [klasseZuRow(klasse, NUTZER, GELOESCHT)],
         schueler: [
-          schuelerZuRow(ada, klasse.id, NUTZER, null),
-          schuelerZuRow(cem, klasse.id, NUTZER, GELOESCHT),
+          schuelerZuRow(ada, klasse.id, NUTZER, GELOESCHT),
+          schuelerZuRow(cem, klasse.id, NUTZER, FRUEHER),
         ],
       }),
     );
     const eintrag = data.trash.find((t) => t.kind === "klasse");
     expect((eintrag?.payload as SchoolClass).students.map((s) => s.id)).toEqual(["s1"]);
+  });
+
+  it("räumt gelöschte Schüler aus den Sitzplätzen — kein besetzter, leerer Platz", () => {
+    // Der Platz bliebe sonst als belegt gezählt, würde aber ohne Namen
+    // gezeichnet: ein Sitzplan, der mehr Kinder behauptet, als da sind.
+    const data = zeilenZuAppData(
+      zeilen({
+        schueler: [
+          schuelerZuRow(ada, klasse.id, NUTZER, null),
+          schuelerZuRow(cem, klasse.id, NUTZER, GELOESCHT),
+        ],
+        plaene: [
+          planZuRow({ ...plan, assignments: { m1__sitz_0: "s1", m1__sitz_1: "s2" } }, NUTZER, null),
+        ],
+      }),
+    );
+    expect(data.plans[0]?.assignments).toEqual({ m1__sitz_0: "s1" });
   });
 
   it("ordnet Schüler ihrer eigenen Klasse zu", () => {
