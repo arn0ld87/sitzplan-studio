@@ -1,0 +1,106 @@
+name: Fehler melden
+description: Etwas verhält sich anders als erwartet.
+title: "fix: "
+labels: ["typ: fix"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Danke für die Meldung. Der mit Abstand nützlichste Teil ist die
+        Schrittfolge: Ein Fehler, den wir nachstellen können, ist meist schon
+        halb behoben. Ein Fehler ohne Schritte bleibt oft Wochen liegen.
+
+  - type: textarea
+    id: schritte
+    attributes:
+      label: Schritte zum Nachstellen
+      description: Nummeriert, vom Anmelden bis zum Fehler. Lieber ein Schritt zu viel.
+      placeholder: |
+        1. Anmelden und Klasse "7b" öffnen
+        2. Sitzplan "Fenster links" öffnen
+        3. Tisch in der zweiten Reihe um 90 Grad drehen
+        4. Seite neu laden
+    validations:
+      required: true
+
+  - type: textarea
+    id: erwartung
+    attributes:
+      label: Erwartet
+      description: Was hätte passieren sollen?
+      placeholder: Die Schüler sitzen nach dem Neuladen weiterhin auf denselben Plätzen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: beobachtung
+    attributes:
+      label: Beobachtet
+      description: Was ist stattdessen passiert? Fehlermeldung wörtlich, wenn es eine gab.
+      placeholder: Zwei Schüler sind vertauscht, ein dritter Platz ist leer.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: bereich
+    attributes:
+      label: Betroffener Bereich
+      description: Grobe Einordnung genügt. Bei Unsicherheit "Weiß ich nicht".
+      options:
+        - Sitzplan-Zeichenfläche (Möbel, Sitzplätze, Raster)
+        - Klassen und Schüler
+        - Räume und Raumvorlagen
+        - Sitzregeln und Konflikte
+        - Papierkorb und Wiederherstellen
+        - Drucken und PDF
+        - Anmeldung und Konto
+        - Darstellung, Farben, Bedienung
+        - Weiß ich nicht
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser und Betriebssystem
+      description: Name und Version. Bei Tablets bitte das Gerät nennen.
+      placeholder: Firefox 141 auf Windows 11 / Safari auf iPad
+    validations:
+      required: true
+
+  - type: dropdown
+    id: haeufigkeit
+    attributes:
+      label: Wie oft tritt es auf?
+      options:
+        - Jedes Mal
+        - Häufig, aber nicht immer
+        - Einmalig beobachtet
+    validations:
+      required: true
+
+  - type: textarea
+    id: datenverlust
+    attributes:
+      label: Gingen dabei Daten verloren?
+      description: >
+        Verschwundene Sitzpläne, Schüler oder Räume sind dringlicher als alles
+        andere. Wenn ja, bitte hier nennen — auch bei Unsicherheit.
+      placeholder: Nein. / Ja, der Sitzplan "Fenster links" ist seitdem leer.
+
+  - type: textarea
+    id: sonstiges
+    attributes:
+      label: Screenshots oder Sonstiges
+      description: Optional. Bilder gern direkt hineinziehen.
+
+  - type: checkboxes
+    id: keine-personendaten
+    attributes:
+      label: Datenschutz
+      description: >
+        Dieses Repo ist öffentlich. Schülernamen, Klassenlisten und
+        Anmeldedaten gehören nicht in ein Issue.
+      options:
+        - label: Meine Meldung enthält keine echten Schülerdaten. Namen in Screenshots sind unkenntlich gemacht oder erfunden.
+          required: true

@@ -24,6 +24,7 @@ import { Field, Modal, inputClass } from "@/components/ui-kit/Modal";
 import { SearchField } from "@/components/ui-kit/SearchField";
 import { RoomPlan } from "@/components/plan/RoomPlan";
 import { allSeats, seatCount, studentName, type PlanStatus, type Student } from "@/data/types";
+import { nachbarplaetze, pruefeSitzregeln } from "@/data/sitzregeln";
 import { useStore } from "@/store/app";
 import { supabase } from "@/integrations/supabase/client";
 import { ladeVersionen, speichereVersion, type PlanVersion } from "@/lib/versionen";
@@ -129,57 +130,47 @@ function SitzplanEditor() {
     );
   }
 
-  const regeln = data.rules.filter((r) => r.classId === plan.classId);
-  const platzVonSchueler: Record<string, string> = {};
-  for (const [seat, sid] of Object.entries(plan.assignments)) platzVonSchueler[sid] = seat;
-  const nachbarn = (seatId: string) => {
-    const moebel = plan!.room.furniture.find((f) => f.seats.includes(seatId));
-    return moebel ? moebel.seats.filter((x) => x !== seatId) : [];
-  };
+  // Welche Regel verletzt ist, entscheidet `pruefeSitzregeln` in
+  // `src/data/sitzregeln.ts` — dort ist die Fachlogik getestet. Diese Ansicht
+  // macht aus einem Konflikt nur noch Text und eine anwendbare Umsetzung.
+  const konflikte = pruefeSitzregeln(plan, data.rules);
   const freiePlaetze = allSeats(plan.room).filter((s) => !plan!.assignments[s]);
 
   type Vorschlag = { id: string; text: string; anwenden: () => void };
-  const vorschlaege: Vorschlag[] = [];
-  for (const r of regeln) {
-    const sa = platzVonSchueler[r.a];
-    const sb = platzVonSchueler[r.b];
-    if (!sa || !sb) continue;
-    const benachbart = nachbarn(sa).includes(sb);
-    const nameA = studentsById[r.a] ? studentName(studentsById[r.a]!) : "?";
-    const nameB = studentsById[r.b] ? studentName(studentsById[r.b]!) : "?";
-    if (r.kind === "nicht_neben" && benachbart) {
-      const ziel = freiePlaetze.find((f) => !nachbarn(sa).includes(f) && f !== sa);
-      vorschlaege.push({
-        id: r.id,
-        text: ziel
+  const vorschlaege: Vorschlag[] = konflikte.map((k) => {
+    const nameA = studentsById[k.a] ? studentName(studentsById[k.a]!) : "?";
+    const nameB = studentsById[k.b] ? studentName(studentsById[k.b]!) : "?";
+    const nachbarnVonA = nachbarplaetze(plan!.room, k.sitzA);
+
+    // Wohin der zweite Schüler ziehen soll: bei "nicht neben" weg von A, bei
+    // "muss neben" auf einen freien Platz direkt neben A. Findet sich keiner,
+    // bleibt der Vorschlag ein Hinweis ohne Schaltfläche.
+    const ziel =
+      k.kind === "nicht_neben"
+        ? freiePlaetze.find((f) => !nachbarnVonA.includes(f) && f !== k.sitzA)
+        : nachbarnVonA.find((n) => !plan!.assignments[n]);
+
+    const text =
+      k.kind === "nicht_neben"
+        ? ziel
           ? `${nameA} und ${nameB} sitzen nebeneinander. Vorschlag: ${nameB} auf einen freien Platz weiter weg setzen.`
-          : `${nameA} und ${nameB} sitzen nebeneinander. Es ist kein passender freier Platz vorhanden.`,
-        anwenden: () => {
-          if (!ziel) return;
-          const next = { ...plan!.assignments };
-          delete next[sb];
-          next[ziel] = r.b;
-          setAssignments(next);
-        },
-      });
-    }
-    if (r.kind === "muss_neben" && !benachbart) {
-      const ziel = nachbarn(sa).find((n) => !plan!.assignments[n]);
-      vorschlaege.push({
-        id: r.id,
-        text: ziel
+          : `${nameA} und ${nameB} sitzen nebeneinander. Es ist kein passender freier Platz vorhanden.`
+        : ziel
           ? `${nameA} und ${nameB} sollen nebeneinander sitzen. Vorschlag: ${nameB} auf den freien Nachbarplatz setzen.`
-          : `${nameA} und ${nameB} sitzen nicht nebeneinander. Neben ${nameA} ist kein Platz frei.`,
-        anwenden: () => {
-          if (!ziel) return;
-          const next = { ...plan!.assignments };
-          delete next[sb];
-          next[ziel] = r.b;
-          setAssignments(next);
-        },
-      });
-    }
-  }
+          : `${nameA} und ${nameB} sitzen nicht nebeneinander. Neben ${nameA} ist kein Platz frei.`;
+
+    return {
+      id: k.regelId,
+      text,
+      anwenden: () => {
+        if (!ziel) return;
+        const next = { ...plan!.assignments };
+        delete next[k.sitzB];
+        next[ziel] = k.b;
+        setAssignments(next);
+      },
+    };
+  });
   const offeneVorschlaege = vorschlaege.filter((v) => !verworfen.includes(v.id));
 
   async function versionenLaenden() {
