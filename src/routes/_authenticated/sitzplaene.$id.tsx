@@ -26,6 +26,7 @@ import { RoomPlan } from "@/components/plan/RoomPlan";
 import { allSeats, seatCount, studentName, type PlanStatus, type Student } from "@/data/types";
 import { useStore } from "@/store/app";
 import { supabase } from "@/integrations/supabase/client";
+import { ladeVersionen, speichereVersion, type PlanVersion } from "@/lib/versionen";
 
 export const Route = createFileRoute("/_authenticated/sitzplaene/$id")({
   head: () => ({
@@ -62,9 +63,7 @@ function SitzplanEditor() {
   const [form, setForm] = useState<{ title: string } | null>(null);
   const [ablageOffen, setAblageOffen] = useState(true);
   const [versionenOffen, setVersionenOffen] = useState(false);
-  const [versionen, setVersionen] = useState<
-    { id: string; name: string; created_at: string; canvas_document: unknown }[]
-  >([]);
+  const [versionen, setVersionen] = useState<PlanVersion[]>([]);
   const [versionenLaden, setVersionenLaden] = useState(false);
   const [versionName, setVersionName] = useState("");
   const [versionFehler, setVersionFehler] = useState("");
@@ -186,11 +185,7 @@ function SitzplanEditor() {
   async function versionenLaenden() {
     setVersionenLaden(true);
     setVersionFehler("");
-    const { data: rows, error } = await supabase
-      .from("sitzplan_versionen")
-      .select("id, name, created_at, canvas_document")
-      .eq("sitzplan_id", plan!.id)
-      .order("created_at", { ascending: false });
+    const { data: rows, error } = await ladeVersionen(plan!.id);
     if (error) setVersionFehler("Die Stände konnten nicht geladen werden.");
     else setVersionen(rows ?? []);
     setVersionenLaden(false);
@@ -202,19 +197,14 @@ function SitzplanEditor() {
     const { data: sess } = await supabase.auth.getUser();
     const uid = sess.user?.id;
     if (!uid) return setVersionFehler("Keine gültige Sitzung.");
-    const { error } = await supabase.from("sitzplan_versionen").insert({
-      sitzplan_id: plan!.id,
-      user_id: uid,
-      name,
-      canvas_document: { zuordnungen: plan!.assignments } as never,
-    });
+    const { error } = await speichereVersion(plan!.id, uid, name, plan!.assignments);
     if (error) return setVersionFehler("Der Stand konnte nicht gespeichert werden.");
     setVersionName("");
     void versionenLaenden();
   }
 
-  function standWiederherstellen(doc: unknown) {
-    const z = (doc as { zuordnungen?: Record<string, string> } | null)?.zuordnungen;
+  function standWiederherstellen(doc: PlanVersion["canvas_document"]) {
+    const z = doc?.zuordnungen;
     if (!z) return setVersionFehler("Dieser Stand enthält keine Zuordnungen.");
     setAssignments({ ...z });
     setVersionenOffen(false);
