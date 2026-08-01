@@ -13,6 +13,18 @@ bun run build       # vite build — muss durchlaufen
 
 Kurzform als Slash-Command: `/gate`.
 
+## Das Gate läuft zusätzlich in CI
+
+Seit [`.github/workflows/gate.yml`](../../.github/workflows/gate.yml) fahren
+dieselben vier Schritte bei jedem Pull Request gegen `main` — mit gepinnter
+Bun-Version, `bun install --frozen-lockfile` und Abbruch beim ersten Fehler.
+Jeder Schritt ist ein eigener, benannter Step: Welcher fiel, steht in der
+Job-Übersicht, ohne dass jemand ins Log steigen muss.
+
+Das entbindet nicht vom lokalen Lauf. CI ist das Netz, nicht der Weg — wer
+vorher prüft, wartet nicht auf einen roten Haken und spart sich den
+Korrekturcommit.
+
 ## Warum diese Reihenfolge
 
 Typfehler machen Lint-Meldungen unlesbar. Lint-Fehler machen Testausgaben
