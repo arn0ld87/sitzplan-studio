@@ -57,7 +57,7 @@ export function ConfirmDialog({
           </div>
         </div>
         <div className="mt-5 flex justify-end gap-2">
-          <Button ref={ref as never} variant="secondary" onClick={onCancel}>
+          <Button ref={ref} variant="secondary" onClick={onCancel}>
             Abbrechen
           </Button>
           <Button variant="danger" onClick={onConfirm}>
