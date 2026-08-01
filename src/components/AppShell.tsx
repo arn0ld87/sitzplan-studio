@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { DatenschutzHinweis } from "@/components/DatenschutzHinweis";
 import { useStore } from "@/store/app";
 
 type NavItem = { to: string; label: string; icon: LucideIcon; count?: number };
@@ -125,6 +126,7 @@ export function AppShell({ children, email }: { children: React.ReactNode; email
 
       <div className="md:pl-[236px]">
         <main id="inhalt" className="pb-[52px] md:pb-0">
+          <DatenschutzHinweis />
           {children}
         </main>
       </div>
