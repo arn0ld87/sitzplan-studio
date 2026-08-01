@@ -1,0 +1,20 @@
+# Leere Auswahl verhindern: Wer hier landet, soll immer einen Weg sehen.
+blank_issues_enabled: false
+contact_links:
+  - name: Frage zur Bedienung
+    url: https://github.com/arn0ld87/sitzplan-studio/discussions
+    about: >
+      Keine Fehlermeldung, sondern eine Frage — etwa wie Sitzregeln wirken oder
+      wie eine Raumvorlage in einen Plan kommt. Diskussionen sind dafür der
+      bessere Ort als Issues.
+
+  - name: Sicherheitslücke oder Datenschutzproblem
+    url: https://github.com/arn0ld87/sitzplan-studio/security/advisories/new
+    about: >
+      Bitte nicht als öffentliches Issue melden. Die App verarbeitet
+      Schülerdaten; eine offene Meldung wäre selbst ein Risiko.
+
+  - name: Vorher lesen — Beitrag leisten
+    url: https://github.com/arn0ld87/sitzplan-studio/blob/main/AGENTS.md
+    about: >
+      Aufbau des Projekts, Designsystem und das Gate vor jedem Push.
