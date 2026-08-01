@@ -1,5 +1,6 @@
+import { Info } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { initials, studentColor } from "@/data/types";
+import { initials, merkmalLabel, studentColor } from "@/data/types";
 
 export function StudentChip({
   name,
@@ -11,6 +12,8 @@ export function StudentChip({
   onDragStart,
   onPointerDown,
   title,
+  merkmale,
+  notiz,
 }: {
   name: string;
   colorIndex: number;
@@ -21,8 +24,20 @@ export function StudentChip({
   onDragStart?: (e: React.DragEvent) => void;
   onPointerDown?: (e: React.PointerEvent) => void;
   title?: string;
+  /** Wenn gesetzt und nicht leer, trägt der Chip eine Hinweismarke. */
+  merkmale?: string[];
+  /** Wie {@link merkmale} — eine gefüllte Notiz zählt als Hinweis. */
+  notiz?: string;
 }) {
   const dot = size === 40 ? 26 : 22;
+  // Der Chip steht auch auf einem Sitzplatz und darf dort nicht wachsen. Statt
+  // der Merkmale selbst trägt er nur eine Marke; die Klartexte stehen im
+  // Tooltip und ausgeschrieben in der Schülerliste.
+  const hinweise = [
+    ...(merkmale ?? []).map(merkmalLabel),
+    ...(notiz?.trim() ? [notiz.trim()] : []),
+  ];
+  const beschriftung = title ?? (hinweise.length ? `${name} — ${hinweise.join(" · ")}` : name);
   return (
     <button
       type="button"
@@ -31,7 +46,8 @@ export function StudentChip({
       onDragStart={onDragStart}
       onPointerDown={onPointerDown}
       aria-pressed={selected}
-      title={title ?? name}
+      title={beschriftung}
+      aria-label={beschriftung}
       style={{ height: size }}
       className={cn(
         "inline-flex max-w-full items-center gap-2 rounded-full border bg-elevated pl-1 pr-3 text-[13px] transition-[border-color,box-shadow] duration-[180ms] ease-out",
@@ -48,6 +64,9 @@ export function StudentChip({
         {initials(name)}
       </span>
       <span className="truncate">{name}</span>
+      {hinweise.length > 0 && (
+        <Info size={12} strokeWidth={1.75} color="#6A6157" className="shrink-0" aria-hidden />
+      )}
     </button>
   );
 }

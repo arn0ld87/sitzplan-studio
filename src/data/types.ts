@@ -31,11 +31,44 @@ export function newId(_prefix?: string) {
   });
 }
 
+/**
+ * Vorschlagsliste für Besonderheiten eines Schülers.
+ *
+ * Bewusst eine Liste und **keine Schranke**: `Student.merkmale` nimmt auch
+ * Werte auf, die hier nicht stehen — der Schulalltag ist reicher als jede
+ * Aufzählung. Bekannte Schlüssel werden zum deutschen Label, unbekannte
+ * erscheinen wörtlich (siehe {@link merkmalLabel}).
+ *
+ * Merkmale sind Anzeige und Eingabe für den KI-Vorschlag. Sie erzeugen
+ * **keine** prüfbaren Sitzregeln — dafür gibt es `sitzregeln.ts`.
+ */
+export const MERKMALE = [
+  { id: "adhs", label: "ADHS" },
+  { id: "autismus_spektrum", label: "Autismus-Spektrum" },
+  { id: "schwerhoerig", label: "Schwerhörigkeit" },
+  { id: "sehschwaeche", label: "Sehschwäche" },
+  { id: "legasthenie", label: "Legasthenie" },
+  { id: "dyskalkulie", label: "Dyskalkulie" },
+  { id: "daz", label: "Deutsch als Zweitsprache" },
+  { id: "nachteilsausgleich", label: "Nachteilsausgleich" },
+  { id: "motorisch", label: "motorische Einschränkung" },
+  { id: "chronisch_krank", label: "chronische Erkrankung" },
+] as const;
+
+/** Anzeigename eines Merkmals — unbekannte Werte bleiben, wie sie eingegeben wurden. */
+export function merkmalLabel(id: string) {
+  return MERKMALE.find((m) => m.id === id)?.label ?? id;
+}
+
 export type Student = {
   id: string;
   firstName: string;
   lastName: string;
   colorIndex: number;
+  /** Schlüssel aus {@link MERKMALE} oder frei eingegebener Text. Nie `undefined`. */
+  merkmale: string[];
+  /** Freie Notiz zur Person. Leer heißt `""`, nicht `undefined`. */
+  notiz: string;
 };
 
 export function studentName(s: Student) {

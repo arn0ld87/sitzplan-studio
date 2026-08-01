@@ -198,8 +198,15 @@ describe("klasseZuRow und rowZuKlasse", () => {
     colorIndex: 2,
     createdAt: "2026-01-15T08:00:00Z",
     students: [
-      { id: "s1", firstName: "Ada", lastName: "Lovelace", colorIndex: 0 },
-      { id: "s2", firstName: "Cem", lastName: "Yildiz", colorIndex: 5 },
+      {
+        id: "s1",
+        firstName: "Ada",
+        lastName: "Lovelace",
+        colorIndex: 0,
+        merkmale: ["adhs", "sitzt ungern am Fenster"],
+        notiz: "Absprache mit den Eltern vom 12.03.",
+      },
+      { id: "s2", firstName: "Cem", lastName: "Yildiz", colorIndex: 5, merkmale: [], notiz: "" },
     ],
   };
 
@@ -226,7 +233,14 @@ describe("klasseZuRow und rowZuKlasse", () => {
 });
 
 describe("schuelerZuRow", () => {
-  const ada = { id: "s1", firstName: "Ada", lastName: "Lovelace", colorIndex: 0 };
+  const ada = {
+    id: "s1",
+    firstName: "Ada",
+    lastName: "Lovelace",
+    colorIndex: 0,
+    merkmale: [],
+    notiz: "",
+  };
 
   it("berechnet die Initialen für die Anzeige mit", () => {
     expect(schuelerZuRow(ada, "k1", NUTZER, null).initialen).toBe("AL");
@@ -249,6 +263,82 @@ describe("schuelerZuRow", () => {
 
   it("ordnet den Schüler der übergebenen Klasse zu", () => {
     expect(schuelerZuRow(ada, "k7", NUTZER, null).klasse_id).toBe("k7");
+  });
+
+  it("entdoppelt und beschneidet die Merkmale vor dem Schreiben", () => {
+    const row = schuelerZuRow(
+      { ...ada, merkmale: ["adhs", " adhs ", "", "  ", "daz"] },
+      "k1",
+      NUTZER,
+      null,
+    );
+    expect(row.merkmale).toEqual(["adhs", "daz"]);
+  });
+
+  it("schreibt eine fehlende Notiz als leeren Text, nicht als NULL", () => {
+    // Anders als bei der Klassennotiz: `notiz` ist NOT NULL, und die Oberfläche
+    // rechnet nie mit `null`.
+    expect(schuelerZuRow(ada, "k1", NUTZER, null).notiz).toBe("");
+  });
+});
+
+describe("Merkmale und Notiz beim Lesen einer Zeile", () => {
+  // Diese Fälle entstehen nicht in dieser Anwendung, sondern kommen aus Zeilen
+  // vor der Migration, aus einem zweiten Client oder aus einem Direktzugriff
+  // auf die Datenbank. Sie dürfen die Oberfläche nicht zerlegen.
+  const basis = {
+    id: "s1",
+    user_id: NUTZER,
+    klasse_id: "k1",
+    vorname: "Ada",
+    nachname: "Lovelace",
+    initialen: "AL",
+    farb_index: 0,
+    deleted_at: null,
+  };
+  const klasseRow = {
+    id: "k1",
+    user_id: NUTZER,
+    name: "5b",
+    notizen: null,
+    created_at: "2026-01-15T08:00:00Z",
+    deleted_at: null,
+  };
+  function ersterSchueler(schueler: Record<string, unknown>) {
+    const s = rowZuKlasse(klasseRow, [schueler as never], 0).students[0];
+    if (!s) throw new Error("rowZuKlasse hat den Schüler verschluckt");
+    return s;
+  }
+
+  it("macht aus einer fehlenden Spalte eine leere Liste und einen leeren Text", () => {
+    const s = ersterSchueler(basis);
+    expect(s.merkmale).toEqual([]);
+    expect(s.notiz).toBe("");
+  });
+
+  it("verträgt NULL in beiden Spalten", () => {
+    const s = ersterSchueler({ ...basis, merkmale: null, notiz: null });
+    expect(s.merkmale).toEqual([]);
+    expect(s.notiz).toBe("");
+  });
+
+  it("wirft weg, was keine Zeichenkette ist, und behält den Rest", () => {
+    const s = ersterSchueler({ ...basis, merkmale: ["adhs", 7, null, { a: 1 }, "daz"] });
+    expect(s.merkmale).toEqual(["adhs", "daz"]);
+  });
+
+  it("entdoppelt und beschneidet auch beim Lesen", () => {
+    const s = ersterSchueler({ ...basis, merkmale: [" adhs", "adhs ", "", "daz"] });
+    expect(s.merkmale).toEqual(["adhs", "daz"]);
+  });
+
+  it("verträgt einen Wert, der gar keine Liste ist", () => {
+    expect(ersterSchueler({ ...basis, merkmale: "adhs" }).merkmale).toEqual([]);
+  });
+
+  it("behält frei eingegebene Merkmale, die nicht im Katalog stehen", () => {
+    const s = ersterSchueler({ ...basis, merkmale: ["adhs", "sitzt ungern am Fenster"] });
+    expect(s.merkmale).toEqual(["adhs", "sitzt ungern am Fenster"]);
   });
 });
 

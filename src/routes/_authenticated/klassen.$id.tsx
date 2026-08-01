@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Plus, Pencil, Trash2, UserPlus, Grid2x2, Link2Off, Link2 } from "lucide-react";
+import { Plus, Pencil, Trash2, UserPlus, Grid2x2, Link2Off, Link2, StickyNote } from "lucide-react";
 import { Button } from "@/components/ui-kit/Button";
 import { PageHeader } from "@/components/PageHeader";
 import { SearchField } from "@/components/ui-kit/SearchField";
@@ -10,8 +10,10 @@ import { Field, Modal, inputClass } from "@/components/ui-kit/Modal";
 import { SaveStatus } from "@/components/ui-kit/SaveStatus";
 import { KeineTreffer } from "@/components/ui-kit/KeineTreffer";
 import { StatusChip } from "@/components/ui-kit/StatusChip";
+import { MerkmalBadges } from "@/components/ui-kit/MerkmalBadge";
+import { MerkmalWahl } from "@/components/ui-kit/MerkmalWahl";
 import { relativeZeit } from "@/lib/zeit";
-import { seatCount } from "@/data/types";
+import { MERKMALE, seatCount } from "@/data/types";
 import type { RuleKind } from "@/data/types";
 import { studentColor, initials, studentName } from "@/data/types";
 import { useStore } from "@/store/app";
@@ -31,7 +33,15 @@ export const Route = createFileRoute("/_authenticated/klassen/$id")({
   component: KlassenDetail,
 });
 
-type StudentForm = { id?: string; firstName: string; lastName: string };
+type StudentForm = {
+  id?: string;
+  firstName: string;
+  lastName: string;
+  merkmale: string[];
+  notiz: string;
+};
+
+const LEERER_SCHUELER: StudentForm = { firstName: "", lastName: "", merkmale: [], notiz: "" };
 
 function KlassenDetail() {
   const { id } = Route.useParams();
@@ -47,6 +57,17 @@ function KlassenDetail() {
   const [tab, setTab] = useState<"schueler" | "regeln" | "plaene">("schueler");
   const [regelForm, setRegelForm] = useState<{ a: string; b: string; kind: RuleKind } | null>(null);
   const [regelLoeschen, setRegelLoeschen] = useState<string | null>(null);
+
+  // Frei eingetippte Merkmale über **alle** Klassen hinweg, als Vorschlag beim
+  // nächsten Mal. Ohne das entstehen mit der Zeit "ADHS", "ADS" und "adhs"
+  // nebeneinander, und die KI sieht drei verschiedene Dinge.
+  const freieMerkmale = useMemo(() => {
+    const katalog = new Set<string>(MERKMALE.map((m) => m.id));
+    const gesammelt = new Set<string>();
+    for (const k of data.classes)
+      for (const s of k.students) for (const m of s.merkmale) if (!katalog.has(m)) gesammelt.add(m);
+    return [...gesammelt].sort((a, b) => a.localeCompare(b, "de"));
+  }, [data.classes]);
 
   const gefiltert = useMemo(() => {
     if (!cls) return [];
@@ -103,6 +124,8 @@ function KlassenDetail() {
     const vor = form.firstName.trim();
     const nach = form.lastName.trim();
     if (!vor) return setFehler("Bitte mindestens einen Vornamen angeben.");
+    const merkmale = [...new Set(form.merkmale.map((m) => m.trim()).filter(Boolean))];
+    const notiz = form.notiz.trim();
     if (form.id) {
       dispatch({
         type: "student/update",
@@ -110,9 +133,18 @@ function KlassenDetail() {
         id: form.id,
         firstName: vor,
         lastName: nach,
+        merkmale,
+        notiz,
       });
     } else {
-      dispatch({ type: "student/add", classId: cls.id, firstName: vor, lastName: nach });
+      dispatch({
+        type: "student/add",
+        classId: cls.id,
+        firstName: vor,
+        lastName: nach,
+        merkmale,
+        notiz,
+      });
     }
     setForm(null);
     setFehler("");
@@ -147,7 +179,7 @@ function KlassenDetail() {
               <Pencil size={16} strokeWidth={1.5} />
               Klasse bearbeiten
             </Button>
-            <Button variant="primary" onClick={() => setForm({ firstName: "", lastName: "" })}>
+            <Button variant="primary" onClick={() => setForm(LEERER_SCHUELER)}>
               <UserPlus size={16} strokeWidth={1.5} />
               Schüler hinzufügen
             </Button>
@@ -235,11 +267,7 @@ function KlassenDetail() {
                 <p className="prose-measure mx-auto mt-1 text-[13px] text-ink-2">
                   Initialen und Farbe werden beim Hinzufügen automatisch vergeben.
                 </p>
-                <Button
-                  className="mt-4"
-                  variant="primary"
-                  onClick={() => setForm({ firstName: "", lastName: "" })}
-                >
+                <Button className="mt-4" variant="primary" onClick={() => setForm(LEERER_SCHUELER)}>
                   <Plus size={16} strokeWidth={1.5} />
                   Ersten Schüler hinzufügen
                 </Button>
@@ -262,13 +290,35 @@ function KlassenDetail() {
                     >
                       {initials(studentName(s))}
                     </span>
-                    <span className="min-w-0 flex-1 truncate text-[14px]">{studentName(s)}</span>
+                    <span className="flex min-w-0 flex-1 flex-col gap-1">
+                      <span className="truncate text-[14px]">{studentName(s)}</span>
+                      {(s.merkmale.length > 0 || s.notiz) && (
+                        <span className="flex flex-wrap items-center gap-1.5">
+                          <MerkmalBadges merkmale={s.merkmale} />
+                          {s.notiz && (
+                            <span
+                              title={s.notiz}
+                              className="inline-flex min-w-0 items-center gap-1 text-[11px] text-ink-2"
+                            >
+                              <StickyNote size={11} strokeWidth={1.75} aria-hidden />
+                              <span className="max-w-[28ch] truncate">{s.notiz}</span>
+                            </span>
+                          )}
+                        </span>
+                      )}
+                    </span>
                     <Button
                       variant="quiet"
                       size="iconSm"
                       aria-label={`${studentName(s)} bearbeiten`}
                       onClick={() =>
-                        setForm({ id: s.id, firstName: s.firstName, lastName: s.lastName })
+                        setForm({
+                          id: s.id,
+                          firstName: s.firstName,
+                          lastName: s.lastName,
+                          merkmale: s.merkmale,
+                          notiz: s.notiz,
+                        })
                       }
                     >
                       <Pencil size={16} strokeWidth={1.5} />
@@ -428,6 +478,22 @@ function KlassenDetail() {
             value={form?.lastName ?? ""}
             maxLength={40}
             onChange={(e) => setForm((f) => (f ? { ...f, lastName: e.target.value } : f))}
+          />
+        </Field>
+        <Field label="Besonderheiten" hint="Optional, mehrere möglich">
+          <MerkmalWahl
+            werte={form?.merkmale ?? []}
+            vorschlaege={freieMerkmale}
+            onChange={(m) => setForm((f) => (f ? { ...f, merkmale: m } : f))}
+          />
+        </Field>
+        <Field label="Notiz" hint="Optional — nur für dich sichtbar">
+          <textarea
+            className={`${inputClass} min-h-[76px] py-2 leading-snug`}
+            value={form?.notiz ?? ""}
+            maxLength={500}
+            placeholder="Was beim Setzen zu bedenken ist."
+            onChange={(e) => setForm((f) => (f ? { ...f, notiz: e.target.value } : f))}
           />
         </Field>
       </Modal>
