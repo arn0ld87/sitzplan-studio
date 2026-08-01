@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { SearchField } from "@/components/ui-kit/SearchField";
 import { ClassDot } from "@/components/ui-kit/ClassDot";
 import { ConfirmDialog } from "@/components/ui-kit/ConfirmDialog";
-import { Field, Modal, inputClass } from "@/components/ui-kit/Modal";
+import { Field, FieldGroup, Modal, inputClass } from "@/components/ui-kit/Modal";
 import { SaveStatus } from "@/components/ui-kit/SaveStatus";
 import { KeineTreffer } from "@/components/ui-kit/KeineTreffer";
 import { StatusChip } from "@/components/ui-kit/StatusChip";
@@ -480,13 +480,15 @@ function KlassenDetail() {
             onChange={(e) => setForm((f) => (f ? { ...f, lastName: e.target.value } : f))}
           />
         </Field>
-        <Field label="Besonderheiten" hint="Optional, mehrere möglich">
+        {/* FieldGroup statt Field: Field ist ein <label> und würde einen Klick
+            auf die Überschrift an den ersten Umschalter weiterreichen. */}
+        <FieldGroup label="Besonderheiten" hint="Optional, mehrere möglich">
           <MerkmalWahl
             werte={form?.merkmale ?? []}
             vorschlaege={freieMerkmale}
             onChange={(m) => setForm((f) => (f ? { ...f, merkmale: m } : f))}
           />
-        </Field>
+        </FieldGroup>
         <Field label="Notiz" hint="Optional — nur für dich sichtbar">
           <textarea
             className={`${inputClass} min-h-[76px] py-2 leading-snug`}

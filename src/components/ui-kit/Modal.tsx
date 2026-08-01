@@ -123,5 +123,40 @@ export function Field({
   );
 }
 
+/**
+ * Wie {@link Field}, aber **ohne** umschließendes `<label>`.
+ *
+ * Ein `<label>` aktiviert beim Klick auf seine Beschriftung das erste
+ * labelable Element darin — und dazu zählen auch `<button>`. Für ein Feld mit
+ * mehreren Bedienelementen (Umschalter, Eingabe, Knopf) hieße das: ein Klick
+ * auf die Feldüberschrift schaltet stillschweigend den ersten Umschalter um.
+ *
+ * Deshalb hier eine Gruppe mit `aria-labelledby`: gleiche Optik, gleiche
+ * Vorlesereihenfolge, aber ohne die Klickübertragung.
+ */
+export function FieldGroup({
+  label,
+  hint,
+  error,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  error?: string;
+  children: React.ReactNode;
+}) {
+  const id = useId();
+  return (
+    <div role="group" aria-labelledby={`${id}-label`} className="block">
+      <span id={`${id}-label`} className="block text-[13px] font-medium">
+        {label}
+      </span>
+      {hint && <span className="mt-0.5 block text-[12px] text-ink-3">{hint}</span>}
+      <div className="mt-1.5 block">{children}</div>
+      {error && <span className="mt-1 block text-[12px] text-danger">{error}</span>}
+    </div>
+  );
+}
+
 export const inputClass =
   "h-10 w-full rounded-[6px] border border-line-control bg-elevated px-3 text-[13px] placeholder:text-ink-3";

@@ -24,19 +24,20 @@ export function StudentChip({
   onDragStart?: (e: React.DragEvent) => void;
   onPointerDown?: (e: React.PointerEvent) => void;
   title?: string;
-  /** Wenn gesetzt und nicht leer, trägt der Chip eine Hinweismarke. */
-  merkmale?: string[];
+  /**
+   * Merkmale des Schülers. **Pflicht, obwohl oft leer**: als optionale Prop
+   * wurde sie an der einzigen Aufrufstelle schlicht vergessen, und die
+   * Hinweismarke erschien nirgends. Wer einen Chip zeichnet, hat den Schüler.
+   */
+  merkmale: string[];
   /** Wie {@link merkmale} — eine gefüllte Notiz zählt als Hinweis. */
-  notiz?: string;
+  notiz: string;
 }) {
   const dot = size === 40 ? 26 : 22;
   // Der Chip steht auch auf einem Sitzplatz und darf dort nicht wachsen. Statt
   // der Merkmale selbst trägt er nur eine Marke; die Klartexte stehen im
   // Tooltip und ausgeschrieben in der Schülerliste.
-  const hinweise = [
-    ...(merkmale ?? []).map(merkmalLabel),
-    ...(notiz?.trim() ? [notiz.trim()] : []),
-  ];
+  const hinweise = [...merkmale.map(merkmalLabel), ...(notiz.trim() ? [notiz.trim()] : [])];
   const beschriftung = title ?? (hinweise.length ? `${name} — ${hinweise.join(" · ")}` : name);
   return (
     <button

@@ -364,6 +364,8 @@ function SitzplanEditor() {
                       key={s.id}
                       name={studentName(s)}
                       colorIndex={s.colorIndex}
+                      merkmale={s.merkmale}
+                      notiz={s.notiz}
                       selected={carry?.studentId === s.id}
                       draggable
                       onDragStart={() => setCarry({ studentId: s.id, from: null })}

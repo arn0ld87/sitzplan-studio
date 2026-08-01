@@ -1,5 +1,5 @@
 import { useId, useState } from "react";
-import { Plus, X } from "lucide-react";
+import { Check, Plus, X } from "lucide-react";
 import { MERKMALE, merkmalLabel } from "@/data/types";
 import { cn } from "@/lib/utils";
 
@@ -10,6 +10,15 @@ import { cn } from "@/lib/utils";
  * Was fehlt, wird unten frei eingetippt und landet im selben Feld. Bereits
  * anderswo vergebene freie Werte erscheinen als Vorschlag, damit aus „ADHS"
  * nicht mit der Zeit „ADS", „adhs" und „AD(H)S" werden.
+ *
+ * Zwei Vorgaben aus `AGENTS.md` prägen die Gestalt: Der gewählte Zustand trägt
+ * ein Häkchen und nicht nur eine andere Farbe, und jede Klickfläche misst
+ * mindestens 40 px — auch die zum Entfernen, die sonst als Icon-Größe
+ * durchgerutscht wäre.
+ *
+ * Gehört in einen `FieldGroup`, **nicht** in ein `Field`: Dessen `<label>`
+ * würde einen Klick auf die Feldüberschrift an den ersten Umschalter
+ * weiterreichen und damit ungefragt ein Merkmal setzen.
  */
 export function MerkmalWahl({
   werte,
@@ -56,12 +65,18 @@ export function MerkmalWahl({
               aria-pressed={an}
               onClick={() => umschalten(m.id)}
               className={cn(
-                "inline-flex h-[28px] items-center rounded-[4px] border px-2.5 text-[12px] transition-[border-color,box-shadow] duration-[180ms] ease-out",
+                "inline-flex h-10 items-center gap-1.5 rounded-[6px] border px-3 text-[12px] transition-[border-color,box-shadow] duration-[180ms] ease-out",
                 an
-                  ? "border-[color:var(--select)] bg-[color:var(--select-soft)] text-[color:var(--select)] shadow-[0_0_0_2px_var(--select-soft)]"
+                  ? "border-[color:var(--select)] bg-[color:var(--select-soft)] text-[color:var(--select)]"
                   : "border-line-control bg-elevated hover:border-[color:var(--line-plan)]",
               )}
             >
+              {/* Formmerkmal neben der Farbe: Der Haken belegt auch im
+                  ungewählten Zustand Platz, damit die Beschriftung beim
+                  Umschalten nicht springt. */}
+              <span aria-hidden className="grid w-[14px] shrink-0 place-items-center">
+                {an && <Check size={14} strokeWidth={2} />}
+              </span>
               {m.label}
             </button>
           );
@@ -73,17 +88,17 @@ export function MerkmalWahl({
           {frei.map((w) => (
             <li key={w}>
               <span
-                style={{ height: 28, borderRadius: 4, background: "#F3EDE3", color: "#6A6157" }}
-                className="inline-flex items-center gap-1 pl-2.5 pr-1 text-[12px]"
+                style={{ background: "#F3EDE3", color: "#6A6157" }}
+                className="inline-flex h-10 items-center gap-1 rounded-[6px] py-0 pl-3 pr-1 text-[12px]"
               >
                 {merkmalLabel(w)}
                 <button
                   type="button"
                   aria-label={`${w} entfernen`}
                   onClick={() => onChange(werte.filter((x) => x !== w))}
-                  className="grid h-[20px] w-[20px] place-items-center rounded-[3px] hover:bg-sunken"
+                  className="grid h-9 w-9 place-items-center rounded-[6px] hover:bg-sunken"
                 >
-                  <X size={12} strokeWidth={1.75} aria-hidden />
+                  <X size={14} strokeWidth={1.75} aria-hidden />
                 </button>
               </span>
             </li>
@@ -93,7 +108,7 @@ export function MerkmalWahl({
 
       <div className="flex gap-2">
         <input
-          className="h-[36px] min-w-0 flex-1 rounded-[6px] border border-line-control bg-elevated px-2.5 text-[13px]"
+          className="h-10 min-w-0 flex-1 rounded-[6px] border border-line-control bg-elevated px-3 text-[13px]"
           placeholder="Eigenes Merkmal …"
           aria-label="Eigenes Merkmal hinzufügen"
           list={offeneVorschlaege.length ? listeId : undefined}
@@ -120,7 +135,7 @@ export function MerkmalWahl({
           onClick={hinzufuegen}
           disabled={!eingabe.trim()}
           aria-label="Merkmal hinzufügen"
-          className="grid h-[36px] w-[36px] shrink-0 place-items-center rounded-[6px] border border-line-control bg-elevated hover:border-[color:var(--line-plan)] disabled:opacity-40"
+          className="grid h-10 w-10 shrink-0 place-items-center rounded-[6px] border border-line-control bg-elevated hover:border-[color:var(--line-plan)] disabled:opacity-40"
         >
           <Plus size={16} strokeWidth={1.5} aria-hidden />
         </button>
