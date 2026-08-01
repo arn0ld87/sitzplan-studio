@@ -15,7 +15,11 @@ import type { Ansichtsmodus } from "./room3d/Kamerasteuerung";
 
 const Szene = lazy(() => import("./room3d/Szene"));
 
-/** Kommt in diesem Browser ein WebGL-Kontext zustande? */
+/**
+ * Determines whether the browser can create a WebGL rendering context.
+ *
+ * @returns `true` if a WebGL2 or WebGL context can be created, `false` otherwise.
+ */
 function webglVerfuegbar(): boolean {
   try {
     const probe = document.createElement("canvas");
@@ -25,7 +29,12 @@ function webglVerfuegbar(): boolean {
   }
 }
 
-/** Beschreibt den Rauminhalt in einem Satz — der Name der Zeichenfläche. */
+/**
+ * Creates an accessible description of the room, including its dimensions, furnishings, and seating capacity.
+ *
+ * @param raum - The room geometry to describe
+ * @returns A localized textual description of the room
+ */
 function raumBeschreiben(raum: RoomGeometry): string {
   const anzahl = new Map<string, number>();
   for (const f of raum.furniture) {
@@ -37,6 +46,13 @@ function raumBeschreiben(raum: RoomGeometry): string {
   return `Räumliche Ansicht von ${raum.name}, ${raum.width} × ${raum.height} cm: ${inhalt}. ${seatCount(raum)} Sitzplätze.`;
 }
 
+/**
+ * Renders a warning message with a title, description, and optional action.
+ *
+ * @param titel - The warning title
+ * @param text - The warning description
+ * @param aktion - An optional action element
+ */
 function Hinweiskasten({
   titel,
   text,
@@ -61,7 +77,7 @@ function Hinweiskasten({
  * Raumansicht nicht mitreißen — die 2D-Bearbeitung bleibt erreichbar.
  */
 class SzeneGrenze extends Component<
-  { children: ReactNode; ersatz: ReactNode },
+  { children: ReactNode; ersatz: ReactNode; resetKey?: string | number; onFehler?: (fehler: Error) => void },
   { fehler: boolean }
 > {
   override state = { fehler: false };
@@ -70,11 +86,25 @@ class SzeneGrenze extends Component<
     return { fehler: true };
   }
 
+  override componentDidCatch(fehler: Error, fehlerInfo: { componentStack?: string }) {
+    console.error("3D-Szene Fehler:", fehler, fehlerInfo);
+    this.props.onFehler?.(fehler);
+  }
+
+  override componentDidUpdate(prevProps: SzeneGrenze["props"]) {
+    if (this.state.fehler && prevProps.resetKey !== this.props.resetKey) {
+      this.setState({ fehler: false });
+    }
+  }
+
   override render() {
     return this.state.fehler ? this.props.ersatz : this.props.children;
   }
 }
 
+/**
+ * Displays a loading state while the 3D view is being loaded.
+ */
 function Ladeflaeche() {
   return (
     <div className="flex h-full items-center justify-center" role="status">
@@ -88,6 +118,16 @@ function Ladeflaeche() {
   );
 }
 
+/**
+ * Displays an interactive 3D view of a room with selection, grid, camera controls, and fallback content.
+ *
+ * @param room - The room geometry to display
+ * @param selectedId - The identifier of the currently selected furniture item
+ * @param onSelect - Handles changes to the selected furniture item
+ * @param showGrid - Whether to display the floor grid
+ * @param onZurueckZu2D - Handles returning to the 2D view when the 3D view is unavailable
+ * @returns The room view with loading and error fallbacks
+ */
 export function RoomPlan3D({
   room,
   selectedId,
@@ -106,6 +146,7 @@ export function RoomPlan3D({
   const [webgl, setWebgl] = useState(true);
   const [modus, setModus] = useState<Ansichtsmodus>("perspektive");
   const [zuruecksetzen, setZuruecksetzen] = useState(0);
+  const [fehlerZaehler, setFehlerZaehler] = useState(0);
 
   useEffect(() => {
     setImBrowser(true);
@@ -145,6 +186,8 @@ export function RoomPlan3D({
     <div>
       <div className={rahmen}>
         <SzeneGrenze
+          resetKey={`${room.name}-${fehlerZaehler}`}
+          onFehler={() => setFehlerZaehler((n) => n + 1)}
           ersatz={
             <Hinweiskasten
               titel="3D-Ansicht konnte nicht aufgebaut werden"
@@ -162,6 +205,7 @@ export function RoomPlan3D({
               modus={modus}
               zuruecksetzen={zuruecksetzen}
               beschriftung={raumBeschreiben(room)}
+              onFehler={() => setFehlerZaehler((n) => n + 1)}
             />
           </Suspense>
         </SzeneGrenze>

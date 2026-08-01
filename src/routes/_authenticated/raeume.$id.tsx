@@ -61,6 +61,12 @@ const PALETTE: { kind: FurnitureKind; icon: typeof Square }[] = [
   { kind: "fenster", icon: Blinds },
 ];
 
+/**
+ * Edits a room layout, including its dimensions, grid, furniture, and viewing mode.
+ *
+ * Provides controls for selecting, moving, rotating, duplicating, and removing furniture, as well
+ * as undoing and redoing layout changes.
+ */
 function RaumEditor() {
   const { id } = Route.useParams();
   const { data, dispatch, saveState, retry, undo, redo, canUndo, canRedo } = useStore();

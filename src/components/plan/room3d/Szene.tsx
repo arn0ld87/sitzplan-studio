@@ -5,8 +5,8 @@
 // keine Bildschleife. `flat` schaltet das Tone-Mapping ab, damit die Farben
 // exakt den Tokens aus dem Designsystem entsprechen.
 
-import { useCallback, useMemo } from "react";
-import { Canvas } from "@react-three/fiber";
+import { useCallback, useEffect, useMemo } from "react";
+import { Canvas, useThree } from "@react-three/fiber";
 import type { RoomGeometry } from "@/data/types";
 import { useBausatz } from "./bausatz";
 import { leseSzenenfarben, type Szenenfarben } from "./farben";
@@ -23,8 +23,34 @@ export type SzeneProps = {
   modus: Ansichtsmodus;
   zuruecksetzen: number;
   beschriftung: string;
+  onFehler?: () => void;
 };
 
+/**
+ * Überwacht den WebGL-Kontext und meldet Verluste an die Fehlergrenze.
+ *
+ * @param onFehler - Callback bei Kontextverlust
+ */
+function KontextWaechter({ onFehler }: { onFehler?: () => void }) {
+  const gl = useThree((s) => s.gl);
+  useEffect(() => {
+    const element = gl.domElement;
+    const beiVerlust = () => {
+      console.error("WebGL-Kontext verloren");
+      onFehler?.();
+    };
+    element.addEventListener("webglcontextlost", beiVerlust);
+    return () => element.removeEventListener("webglcontextlost", beiVerlust);
+  }, [gl, onFehler]);
+  return null;
+}
+
+/**
+ * Renders ambient and directional lighting for the room scene.
+ *
+ * @param raum - The room geometry used to size the lighting and shadow bounds.
+ * @param farben - The scene colors used for the ambient light.
+ */
 function Beleuchtung({ raum, farben }: { raum: RoomGeometry; farben: Szenenfarben }) {
   const { breite, tiefe, hoehe } = raumMasse(raum);
   const spanne = Math.max(breite, tiefe);
@@ -53,6 +79,17 @@ function Beleuchtung({ raum, farben }: { raum: RoomGeometry; farben: Szenenfarbe
   );
 }
 
+/**
+ * Renders an interactive 3D scene for a room and its furniture.
+ *
+ * @param raum - The room geometry and furniture to display
+ * @param selectedId - The identifier of the selected furniture item
+ * @param onSelect - Callback invoked when furniture selection changes
+ * @param rasterZeigen - Whether to display the room grid
+ * @param modus - The active camera view mode
+ * @param zuruecksetzen - Trigger for resetting the camera
+ * @param beschriftung - Accessible label for the scene
+ */
 export default function Szene({
   raum,
   selectedId,
@@ -61,6 +98,7 @@ export default function Szene({
   modus,
   zuruecksetzen,
   beschriftung,
+  onFehler,
 }: SzeneProps) {
   const start = startKamera(raum);
   const farben = useMemo(() => leseSzenenfarben(), []);
@@ -79,6 +117,7 @@ export default function Szene({
       onPointerMissed={() => onSelect(null)}
       style={{ background: farben["--plan"] }}
     >
+      {onFehler && <KontextWaechter onFehler={onFehler} />}
       <Kamerasteuerung raum={raum} modus={modus} zuruecksetzen={zuruecksetzen} />
       <Beleuchtung raum={raum} farben={farben} />
       <Raumhuelle raum={raum} farben={farben} rasterZeigen={rasterZeigen} />

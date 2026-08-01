@@ -17,13 +17,24 @@ import {
 
 export type Ansichtsmodus = "perspektive" | "draufsicht";
 
-/** Läuft dieser Rechner mit reduzierter Bewegung? */
+/**
+ * Determines whether the user prefers reduced motion.
+ *
+ * @returns `true` if reduced motion is preferred, `false` otherwise.
+ */
 function bewegungReduziert(): boolean {
   return (
     typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
   );
 }
 
+/**
+ * Configures camera controls for navigating the room in perspective or top-down view.
+ *
+ * @param raum - The room dimensions used to position and constrain the camera.
+ * @param modus - The camera view mode.
+ * @param zuruecksetzen - Counter whose increments restore the initial camera view.
+ */
 export function Kamerasteuerung({
   raum,
   modus,
@@ -59,7 +70,7 @@ export function Kamerasteuerung({
       c.dispose();
       steuerung.current = null;
     };
-  }, [kamera, gl, raum, invalidate]);
+  }, [kamera, gl, raum.width, raum.height, invalidate]);
 
   // Kamerastand setzen: beim Aufbau, bei Moduswechsel und bei jedem Zurücksetzen.
   useEffect(() => {
@@ -70,13 +81,14 @@ export function Kamerasteuerung({
     c.target.set(...stand.ziel);
     c.update();
     invalidate();
-  }, [kamera, raum, modus, zuruecksetzen, invalidate]);
+  }, [kamera, raum.width, raum.height, modus, zuruecksetzen, invalidate]);
 
   // Das Verschieben (Pan) darf den Blickpunkt nicht beliebig weit forttragen.
-  const grenze = useRef(new THREE.Vector3());
+  const grenze = useRef<THREE.Vector3 | null>(null);
   useFrame(() => {
     const c = steuerung.current;
     if (!c) return;
+    if (!grenze.current) grenze.current = new THREE.Vector3();
     const { breite, tiefe, hoehe } = raumMasse(raum);
     const rand = 0.6;
     const ziel = c.target;

@@ -18,20 +18,27 @@ import {
   type Wandseite,
 } from "./geometrie";
 
-/** Rasterlinien exakt auf der Grundfläche, nicht darüber hinaus. */
+/**
+ * Creates a floor-aligned grid geometry sized to the room.
+ *
+ * @param raum - The room dimensions and grid configuration.
+ * @returns The generated grid geometry.
+ */
 function useRastergeometrie(raum: Pick<RoomGeometry, "width" | "height" | "grid">) {
   const geometrie = useMemo(() => {
     const weite = rasterWeite(raum.grid);
     const { breite, tiefe } = raumMasse(raum);
     const punkte: number[] = [];
     const y = 0.002; // knapp über dem Boden, sonst flimmern Linie und Fläche
-    for (let cm = 0; cm <= raum.width + 0.001; cm += weite) {
-      const x = cmZuEinheit(cm) - breite / 2;
-      punkte.push(x, y, -tiefe / 2, x, y, tiefe / 2);
-    }
-    for (let cm = 0; cm <= raum.height + 0.001; cm += weite) {
-      const z = cmZuEinheit(cm) - tiefe / 2;
-      punkte.push(-breite / 2, y, z, breite / 2, y, z);
+    if (weite > 0) {
+      for (let cm = 0; cm <= raum.width + 0.001; cm += weite) {
+        const x = cmZuEinheit(cm) - breite / 2;
+        punkte.push(x, y, -tiefe / 2, x, y, tiefe / 2);
+      }
+      for (let cm = 0; cm <= raum.height + 0.001; cm += weite) {
+        const z = cmZuEinheit(cm) - tiefe / 2;
+        punkte.push(-breite / 2, y, z, breite / 2, y, z);
+      }
     }
     const g = new THREE.BufferGeometry();
     g.setAttribute("position", new THREE.Float32BufferAttribute(punkte, 3));
@@ -42,6 +49,13 @@ function useRastergeometrie(raum: Pick<RoomGeometry, "width" | "height" | "grid"
   return geometrie;
 }
 
+/**
+ * Renders a room wall with the specified material and dimensions.
+ *
+ * @param seite - The wall side to render
+ * @param raum - The room dimensions used to position and size the wall
+ * @param material - The material applied to the wall
+ */
 function Wand({
   seite,
   raum,
@@ -60,6 +74,13 @@ function Wand({
   );
 }
 
+/**
+ * Renders the room floor, optional grid, and four walls with camera-dependent wall transparency.
+ *
+ * @param raum - Room dimensions and grid spacing used to construct the room shell
+ * @param farben - Scene colors for the floor, walls, and grid
+ * @param rasterZeigen - Whether to display the floor grid
+ */
 export function Raumhuelle({
   raum,
   farben,
