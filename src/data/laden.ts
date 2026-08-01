@@ -57,6 +57,17 @@ export type Zeilen = {
  *
  * Die Objekte werden vor dem Filtern gebaut, nicht danach: Der Papierkorb
  * braucht die fertige Form als `payload`, sonst gäbe es nichts zurückzuholen.
+ *
+ * Der heikle Fall steht zwischen beiden Punkten: Wird eine Klasse gelöscht,
+ * schreibt `buildRows` **alle ihre Schüler** mit demselben Zeitstempel fort.
+ * Würde Punkt 1 hier stur greifen, käme die Klasse leer aus dem Papierkorb
+ * zurück — Datenverlust. Deshalb entscheidet der Zustand der Klasse, welche
+ * Schüler sie trägt:
+ *
+ * - Aktive Klasse: nur Schüler ohne `deleted_at`.
+ * - Gelöschte Klasse: die Schüler, die **mit ihr** gegangen sind, erkennbar am
+ *   identischen Zeitstempel. Wer vorher einzeln gelöscht wurde, trägt einen
+ *   älteren und bleibt gelöscht — auch nach dem Wiederherstellen.
  */
 export function zeilenZuAppData({ klassen, schueler, raeume, plaene, regeln }: Zeilen): AppData {
   const klasseObj = new Map<string, SchoolClass>();
@@ -68,15 +79,35 @@ export function zeilenZuAppData({ klassen, schueler, raeume, plaene, regeln }: Z
         // Der Filter auf `deleted_at` gehört hierher und nicht erst in die
         // Ansicht: Ein gelöschter Schüler, der einmal in `class.students`
         // steht, wandert von dort ungeprüft weiter.
-        schueler.filter((x) => x.klasse_id === row.id && !x.deleted_at),
+        schueler.filter(
+          (x) =>
+            x.klasse_id === row.id &&
+            (row.deleted_at ? !x.deleted_at || x.deleted_at === row.deleted_at : !x.deleted_at),
+        ),
         i % 8,
       ),
     ),
   );
 
+  // Wen die Klassen kennen, den darf ein Sitzplan setzen. Alle anderen sind
+  // einzeln gelöscht: Ihr Platz bliebe sonst besetzt, aber leer gezeichnet.
+  const bekannteSchueler = new Set<string>();
+  for (const k of klasseObj.values()) for (const s of k.students) bekannteSchueler.add(s.id);
+
   const raumObj = new Map<string, Room>(raeume.map((row) => [row.id, rowZuRaum(row)]));
   const planObj = new Map<string, SeatingPlan>(
-    plaene.map((row) => [row.id, rowZuPlan(row, raumObj.get(row.raum_id)?.name ?? "Raum")]),
+    plaene.map((row) => {
+      const plan = rowZuPlan(row, raumObj.get(row.raum_id)?.name ?? "Raum");
+      return [
+        row.id,
+        {
+          ...plan,
+          assignments: Object.fromEntries(
+            Object.entries(plan.assignments).filter(([, id]) => bekannteSchueler.has(id)),
+          ),
+        },
+      ];
+    }),
   );
 
   const trash: TrashItem[] = [];
