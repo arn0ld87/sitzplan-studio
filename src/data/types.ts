@@ -74,6 +74,24 @@ export const FURNITURE_SPECS: Record<
   fenster: { label: "Fenster", w: 15, h: 180, seats: 0 },
 };
 
+/**
+ * Lage der Sitzplätze auf einem Möbelstück, in Zentimetern relativ zu dessen
+ * linker oberer Ecke — vor jeder Drehung.
+ *
+ * Gemeinsame Quelle für die SVG-Zeichnung und die 3D-Ansicht: beide setzen ihre
+ * Sitzplätze an dieselben Punkte, damit kein zweites Sitzplatzraster entsteht.
+ */
+export function seatPositions(kind: FurnitureKind): { cx: number; cy: number }[] {
+  const spec = FURNITURE_SPECS[kind];
+  if (spec.seats === 1) return [{ cx: spec.w / 2, cy: spec.h / 2 }];
+  if (spec.seats === 2)
+    return [
+      { cx: spec.w * 0.25, cy: spec.h / 2 },
+      { cx: spec.w * 0.75, cy: spec.h / 2 },
+    ];
+  return [];
+}
+
 /** Sitzplatzkennung nach dem festen Muster `<objektId>__sitz_<n>`. */
 export function seatId(objektId: string, n: number) {
   return `${objektId}__sitz_${n}`;

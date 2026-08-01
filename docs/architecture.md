@@ -15,7 +15,7 @@ Ergebnis ist ein druckbarer Sitzplan.
 ```
 src/routes/          TanStack Start, dateibasiert — Seitenstruktur ist Ordnerstruktur
   └ _authenticated/  alles hinter Login; route.tsx erzwingt die Session
-src/components/      64 Dateien
+src/components/      74 Dateien
   ├ ui-kit/          eigene, kuratierte Bausteine — hier zuerst nachsehen
   └ ui/              generierte shadcn-Primitives — nicht von Hand umbauen
 src/data/            Domäne: types.ts (Wahrheit über Geometrie) + mapping.ts (DB ↔ Domäne)
@@ -90,15 +90,20 @@ muss `deleted_at IS NULL` enthalten — siehe
 
 ## Tests
 
-Vitest mit jsdom. Vier Testdateien decken die Stellen ab, an denen stille Fehler
+Vitest mit jsdom. Neun Testdateien decken die Stellen ab, an denen stille Fehler
 teuer wären:
 
 | Datei | Prüft |
 | --- | --- |
 | `src/data/mapping.test.ts` | Rundreise DB → Domäne → DB, tolerante Altfälle |
 | `src/data/types.test.ts` | Geometrie, `seatId()`, Möbelmaße, Farbvergabe |
+| `src/data/laden.test.ts` | Zeilen zu `AppData`, Nutzlast des Papierkorbs |
+| `src/data/papierkorb.test.ts` | Soft-Delete-Filter, Wiederherstellen |
+| `src/data/sitzregeln.test.ts` | Nachbarschaft und Regelverstöße |
+| `src/lib/raster.test.ts` | Rasterrundung in Zentimetern |
 | `src/lib/zeit.test.ts` | relative Zeitangaben über Monats- und Jahresgrenzen |
 | `src/components/ui-kit/SaveStatus.test.tsx` | Zustand als Symbol **und** Text |
+| `src/components/plan/room3d/geometrie.test.ts` | 3D-Projektion der Raumgeometrie |
 
 `bun run test` läuft ohne Netz und ohne Datenbank. Wo eine Supabase-Antwort nötig
 ist, wird sie gefälscht, nicht abgerufen.
@@ -109,8 +114,8 @@ Vite, TanStack Start und Router, Tailwind v4 mit CSS-Variablen aus
 `src/styles.css`, Supabase, Vitest, ESLint mit Prettier, Bun als Paketmanager.
 
 Das Repo ist im `code-review-graph` registriert (Alias `sitzplan_app`). Vor
-Codeänderungen zuerst dort fragen — 393 Knoten, 3739 Kanten, 44 Abläufe sind
-billiger zu befragen als 100 Dateien zu lesen.
+Codeänderungen zuerst dort fragen — 647 Knoten, 6082 Kanten und 44 Abläufe über
+128 Dateien sind billiger zu befragen als die Dateien zu lesen.
 
 ## Wo Lovable mitspielt
 

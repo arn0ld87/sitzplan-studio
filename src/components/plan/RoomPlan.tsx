@@ -1,6 +1,7 @@
 import { Fragment, useRef } from "react";
 import {
   FURNITURE_SPECS,
+  seatPositions,
   studentColor,
   initials,
   studentName,
@@ -12,6 +13,11 @@ import { aufRasterPunkt, rasterWeite } from "@/lib/raster";
 
 export type PlanMode = "room" | "seating";
 
+/**
+ * Wiederverwendbare SVG-Patterns für Rasterlinien und Schraffur im Grundriss.
+ *
+ * @param grid - Breite und Höhe einer Rasterzelle.
+ */
 export function PlanDefs({ grid }: { grid: number }) {
   return (
     <defs>
@@ -31,17 +37,7 @@ export function PlanDefs({ grid }: { grid: number }) {
   );
 }
 
-function seatPositions(f: Furniture) {
-  const spec = FURNITURE_SPECS[f.kind];
-  if (spec.seats === 1) return [{ cx: spec.w / 2, cy: spec.h / 2 }];
-  if (spec.seats === 2)
-    return [
-      { cx: spec.w * 0.25, cy: spec.h / 2 },
-      { cx: spec.w * 0.75, cy: spec.h / 2 },
-    ];
-  return [];
-}
-
+/** Zeichnet ein Möbelstück als SVG anhand seiner Art (`kind`). */
 export function FurnitureShape({ kind }: { kind: Furniture["kind"] }) {
   const { w, h } = FURNITURE_SPECS[kind];
   switch (kind) {
@@ -210,6 +206,12 @@ function Seat({
   );
 }
 
+/**
+ * SVG-Grundriss mit optionalem Raster, Möbelauswahl, Ziehen und Sitzplatzbelegung.
+ *
+ * @param assignments - Sitzplatz-ID → Schüler-ID.
+ * @param studentsById - Schüler-ID → Schülerdatensatz.
+ */
 export function RoomPlan({
   room,
   mode = "room",
@@ -378,7 +380,7 @@ export function RoomPlan({
               <FurnitureShape kind={f.kind} />
             </g>
             {f.seats.map((seatId, i) => {
-              const pos = seatPositions(f)[i];
+              const pos = seatPositions(f.kind)[i];
               if (!pos) return null;
               const studentId = assignments[seatId];
               const student = studentId ? studentsById[studentId] : undefined;

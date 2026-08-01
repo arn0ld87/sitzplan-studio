@@ -24,6 +24,8 @@ import { SaveStatus } from "@/components/ui-kit/SaveStatus";
 import { ConfirmDialog } from "@/components/ui-kit/ConfirmDialog";
 import { Field, Modal, inputClass } from "@/components/ui-kit/Modal";
 import { RoomPlan } from "@/components/plan/RoomPlan";
+import { RoomPlan3D } from "@/components/plan/RoomPlan3D";
+import { AnsichtUmschalter, type Ansicht } from "@/components/plan/AnsichtUmschalter";
 import {
   FURNITURE_SPECS,
   makeFurniture,
@@ -59,6 +61,12 @@ const PALETTE: { kind: FurnitureKind; icon: typeof Square }[] = [
   { kind: "fenster", icon: Blinds },
 ];
 
+/**
+ * Edits a room layout, including its dimensions, grid, furniture, and viewing mode.
+ *
+ * Provides controls for selecting, moving, rotating, duplicating, and removing furniture, as well
+ * as undoing and redoing layout changes.
+ */
 function RaumEditor() {
   const { id } = Route.useParams();
   const { data, dispatch, saveState, retry, undo, redo, canUndo, canRedo } = useStore();
@@ -67,6 +75,7 @@ function RaumEditor() {
   const [selected, setSelected] = useState<string | null>(null);
   const [showGrid, setShowGrid] = useState(true);
   const [zoom, setZoom] = useState(1);
+  const [ansicht, setAnsicht] = useState<Ansicht>("2d");
   const [form, setForm] = useState<{
     name: string;
     width: string;
@@ -383,32 +392,38 @@ function RaumEditor() {
 
         <div className="p-4 md:p-6">
           <div className="mb-3 flex items-center gap-1.5">
-            <Button
-              variant="quiet"
-              size="iconSm"
-              aria-label="Verkleinern"
-              disabled={zoom <= 0.5}
-              onClick={() => setZoom((z) => Math.max(0.5, Math.round((z - 0.25) * 100) / 100))}
-            >
-              <ZoomOut size={16} strokeWidth={1.5} />
-            </Button>
-            <button
-              type="button"
-              onClick={() => setZoom(1)}
-              title="Zoom zurücksetzen"
-              className="num min-w-[52px] rounded-[6px] px-1.5 py-1 text-[12px] text-ink-2 transition-colors duration-[160ms] ease-out hover:bg-sunken hover:text-ink"
-            >
-              {Math.round(zoom * 100)} %
-            </button>
-            <Button
-              variant="quiet"
-              size="iconSm"
-              aria-label="Vergrößern"
-              disabled={zoom >= 2.5}
-              onClick={() => setZoom((z) => Math.min(2.5, Math.round((z + 0.25) * 100) / 100))}
-            >
-              <ZoomIn size={16} strokeWidth={1.5} />
-            </Button>
+            <AnsichtUmschalter wert={ansicht} onChange={setAnsicht} />
+            {ansicht === "2d" && (
+              <>
+                <span className="mx-1 h-5 w-px bg-line" aria-hidden />
+                <Button
+                  variant="quiet"
+                  size="iconSm"
+                  aria-label="Verkleinern"
+                  disabled={zoom <= 0.5}
+                  onClick={() => setZoom((z) => Math.max(0.5, Math.round((z - 0.25) * 100) / 100))}
+                >
+                  <ZoomOut size={16} strokeWidth={1.5} />
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => setZoom(1)}
+                  title="Zoom zurücksetzen"
+                  className="num min-w-[52px] rounded-[6px] px-1.5 py-1 text-[12px] text-ink-2 transition-colors duration-[160ms] ease-out hover:bg-sunken hover:text-ink"
+                >
+                  {Math.round(zoom * 100)} %
+                </button>
+                <Button
+                  variant="quiet"
+                  size="iconSm"
+                  aria-label="Vergrößern"
+                  disabled={zoom >= 2.5}
+                  onClick={() => setZoom((z) => Math.min(2.5, Math.round((z + 0.25) * 100) / 100))}
+                >
+                  <ZoomIn size={16} strokeWidth={1.5} />
+                </Button>
+              </>
+            )}
           </div>
           {furniture.length === 0 && (
             <p className="mb-3 rounded-[6px] border border-line bg-panel px-3 py-2 text-[13px] text-ink-2">
@@ -416,19 +431,29 @@ function RaumEditor() {
               zwei Sitzplätze mit.
             </p>
           )}
-          <div className="overflow-auto rounded-[8px] border border-line bg-plan">
-            <div style={{ width: `${zoom * 100}%` }}>
-              <RoomPlan
-                room={room}
-                mode="room"
-                showGrid={showGrid}
-                selectedId={selected}
-                onSelect={setSelected}
-                onMoveFurniture={(fid, x, y) => patch(fid, { x, y })}
-                className="block h-auto w-full"
-              />
+          {ansicht === "3d" ? (
+            <RoomPlan3D
+              room={room}
+              selectedId={selected}
+              onSelect={setSelected}
+              showGrid={showGrid}
+              onZurueckZu2D={() => setAnsicht("2d")}
+            />
+          ) : (
+            <div className="overflow-auto rounded-[8px] border border-line bg-plan">
+              <div style={{ width: `${zoom * 100}%` }}>
+                <RoomPlan
+                  room={room}
+                  mode="room"
+                  showGrid={showGrid}
+                  selectedId={selected}
+                  onSelect={setSelected}
+                  onMoveFurniture={(fid, x, y) => patch(fid, { x, y })}
+                  className="block h-auto w-full"
+                />
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
