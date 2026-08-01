@@ -10,33 +10,154 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as EinstellungenRouteImport } from './routes/einstellungen'
+import { Route as PapierkorbRouteImport } from './routes/papierkorb'
+import { Route as SigninRouteImport } from './routes/signin'
+import { Route as KlassenIndexRouteImport } from './routes/klassen.index'
+import { Route as KlassenIdRouteImport } from './routes/klassen.$id'
+import { Route as RaeumeIndexRouteImport } from './routes/raeume.index'
+import { Route as RaeumeIdRouteImport } from './routes/raeume.$id'
+import { Route as SitzplaeneIndexRouteImport } from './routes/sitzplaene.index'
+import { Route as SitzplaeneIdRouteImport } from './routes/sitzplaene.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EinstellungenRoute = EinstellungenRouteImport.update({
+  id: '/einstellungen',
+  path: '/einstellungen',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PapierkorbRoute = PapierkorbRouteImport.update({
+  id: '/papierkorb',
+  path: '/papierkorb',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SigninRoute = SigninRouteImport.update({
+  id: '/signin',
+  path: '/signin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KlassenIndexRoute = KlassenIndexRouteImport.update({
+  id: '/klassen/',
+  path: '/klassen/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KlassenIdRoute = KlassenIdRouteImport.update({
+  id: '/klassen/$id',
+  path: '/klassen/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RaeumeIndexRoute = RaeumeIndexRouteImport.update({
+  id: '/raeume/',
+  path: '/raeume/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RaeumeIdRoute = RaeumeIdRouteImport.update({
+  id: '/raeume/$id',
+  path: '/raeume/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitzplaeneIndexRoute = SitzplaeneIndexRouteImport.update({
+  id: '/sitzplaene/',
+  path: '/sitzplaene/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitzplaeneIdRoute = SitzplaeneIdRouteImport.update({
+  id: '/sitzplaene/$id',
+  path: '/sitzplaene/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/einstellungen': typeof EinstellungenRoute
+  '/papierkorb': typeof PapierkorbRoute
+  '/signin': typeof SigninRoute
+  '/klassen/$id': typeof KlassenIdRoute
+  '/raeume/$id': typeof RaeumeIdRoute
+  '/sitzplaene/$id': typeof SitzplaeneIdRoute
+  '/klassen/': typeof KlassenIndexRoute
+  '/raeume/': typeof RaeumeIndexRoute
+  '/sitzplaene/': typeof SitzplaeneIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/einstellungen': typeof EinstellungenRoute
+  '/papierkorb': typeof PapierkorbRoute
+  '/signin': typeof SigninRoute
+  '/klassen/$id': typeof KlassenIdRoute
+  '/raeume/$id': typeof RaeumeIdRoute
+  '/sitzplaene/$id': typeof SitzplaeneIdRoute
+  '/klassen': typeof KlassenIndexRoute
+  '/raeume': typeof RaeumeIndexRoute
+  '/sitzplaene': typeof SitzplaeneIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/einstellungen': typeof EinstellungenRoute
+  '/papierkorb': typeof PapierkorbRoute
+  '/signin': typeof SigninRoute
+  '/klassen/$id': typeof KlassenIdRoute
+  '/raeume/$id': typeof RaeumeIdRoute
+  '/sitzplaene/$id': typeof SitzplaeneIdRoute
+  '/klassen/': typeof KlassenIndexRoute
+  '/raeume/': typeof RaeumeIndexRoute
+  '/sitzplaene/': typeof SitzplaeneIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/einstellungen'
+    | '/papierkorb'
+    | '/signin'
+    | '/klassen/$id'
+    | '/raeume/$id'
+    | '/sitzplaene/$id'
+    | '/klassen/'
+    | '/raeume/'
+    | '/sitzplaene/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/einstellungen'
+    | '/papierkorb'
+    | '/signin'
+    | '/klassen/$id'
+    | '/raeume/$id'
+    | '/sitzplaene/$id'
+    | '/klassen'
+    | '/raeume'
+    | '/sitzplaene'
+  id:
+    | '__root__'
+    | '/'
+    | '/einstellungen'
+    | '/papierkorb'
+    | '/signin'
+    | '/klassen/$id'
+    | '/raeume/$id'
+    | '/sitzplaene/$id'
+    | '/klassen/'
+    | '/raeume/'
+    | '/sitzplaene/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  EinstellungenRoute: typeof EinstellungenRoute
+  PapierkorbRoute: typeof PapierkorbRoute
+  SigninRoute: typeof SigninRoute
+  KlassenIdRoute: typeof KlassenIdRoute
+  RaeumeIdRoute: typeof RaeumeIdRoute
+  SitzplaeneIdRoute: typeof SitzplaeneIdRoute
+  KlassenIndexRoute: typeof KlassenIndexRoute
+  RaeumeIndexRoute: typeof RaeumeIndexRoute
+  SitzplaeneIndexRoute: typeof SitzplaeneIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,22 +169,84 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/einstellungen': {
+      id: '/einstellungen'
+      path: '/einstellungen'
+      fullPath: '/einstellungen'
+      preLoaderRoute: typeof EinstellungenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/papierkorb': {
+      id: '/papierkorb'
+      path: '/papierkorb'
+      fullPath: '/papierkorb'
+      preLoaderRoute: typeof PapierkorbRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signin': {
+      id: '/signin'
+      path: '/signin'
+      fullPath: '/signin'
+      preLoaderRoute: typeof SigninRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/klassen/': {
+      id: '/klassen/'
+      path: '/klassen'
+      fullPath: '/klassen/'
+      preLoaderRoute: typeof KlassenIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/klassen/$id': {
+      id: '/klassen/$id'
+      path: '/klassen/$id'
+      fullPath: '/klassen/$id'
+      preLoaderRoute: typeof KlassenIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/raeume/': {
+      id: '/raeume/'
+      path: '/raeume'
+      fullPath: '/raeume/'
+      preLoaderRoute: typeof RaeumeIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/raeume/$id': {
+      id: '/raeume/$id'
+      path: '/raeume/$id'
+      fullPath: '/raeume/$id'
+      preLoaderRoute: typeof RaeumeIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitzplaene/': {
+      id: '/sitzplaene/'
+      path: '/sitzplaene'
+      fullPath: '/sitzplaene/'
+      preLoaderRoute: typeof SitzplaeneIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitzplaene/$id': {
+      id: '/sitzplaene/$id'
+      path: '/sitzplaene/$id'
+      fullPath: '/sitzplaene/$id'
+      preLoaderRoute: typeof SitzplaeneIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  EinstellungenRoute: EinstellungenRoute,
+  PapierkorbRoute: PapierkorbRoute,
+  SigninRoute: SigninRoute,
+  KlassenIdRoute: KlassenIdRoute,
+  RaeumeIdRoute: RaeumeIdRoute,
+  SitzplaeneIdRoute: SitzplaeneIdRoute,
+  KlassenIndexRoute: KlassenIndexRoute,
+  RaeumeIndexRoute: RaeumeIndexRoute,
+  SitzplaeneIndexRoute: SitzplaeneIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
