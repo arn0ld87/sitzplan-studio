@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as SigninRouteImport } from './routes/signin'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedEinstellungenRouteImport } from './routes/_authenticated/einstellungen'
 import { Route as AuthenticatedPapierkorbRouteImport } from './routes/_authenticated/papierkorb'
 import { Route as AuthenticatedKlassenIndexRouteImport } from './routes/_authenticated/klassen.index'
 import { Route as AuthenticatedKlassenIdRouteImport } from './routes/_authenticated/klassen.$id'
@@ -34,6 +35,12 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedEinstellungenRoute =
+  AuthenticatedEinstellungenRouteImport.update({
+    id: '/einstellungen',
+    path: '/einstellungen',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPapierkorbRoute = AuthenticatedPapierkorbRouteImport.update({
   id: '/papierkorb',
   path: '/papierkorb',
@@ -77,6 +84,7 @@ const AuthenticatedSitzplaeneIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/signin': typeof SigninRoute
+  '/einstellungen': typeof AuthenticatedEinstellungenRoute
   '/papierkorb': typeof AuthenticatedPapierkorbRoute
   '/klassen/$id': typeof AuthenticatedKlassenIdRoute
   '/raeume/$id': typeof AuthenticatedRaeumeIdRoute
@@ -87,6 +95,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/signin': typeof SigninRoute
+  '/einstellungen': typeof AuthenticatedEinstellungenRoute
   '/papierkorb': typeof AuthenticatedPapierkorbRoute
   '/': typeof AuthenticatedIndexRoute
   '/klassen/$id': typeof AuthenticatedKlassenIdRoute
@@ -100,6 +109,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/signin': typeof SigninRoute
+  '/_authenticated/einstellungen': typeof AuthenticatedEinstellungenRoute
   '/_authenticated/papierkorb': typeof AuthenticatedPapierkorbRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/klassen/$id': typeof AuthenticatedKlassenIdRoute
@@ -114,6 +124,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/signin'
+    | '/einstellungen'
     | '/papierkorb'
     | '/klassen/$id'
     | '/raeume/$id'
@@ -124,6 +135,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/signin'
+    | '/einstellungen'
     | '/papierkorb'
     | '/'
     | '/klassen/$id'
@@ -136,6 +148,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_authenticated'
     | '/signin'
+    | '/_authenticated/einstellungen'
     | '/_authenticated/papierkorb'
     | '/_authenticated/'
     | '/_authenticated/klassen/$id'
@@ -172,6 +185,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/einstellungen': {
+      id: '/_authenticated/einstellungen'
+      path: '/einstellungen'
+      fullPath: '/einstellungen'
+      preLoaderRoute: typeof AuthenticatedEinstellungenRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/papierkorb': {
@@ -227,6 +247,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedEinstellungenRoute: typeof AuthenticatedEinstellungenRoute
   AuthenticatedPapierkorbRoute: typeof AuthenticatedPapierkorbRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedKlassenIdRoute: typeof AuthenticatedKlassenIdRoute
@@ -238,6 +259,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedEinstellungenRoute: AuthenticatedEinstellungenRoute,
   AuthenticatedPapierkorbRoute: AuthenticatedPapierkorbRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedKlassenIdRoute: AuthenticatedKlassenIdRoute,

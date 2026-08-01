@@ -56,7 +56,7 @@ function Einstellungen() {
 
   return (
     <>
-      <PageHeader eyebrow="Konto" title="Einstellungen" />
+      <PageHeader crumbs={[{ label: "Konto" }]} title="Einstellungen" />
       <div className="px-5 py-6 md:px-8">
         <div className="max-w-[620px] space-y-4">
           <section className="rounded-[8px] border border-line bg-elevated p-5">
@@ -90,7 +90,8 @@ function Einstellungen() {
       <ConfirmDialog
         open={frage}
         title="Konto und alle Daten löschen?"
-        description="Alle Klassen, Schülerdaten, Räume und Sitzpläne werden dauerhaft entfernt. Dieser Schritt lässt sich nicht rückgängig machen."
+        description="Alle Klassen, Schülerdaten, Räume und Sitzpläne werden dauerhaft entfernt."
+        consequence="Dieser Schritt lässt sich nicht rückgängig machen."
         confirmLabel={busy ? "Wird gelöscht …" : "Endgültig löschen"}
         onConfirm={loeschen}
         onCancel={() => setFrage(false)}
