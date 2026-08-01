@@ -30,6 +30,25 @@ function Einstellungen() {
   const navigate = useNavigate();
   const [frage, setFrage] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [email, setEmail] = useState("");
+  const [abmeldend, setAbmeldend] = useState(false);
+
+  useEffect(() => {
+    let aktiv = true;
+    void supabase.auth.getUser().then(({ data: u }) => {
+      if (aktiv) setEmail(u.user?.email ?? "");
+    });
+    return () => {
+      aktiv = false;
+    };
+  }, []);
+
+  async function abmelden() {
+    setAbmeldend(true);
+    await supabase.auth.signOut();
+    navigate({ to: "/signin", replace: true });
+  }
+
 
   function exportieren() {
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
