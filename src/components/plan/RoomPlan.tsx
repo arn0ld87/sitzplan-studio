@@ -8,6 +8,7 @@ import {
   type RoomGeometry,
   type Student,
 } from "@/data/types";
+import { aufRasterPunkt, rasterWeite } from "@/lib/raster";
 
 export type PlanMode = "room" | "seating";
 
@@ -268,9 +269,7 @@ export function RoomPlan({
     if (!d || !onMoveFurniture) return;
     const p = toSvg(e);
     if (!p) return;
-    const g = room.grid || 25;
-    const x = Math.round((p.x - d.dx) / g) * g;
-    const y = Math.round((p.y - d.dy) / g) * g;
+    const { x, y } = aufRasterPunkt(p.x - d.dx, p.y - d.dy, rasterWeite(room.grid));
     onMoveFurniture(d.id, x, y);
   }
 
@@ -290,7 +289,7 @@ export function RoomPlan({
         drag.current = null;
       }}
     >
-      <PlanDefs grid={room.grid || 25} />
+      <PlanDefs grid={rasterWeite(room.grid)} />
       <rect
         x={-pad}
         y={-pad}

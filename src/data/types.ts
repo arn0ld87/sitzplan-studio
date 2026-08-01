@@ -79,6 +79,30 @@ export function seatId(objektId: string, n: number) {
   return `${objektId}__sitz_${n}`;
 }
 
+const SITZ_TRENNER = "__sitz_";
+
+/**
+ * Rückweg zu {@link seatId}: zerlegt eine Sitzplatzkennung in Objektkennung und
+ * Nummer. `null`, wenn die Kennung nicht exakt dem Muster entspricht.
+ *
+ * Getrennt wird am **letzten** Vorkommen von `__sitz_`, damit Objektkennungen,
+ * die selbst wie eine Sitzplatzkennung aussehen, den Rückweg überstehen.
+ * Grenze: eine Objektkennung, die bereits auf `__sitz_<n>` endet, ist von einer
+ * echten Sitzplatzkennung nicht unterscheidbar — das Format allein trägt diese
+ * Information nicht.
+ */
+export function parseSeatId(id: string): { objektId: string; n: number } | null {
+  const trenner = id.lastIndexOf(SITZ_TRENNER);
+  if (trenner < 0) return null;
+  const objektId = id.slice(0, trenner);
+  const rest = id.slice(trenner + SITZ_TRENNER.length);
+  if (!/^\d+$/.test(rest)) return null;
+  const n = Number(rest);
+  // Nur kanonische Kennungen gelten — schließt "007" oder "1e3" aus.
+  if (seatId(objektId, n) !== id) return null;
+  return { objektId, n };
+}
+
 export function makeFurniture(kind: FurnitureKind, x: number, y: number): Furniture {
   const id = newId();
   const n = FURNITURE_SPECS[kind].seats;

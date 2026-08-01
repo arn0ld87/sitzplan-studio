@@ -6,6 +6,7 @@ import {
   initials,
   makeFurniture,
   newId,
+  parseSeatId,
   seatCount,
   seatId,
   studentColor,
@@ -77,8 +78,92 @@ describe("newId", () => {
 
 describe("seatId", () => {
   it("hält das vereinbarte Muster ein", () => {
-    // Dieses Muster ist Vertrag zwischen canvas_document und Oberfläche.
+    // Hartanker 5 der CLAUDE.md: `<objektId>__sitz_<n>` ist Vertrag zwischen
+    // canvas_document (JSONB) und Oberfläche. Schlägt dieser Test fehl, sind
+    // gespeicherte Sitzpläne nicht mehr lesbar — das Muster wird nicht
+    // angepasst, sondern der Aufrufer.
     expect(seatId("abc", 2)).toBe("abc__sitz_2");
+    expect(seatId("abc", 2)).toMatch(/^.+__sitz_\d+$/);
+  });
+
+  it("liefert für dieselbe Eingabe immer dieselbe Kennung", () => {
+    expect(seatId("raum-7", 3)).toBe(seatId("raum-7", 3));
+  });
+
+  it("übernimmt Sonderzeichen der Objektkennung unverändert", () => {
+    expect(seatId("a b/c.d-e_f", 1)).toBe("a b/c.d-e_f__sitz_1");
+    expect(seatId("tisch__sitz", 1)).toBe("tisch__sitz__sitz_1");
+  });
+
+  it("hängt auch an eine Objektkennung an, die selbst wie ein Sitzplatz aussieht", () => {
+    expect(seatId("tisch__sitz_2", 3)).toBe("tisch__sitz_2__sitz_3");
+  });
+
+  it("vergibt für verschiedene Objekte niemals dieselbe Sitzplatzkennung", () => {
+    // Die Nummer ist rein numerisch, deshalb kann der Objektteil nie in den
+    // Nummernteil einer anderen Kennung hineinwachsen.
+    const objekte = ["a", "a_", "a__sitz", "a__sitz_1", "a__sitz_1__sitz_2", "b"];
+    const kennungen = objekte.flatMap((o) => [1, 2, 3].map((n) => seatId(o, n)));
+    expect(new Set(kennungen).size).toBe(kennungen.length);
+  });
+
+  it("unterscheidet Sitzplätze desselben Objekts anhand der Nummer", () => {
+    expect(seatId("abc", 1)).not.toBe(seatId("abc", 2));
+  });
+});
+
+describe("parseSeatId", () => {
+  const objekte = [
+    "abc",
+    "3f9a-1b2c",
+    "a b/c.d-e_f",
+    "tisch__sitz",
+    "tisch__sitz_2",
+    "tisch__sitz_2__sitz_3",
+  ];
+
+  it.each(objekte)("gewinnt Objektkennung und Nummer aus %s zurück", (objektId) => {
+    expect(parseSeatId(seatId(objektId, 4))).toEqual({ objektId, n: 4 });
+  });
+
+  it("erkennt eine Kennung ohne Sitzplatzmuster nicht an", () => {
+    expect(parseSeatId("abc")).toBeNull();
+    expect(parseSeatId("abc__stuhl_1")).toBeNull();
+  });
+
+  it("weist eine nicht numerische oder fehlende Nummer ab", () => {
+    expect(parseSeatId("abc__sitz_")).toBeNull();
+    expect(parseSeatId("abc__sitz_zwei")).toBeNull();
+    expect(parseSeatId("abc__sitz_-1")).toBeNull();
+    expect(parseSeatId("abc__sitz_1.0")).toBeNull();
+  });
+
+  it("akzeptiert nur die kanonische Schreibweise der Nummer", () => {
+    // "007" ergäbe beim Rückweg eine andere Kennung als beim Hinweg.
+    expect(parseSeatId("abc__sitz_007")).toBeNull();
+    expect(parseSeatId("abc__sitz_7")).toEqual({ objektId: "abc", n: 7 });
+  });
+
+  it("trennt am letzten Vorkommen, nicht am ersten", () => {
+    expect(parseSeatId("tisch__sitz_2__sitz_3")).toEqual({ objektId: "tisch__sitz_2", n: 3 });
+  });
+
+  it("kann eine Objektkennung in Sitzplatzform nicht als solche erkennen", () => {
+    // Dokumentierte Grenze: Ein Objekt, dessen Kennung selbst auf `__sitz_<n>`
+    // endet, ist vom Sitzplatz eines anderen Objekts nicht unterscheidbar.
+    // Das Format trägt diese Information nicht — wer sie braucht, muss die
+    // Objektkennung gegen die Möbelliste prüfen.
+    const zweideutig = "tisch__sitz_2";
+    expect(parseSeatId(zweideutig)).toEqual({ objektId: "tisch", n: 2 });
+    expect(seatId("tisch", 2)).toBe(zweideutig);
+  });
+
+  it("führt für jeden echten Sitzplatz eines Möbels zurück zum Möbel", () => {
+    const f = makeFurniture("doppeltisch", 0, 0);
+    expect(f.seats.map((s) => parseSeatId(s))).toEqual([
+      { objektId: f.id, n: 1 },
+      { objektId: f.id, n: 2 },
+    ]);
   });
 });
 
