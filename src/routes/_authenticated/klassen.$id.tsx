@@ -30,7 +30,7 @@ type StudentForm = { id?: string; firstName: string; lastName: string };
 
 function KlassenDetail() {
   const { id } = Route.useParams();
-  const { data, dispatch, saveState } = useStore();
+  const { data, dispatch, saveState, retry } = useStore();
   const navigate = useNavigate();
   const cls = data.classes.find((c) => c.id === id);
 
@@ -99,7 +99,7 @@ function KlassenDetail() {
         subtitle={cls.note || "Ohne Notiz"}
         actions={
           <>
-            <SaveStatus state={saveState} />
+            <SaveStatus state={saveState} onRetry={retry} />
             <Button
               variant="secondary"
               onClick={() => setKlasseForm({ name: cls.name, note: cls.note })}

@@ -58,7 +58,7 @@ const PALETTE: { kind: FurnitureKind; icon: typeof Square }[] = [
 
 function RaumEditor() {
   const { id } = Route.useParams();
-  const { data, dispatch, saveState, undo, redo, canUndo, canRedo } = useStore();
+  const { data, dispatch, saveState, retry, undo, redo, canUndo, canRedo } = useStore();
   const room = data.rooms.find((r) => r.id === id);
 
   const [selected, setSelected] = useState<string | null>(null);
@@ -211,7 +211,7 @@ function RaumEditor() {
         subtitle={`${room.width} × ${room.height} cm · Raster ${room.grid} cm · ${seatCount(room)} Sitzplätze`}
         actions={
           <>
-            <SaveStatus state={saveState} />
+            <SaveStatus state={saveState} onRetry={retry} />
             <Button
               variant="secondary"
               onClick={() =>

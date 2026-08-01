@@ -36,7 +36,7 @@ const STATUS: { value: PlanStatus; label: string }[] = [
 
 function SitzplanEditor() {
   const { id } = Route.useParams();
-  const { data, dispatch, saveState, undo, redo, canUndo, canRedo } = useStore();
+  const { data, dispatch, saveState, retry, undo, redo, canUndo, canRedo } = useStore();
   const plan = data.plans.find((p) => p.id === id);
   const cls = plan ? data.classes.find((c) => c.id === plan.classId) : undefined;
 
@@ -162,7 +162,7 @@ function SitzplanEditor() {
         subtitle={`${cls?.name ?? "Klasse gelöscht"} · ${plan.room.name} · ${Object.keys(plan.assignments).length} von ${plaetze} Plätzen belegt`}
         actions={
           <>
-            <SaveStatus state={saveState} />
+            <SaveStatus state={saveState} onRetry={retry} />
             <select
               aria-label="Status des Sitzplans"
               className="h-10 rounded-[6px] border border-line-control bg-elevated px-2.5 text-[13px]"

@@ -59,9 +59,23 @@ function NavRow({ item, active }: { item: NavItem; active: boolean }) {
   );
 }
 
+function LadeSkelett() {
+  return (
+    <div className="px-5 py-6 md:px-8" aria-busy="true" aria-label="Daten werden geladen">
+      <div className="h-3 w-24 animate-pulse rounded-[4px] bg-sunken" />
+      <div className="mt-3 h-7 w-64 animate-pulse rounded-[6px] bg-sunken" />
+      <div className="mt-6 grid gap-3 md:grid-cols-2">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="h-28 animate-pulse rounded-[8px] border border-line bg-sunken" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function AppShell({ children, email }: { children: React.ReactNode; email: string }) {
   const isActive = useActive();
-  const { data } = useStore();
+  const { data, hydrated } = useStore();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [abmeldend, setAbmeldend] = useState(false);
@@ -127,7 +141,7 @@ export function AppShell({ children, email }: { children: React.ReactNode; email
       <div className="md:pl-[236px]">
         <main id="inhalt" className="pb-[52px] md:pb-0">
           <DatenschutzHinweis />
-          {children}
+          {hydrated ? children : <LadeSkelett />}
         </main>
       </div>
 
