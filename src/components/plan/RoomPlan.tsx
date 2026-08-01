@@ -142,10 +142,17 @@ function Seat({
   onUp,
   onDropStudent,
   label,
+  rotation = 0,
 }: {
   cx: number;
   cy: number;
   r: number;
+  /**
+   * Drehung des Möbels in Grad. Der Sitzplatz steckt in dessen gedrehter
+   * Gruppe, also dreht seine Beschriftung ohne Zutun mit — bei 180° stünden
+   * die Initialen auf dem Kopf. Der Kreis darf mitdrehen, der Text nicht.
+   */
+  rotation?: number;
   student?: Student | undefined;
   carried?: boolean;
   interactive?: boolean;
@@ -193,6 +200,9 @@ function Seat({
       <text
         x={cx}
         y={cy + (r > 13 ? 4 : 3)}
+        // Gegendrehung um den Sitzplatzmittelpunkt: hebt die Drehung des
+        // Möbels genau auf, damit Initialen und „frei" immer lesbar bleiben.
+        transform={rotation ? `rotate(${-rotation} ${cx} ${cy})` : undefined}
         textAnchor="middle"
         fontSize={r > 13 ? 11 : 8}
         fontWeight={student ? 600 : 400}
@@ -391,6 +401,7 @@ export function RoomPlan({
                   cx={pos.cx}
                   cy={pos.cy}
                   r={r}
+                  rotation={f.rotation}
                   student={mode === "seating" ? student : undefined}
                   carried={Boolean(student && carriedStudentId && student.id === carriedStudentId)}
                   interactive={interactive}
