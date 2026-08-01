@@ -11,7 +11,7 @@ import { PlanThumb } from "@/components/plan/RoomPlan";
 import { seatCount } from "@/data/types";
 import { useStore } from "@/store/app";
 
-export const Route = createFileRoute("/raeume/")({
+export const Route = createFileRoute("/_authenticated/raeume/")({
   head: () => ({
     meta: [
       { title: "Räume und Grundrisse — Sitzplan" },

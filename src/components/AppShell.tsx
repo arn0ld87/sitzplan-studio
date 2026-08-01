@@ -1,6 +1,19 @@
-import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutGrid, Users, DoorOpen, Grid2x2, Trash2, type LucideIcon } from "lucide-react";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import {
+  LayoutGrid,
+  Users,
+  DoorOpen,
+  Grid2x2,
+  Trash2,
+  Settings,
+  LogOut,
+  type LucideIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { DatenschutzHinweis } from "@/components/DatenschutzHinweis";
 import { useStore } from "@/store/app";
 
 type NavItem = { to: string; label: string; icon: LucideIcon; count?: number };
@@ -46,9 +59,34 @@ function NavRow({ item, active }: { item: NavItem; active: boolean }) {
   );
 }
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+function LadeSkelett() {
+  return (
+    <div className="px-5 py-6 md:px-8" aria-busy="true" aria-label="Daten werden geladen">
+      <div className="h-3 w-24 animate-pulse rounded-[4px] bg-sunken" />
+      <div className="mt-3 h-7 w-64 animate-pulse rounded-[6px] bg-sunken" />
+      <div className="mt-6 grid gap-3 md:grid-cols-2">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="h-28 animate-pulse rounded-[8px] border border-line bg-sunken" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function AppShell({ children, email }: { children: React.ReactNode; email: string }) {
   const isActive = useActive();
-  const { data } = useStore();
+  const { data, hydrated } = useStore();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [abmeldend, setAbmeldend] = useState(false);
+
+  async function abmelden() {
+    setAbmeldend(true);
+    await queryClient.cancelQueries();
+    queryClient.clear();
+    await supabase.auth.signOut();
+    navigate({ to: "/signin", replace: true });
+  }
 
   const MAIN: NavItem[] = [
     { to: "/", label: "Übersicht", icon: LayoutGrid },
@@ -58,6 +96,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   ];
   const SECONDARY: NavItem[] = [
     { to: "/papierkorb", label: "Papierkorb", icon: Trash2, count: data.trash.length },
+    { to: "/einstellungen", label: "Einstellungen", icon: Settings },
   ];
 
   return (
@@ -83,15 +122,26 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           ))}
         </nav>
         <div className="border-t border-line px-3.5 py-3">
-          <p className="text-[12px] leading-[1.5] text-ink-3">
-            Alle Daten liegen ausschließlich lokal in diesem Browser.
+          <p className="truncate text-[12px] font-medium" title={email}>
+            {email}
           </p>
+          <button
+            type="button"
+            onClick={abmelden}
+            disabled={abmeldend}
+            className="mt-1.5 inline-flex items-center gap-1.5 text-[12px] text-ink-2 transition-colors duration-[160ms] ease-out hover:text-ink disabled:opacity-60"
+          >
+            <LogOut size={12} strokeWidth={1.5} />
+            {abmeldend ? "Wird abgemeldet …" : "Abmelden"}
+          </button>
         </div>
       </aside>
 
+
       <div className="md:pl-[236px]">
         <main id="inhalt" className="pb-[52px] md:pb-0">
-          {children}
+          <DatenschutzHinweis />
+          {hydrated ? children : <LadeSkelett />}
         </main>
       </div>
 

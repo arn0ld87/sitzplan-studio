@@ -8,14 +8,14 @@ import { relativeZeit } from "@/lib/zeit";
 import { seatCount } from "@/data/types";
 import { useStore } from "@/store/app";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
     meta: [
       { title: "Sitzplan — Klassen, Räume und Sitzpläne für Lehrkräfte" },
       {
         name: "description",
         content:
-          "Sitzplan bündelt Klassenlisten, Raumgrundrisse und Sitzordnungen in einer ruhigen Oberfläche. Alle Daten bleiben lokal im Browser.",
+          "Sitzplan bündelt Klassenlisten, Raumgrundrisse und Sitzordnungen in einer ruhigen Oberfläche.",
       },
       { property: "og:title", content: "Sitzplan — Klassen, Räume und Sitzpläne" },
       {
@@ -262,9 +262,9 @@ function Uebersicht() {
               Datenstand
             </h2>
             <p className="prose-measure mt-1.5 text-[13px] leading-[1.6] text-ink-2">
-              Alle Klassen, Räume und Sitzpläne liegen ausschließlich lokal in diesem Browser. Es
-              gibt kein Nutzerkonto und keine Übertragung an einen Server. Wird der Browserspeicher
-              geleert oder ein anderes Gerät verwendet, beginnt die Anwendung wieder leer.
+              Alle Klassen, Räume und Sitzpläne sind an Ihr Konto gebunden und werden serverseitig
+              gespeichert. Nur angemeldete Sitzungen dieses Kontos haben Zugriff — Daten anderer
+              Konten sind nicht einsehbar. Gelöschtes landet zunächst im Papierkorb.
             </p>
           </div>
         </aside>

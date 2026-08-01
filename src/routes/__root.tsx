@@ -11,8 +11,6 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { AppShell } from "../components/AppShell";
-import { StoreProvider } from "../store/app";
 
 function NotFoundComponent() {
   return (
@@ -49,7 +47,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
         <p className="eyebrow">Ansicht nicht geladen</p>
         <h1 className="page-title mt-2">Die Daten konnten nicht geladen werden</h1>
         <p className="mt-2 text-[14px] text-ink-2">
-          Ihr lokaler Entwurf ist erhalten geblieben und wurde nicht überschrieben.
+          Bitte versuchen Sie es erneut. Gespeicherte Daten sind davon nicht betroffen.
         </p>
         <div className="mt-6 flex flex-wrap gap-2">
           <button
@@ -65,7 +63,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
             href="/"
             className="inline-flex h-10 items-center rounded-[6px] border border-line-control bg-elevated px-3.5 text-[13px] font-medium"
           >
-            Entwurf ansehen
+            Zur Übersicht
           </a>
         </div>
       </div>
@@ -123,11 +121,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <StoreProvider>
-        <AppShell>
-          <Outlet />
-        </AppShell>
-      </StoreProvider>
+      <Outlet />
     </QueryClientProvider>
   );
 }

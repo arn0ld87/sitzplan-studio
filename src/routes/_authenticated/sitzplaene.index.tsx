@@ -13,7 +13,7 @@ import { relativeZeit } from "@/lib/zeit";
 import { seatCount } from "@/data/types";
 import { useStore } from "@/store/app";
 
-export const Route = createFileRoute("/sitzplaene/")({
+export const Route = createFileRoute("/_authenticated/sitzplaene/")({
   validateSearch: (search: Record<string, unknown>) => ({
     neu: typeof search["neu"] === "string" ? (search["neu"] as string) : undefined,
   }),

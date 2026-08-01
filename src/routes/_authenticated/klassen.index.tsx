@@ -10,7 +10,7 @@ import { EmptyState } from "@/components/ui-kit/EmptyState";
 import { Field, Modal, inputClass } from "@/components/ui-kit/Modal";
 import { useStore } from "@/store/app";
 
-export const Route = createFileRoute("/klassen/")({
+export const Route = createFileRoute("/_authenticated/klassen/")({
   head: () => ({
     meta: [
       { title: "Klassen verwalten — Sitzplan" },

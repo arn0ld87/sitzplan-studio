@@ -30,7 +30,7 @@ const MAP: Record<
     spin: true,
   },
   offline: {
-    text: "Offline gesichert",
+    text: "Offline — Änderungen gesperrt",
     icon: CloudOff,
     cls: "text-info bg-info-bg border-[color:var(--info-bg)]",
   },
@@ -46,10 +46,18 @@ const MAP: Record<
   },
 };
 
-export function SaveStatus({ state, className }: { state: SaveState; className?: string }) {
+export function SaveStatus({
+  state,
+  className,
+  onRetry,
+}: {
+  state: SaveState;
+  className?: string;
+  onRetry?: () => void;
+}) {
   const cfg = MAP[state];
   const Icon = cfg.icon;
-  return (
+  const chip = (
     <div
       aria-live="polite"
       className={cn(
@@ -61,6 +69,20 @@ export function SaveStatus({ state, className }: { state: SaveState; className?:
       <Icon size={16} strokeWidth={1.5} className={cfg.spin ? "animate-spin" : undefined} />
       <span>{cfg.text}</span>
     </div>
+  );
+
+  if (state !== "ungespeichert" || !onRetry) return chip;
+  return (
+    <span className="inline-flex items-center gap-2">
+      {chip}
+      <button
+        type="button"
+        onClick={onRetry}
+        className="text-[12px] font-medium text-action underline underline-offset-2"
+      >
+        Erneut versuchen
+      </button>
+    </span>
   );
 }
 

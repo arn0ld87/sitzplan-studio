@@ -8,7 +8,7 @@ import { ConfirmDialog } from "@/components/ui-kit/ConfirmDialog";
 import { relativeZeit } from "@/lib/zeit";
 import { useStore } from "@/store/app";
 
-export const Route = createFileRoute("/papierkorb")({
+export const Route = createFileRoute("/_authenticated/papierkorb")({
   head: () => ({
     meta: [
       { title: "Papierkorb — Sitzplan" },

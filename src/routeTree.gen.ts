@@ -9,91 +9,122 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as PapierkorbRouteImport } from './routes/papierkorb'
-import { Route as KlassenIndexRouteImport } from './routes/klassen.index'
-import { Route as KlassenIdRouteImport } from './routes/klassen.$id'
-import { Route as RaeumeIndexRouteImport } from './routes/raeume.index'
-import { Route as RaeumeIdRouteImport } from './routes/raeume.$id'
-import { Route as SitzplaeneIndexRouteImport } from './routes/sitzplaene.index'
-import { Route as SitzplaeneIdRouteImport } from './routes/sitzplaene.$id'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as SigninRouteImport } from './routes/signin'
+import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedEinstellungenRouteImport } from './routes/_authenticated/einstellungen'
+import { Route as AuthenticatedPapierkorbRouteImport } from './routes/_authenticated/papierkorb'
+import { Route as AuthenticatedKlassenIndexRouteImport } from './routes/_authenticated/klassen.index'
+import { Route as AuthenticatedKlassenIdRouteImport } from './routes/_authenticated/klassen.$id'
+import { Route as AuthenticatedRaeumeIndexRouteImport } from './routes/_authenticated/raeume.index'
+import { Route as AuthenticatedRaeumeIdRouteImport } from './routes/_authenticated/raeume.$id'
+import { Route as AuthenticatedSitzplaeneIndexRouteImport } from './routes/_authenticated/sitzplaene.index'
+import { Route as AuthenticatedSitzplaeneIdRouteImport } from './routes/_authenticated/sitzplaene.$id'
 
-const IndexRoute = IndexRouteImport.update({
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SigninRoute = SigninRouteImport.update({
+  id: '/signin',
+  path: '/signin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const PapierkorbRoute = PapierkorbRouteImport.update({
+const AuthenticatedEinstellungenRoute =
+  AuthenticatedEinstellungenRouteImport.update({
+    id: '/einstellungen',
+    path: '/einstellungen',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPapierkorbRoute = AuthenticatedPapierkorbRouteImport.update({
   id: '/papierkorb',
   path: '/papierkorb',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const KlassenIndexRoute = KlassenIndexRouteImport.update({
-  id: '/klassen/',
-  path: '/klassen/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const KlassenIdRoute = KlassenIdRouteImport.update({
+const AuthenticatedKlassenIndexRoute =
+  AuthenticatedKlassenIndexRouteImport.update({
+    id: '/klassen/',
+    path: '/klassen/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedKlassenIdRoute = AuthenticatedKlassenIdRouteImport.update({
   id: '/klassen/$id',
   path: '/klassen/$id',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const RaeumeIndexRoute = RaeumeIndexRouteImport.update({
-  id: '/raeume/',
-  path: '/raeume/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RaeumeIdRoute = RaeumeIdRouteImport.update({
+const AuthenticatedRaeumeIndexRoute =
+  AuthenticatedRaeumeIndexRouteImport.update({
+    id: '/raeume/',
+    path: '/raeume/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedRaeumeIdRoute = AuthenticatedRaeumeIdRouteImport.update({
   id: '/raeume/$id',
   path: '/raeume/$id',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const SitzplaeneIndexRoute = SitzplaeneIndexRouteImport.update({
-  id: '/sitzplaene/',
-  path: '/sitzplaene/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SitzplaeneIdRoute = SitzplaeneIdRouteImport.update({
-  id: '/sitzplaene/$id',
-  path: '/sitzplaene/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
+const AuthenticatedSitzplaeneIndexRoute =
+  AuthenticatedSitzplaeneIndexRouteImport.update({
+    id: '/sitzplaene/',
+    path: '/sitzplaene/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSitzplaeneIdRoute =
+  AuthenticatedSitzplaeneIdRouteImport.update({
+    id: '/sitzplaene/$id',
+    path: '/sitzplaene/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/papierkorb': typeof PapierkorbRoute
-  '/klassen/$id': typeof KlassenIdRoute
-  '/raeume/$id': typeof RaeumeIdRoute
-  '/sitzplaene/$id': typeof SitzplaeneIdRoute
-  '/klassen/': typeof KlassenIndexRoute
-  '/raeume/': typeof RaeumeIndexRoute
-  '/sitzplaene/': typeof SitzplaeneIndexRoute
+  '/': typeof AuthenticatedIndexRoute
+  '/signin': typeof SigninRoute
+  '/einstellungen': typeof AuthenticatedEinstellungenRoute
+  '/papierkorb': typeof AuthenticatedPapierkorbRoute
+  '/klassen/$id': typeof AuthenticatedKlassenIdRoute
+  '/raeume/$id': typeof AuthenticatedRaeumeIdRoute
+  '/sitzplaene/$id': typeof AuthenticatedSitzplaeneIdRoute
+  '/klassen/': typeof AuthenticatedKlassenIndexRoute
+  '/raeume/': typeof AuthenticatedRaeumeIndexRoute
+  '/sitzplaene/': typeof AuthenticatedSitzplaeneIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/papierkorb': typeof PapierkorbRoute
-  '/klassen/$id': typeof KlassenIdRoute
-  '/raeume/$id': typeof RaeumeIdRoute
-  '/sitzplaene/$id': typeof SitzplaeneIdRoute
-  '/klassen': typeof KlassenIndexRoute
-  '/raeume': typeof RaeumeIndexRoute
-  '/sitzplaene': typeof SitzplaeneIndexRoute
+  '/signin': typeof SigninRoute
+  '/einstellungen': typeof AuthenticatedEinstellungenRoute
+  '/papierkorb': typeof AuthenticatedPapierkorbRoute
+  '/': typeof AuthenticatedIndexRoute
+  '/klassen/$id': typeof AuthenticatedKlassenIdRoute
+  '/raeume/$id': typeof AuthenticatedRaeumeIdRoute
+  '/sitzplaene/$id': typeof AuthenticatedSitzplaeneIdRoute
+  '/klassen': typeof AuthenticatedKlassenIndexRoute
+  '/raeume': typeof AuthenticatedRaeumeIndexRoute
+  '/sitzplaene': typeof AuthenticatedSitzplaeneIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/papierkorb': typeof PapierkorbRoute
-  '/klassen/$id': typeof KlassenIdRoute
-  '/raeume/$id': typeof RaeumeIdRoute
-  '/sitzplaene/$id': typeof SitzplaeneIdRoute
-  '/klassen/': typeof KlassenIndexRoute
-  '/raeume/': typeof RaeumeIndexRoute
-  '/sitzplaene/': typeof SitzplaeneIndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/signin': typeof SigninRoute
+  '/_authenticated/einstellungen': typeof AuthenticatedEinstellungenRoute
+  '/_authenticated/papierkorb': typeof AuthenticatedPapierkorbRoute
+  '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/klassen/$id': typeof AuthenticatedKlassenIdRoute
+  '/_authenticated/raeume/$id': typeof AuthenticatedRaeumeIdRoute
+  '/_authenticated/sitzplaene/$id': typeof AuthenticatedSitzplaeneIdRoute
+  '/_authenticated/klassen/': typeof AuthenticatedKlassenIndexRoute
+  '/_authenticated/raeume/': typeof AuthenticatedRaeumeIndexRoute
+  '/_authenticated/sitzplaene/': typeof AuthenticatedSitzplaeneIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/signin'
+    | '/einstellungen'
     | '/papierkorb'
     | '/klassen/$id'
     | '/raeume/$id'
@@ -103,8 +134,10 @@ export interface FileRouteTypes {
     | '/sitzplaene/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
+    | '/signin'
+    | '/einstellungen'
     | '/papierkorb'
+    | '/'
     | '/klassen/$id'
     | '/raeume/$id'
     | '/sitzplaene/$id'
@@ -113,97 +146,136 @@ export interface FileRouteTypes {
     | '/sitzplaene'
   id:
     | '__root__'
-    | '/'
-    | '/papierkorb'
-    | '/klassen/$id'
-    | '/raeume/$id'
-    | '/sitzplaene/$id'
-    | '/klassen/'
-    | '/raeume/'
-    | '/sitzplaene/'
+    | '/_authenticated'
+    | '/signin'
+    | '/_authenticated/einstellungen'
+    | '/_authenticated/papierkorb'
+    | '/_authenticated/'
+    | '/_authenticated/klassen/$id'
+    | '/_authenticated/raeume/$id'
+    | '/_authenticated/sitzplaene/$id'
+    | '/_authenticated/klassen/'
+    | '/_authenticated/raeume/'
+    | '/_authenticated/sitzplaene/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  PapierkorbRoute: typeof PapierkorbRoute
-  KlassenIdRoute: typeof KlassenIdRoute
-  RaeumeIdRoute: typeof RaeumeIdRoute
-  SitzplaeneIdRoute: typeof SitzplaeneIdRoute
-  KlassenIndexRoute: typeof KlassenIndexRoute
-  RaeumeIndexRoute: typeof RaeumeIndexRoute
-  SitzplaeneIndexRoute: typeof SitzplaeneIndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  SigninRoute: typeof SigninRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signin': {
+      id: '/signin'
+      path: '/signin'
+      fullPath: '/signin'
+      preLoaderRoute: typeof SigninRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/': {
+      id: '/_authenticated/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/papierkorb': {
-      id: '/papierkorb'
+    '/_authenticated/einstellungen': {
+      id: '/_authenticated/einstellungen'
+      path: '/einstellungen'
+      fullPath: '/einstellungen'
+      preLoaderRoute: typeof AuthenticatedEinstellungenRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/papierkorb': {
+      id: '/_authenticated/papierkorb'
       path: '/papierkorb'
       fullPath: '/papierkorb'
-      preLoaderRoute: typeof PapierkorbRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedPapierkorbRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/klassen/': {
-      id: '/klassen/'
+    '/_authenticated/klassen/': {
+      id: '/_authenticated/klassen/'
       path: '/klassen'
       fullPath: '/klassen/'
-      preLoaderRoute: typeof KlassenIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedKlassenIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/klassen/$id': {
-      id: '/klassen/$id'
+    '/_authenticated/klassen/$id': {
+      id: '/_authenticated/klassen/$id'
       path: '/klassen/$id'
       fullPath: '/klassen/$id'
-      preLoaderRoute: typeof KlassenIdRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedKlassenIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/raeume/': {
-      id: '/raeume/'
+    '/_authenticated/raeume/': {
+      id: '/_authenticated/raeume/'
       path: '/raeume'
       fullPath: '/raeume/'
-      preLoaderRoute: typeof RaeumeIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedRaeumeIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/raeume/$id': {
-      id: '/raeume/$id'
+    '/_authenticated/raeume/$id': {
+      id: '/_authenticated/raeume/$id'
       path: '/raeume/$id'
       fullPath: '/raeume/$id'
-      preLoaderRoute: typeof RaeumeIdRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedRaeumeIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/sitzplaene/': {
-      id: '/sitzplaene/'
+    '/_authenticated/sitzplaene/': {
+      id: '/_authenticated/sitzplaene/'
       path: '/sitzplaene'
       fullPath: '/sitzplaene/'
-      preLoaderRoute: typeof SitzplaeneIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedSitzplaeneIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/sitzplaene/$id': {
-      id: '/sitzplaene/$id'
+    '/_authenticated/sitzplaene/$id': {
+      id: '/_authenticated/sitzplaene/$id'
       path: '/sitzplaene/$id'
       fullPath: '/sitzplaene/$id'
-      preLoaderRoute: typeof SitzplaeneIdRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedSitzplaeneIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedEinstellungenRoute: typeof AuthenticatedEinstellungenRoute
+  AuthenticatedPapierkorbRoute: typeof AuthenticatedPapierkorbRoute
+  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedKlassenIdRoute: typeof AuthenticatedKlassenIdRoute
+  AuthenticatedRaeumeIdRoute: typeof AuthenticatedRaeumeIdRoute
+  AuthenticatedSitzplaeneIdRoute: typeof AuthenticatedSitzplaeneIdRoute
+  AuthenticatedKlassenIndexRoute: typeof AuthenticatedKlassenIndexRoute
+  AuthenticatedRaeumeIndexRoute: typeof AuthenticatedRaeumeIndexRoute
+  AuthenticatedSitzplaeneIndexRoute: typeof AuthenticatedSitzplaeneIndexRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedEinstellungenRoute: AuthenticatedEinstellungenRoute,
+  AuthenticatedPapierkorbRoute: AuthenticatedPapierkorbRoute,
+  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedKlassenIdRoute: AuthenticatedKlassenIdRoute,
+  AuthenticatedRaeumeIdRoute: AuthenticatedRaeumeIdRoute,
+  AuthenticatedSitzplaeneIdRoute: AuthenticatedSitzplaeneIdRoute,
+  AuthenticatedKlassenIndexRoute: AuthenticatedKlassenIndexRoute,
+  AuthenticatedRaeumeIndexRoute: AuthenticatedRaeumeIndexRoute,
+  AuthenticatedSitzplaeneIndexRoute: AuthenticatedSitzplaeneIndexRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  PapierkorbRoute: PapierkorbRoute,
-  KlassenIdRoute: KlassenIdRoute,
-  RaeumeIdRoute: RaeumeIdRoute,
-  SitzplaeneIdRoute: SitzplaeneIdRoute,
-  KlassenIndexRoute: KlassenIndexRoute,
-  RaeumeIndexRoute: RaeumeIndexRoute,
-  SitzplaeneIndexRoute: SitzplaeneIndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  SigninRoute: SigninRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

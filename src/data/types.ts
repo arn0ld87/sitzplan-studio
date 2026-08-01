@@ -20,12 +20,13 @@ export function initials(name: string) {
   return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase();
 }
 
-export function newId(prefix: string) {
-  const rnd =
-    typeof crypto !== "undefined" && "randomUUID" in crypto
-      ? crypto.randomUUID().slice(0, 8)
-      : Math.random().toString(36).slice(2, 10);
-  return `${prefix}_${rnd}`;
+/** UUID — die Kennung ist zugleich der Primärschlüssel in der Datenbank. */
+export function newId(_prefix?: string) {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
+  });
 }
 
 export type Student = {
@@ -77,10 +78,15 @@ export const FURNITURE_SPECS: Record<
   fenster: { label: "Fenster", w: 15, h: 180, seats: 0 },
 };
 
+/** Sitzplatzkennung nach dem festen Muster `<objektId>__sitz_<n>`. */
+export function seatId(objektId: string, n: number) {
+  return `${objektId}__sitz_${n}`;
+}
+
 export function makeFurniture(kind: FurnitureKind, x: number, y: number): Furniture {
-  const id = newId(kind);
+  const id = newId();
   const n = FURNITURE_SPECS[kind].seats;
-  const seats = Array.from({ length: n }, (_, i) => `${id}-s${i + 1}`);
+  const seats = Array.from({ length: n }, (_, i) => seatId(id, i + 1));
   return { id, kind, x, y, rotation: 0, seats };
 }
 
@@ -101,7 +107,9 @@ export type SeatingPlan = {
   id: string;
   title: string;
   classId: string;
-  /** Kopie der Raumgeometrie zum Zeitpunkt des Anlegens. */
+  /** Raumvorlage, aus der der Plan entstanden ist. */
+  roomId: string;
+  /** Kopie der Raumgeometrie zum Zeitpunkt des Anlegens (eingefroren). */
   room: RoomGeometry;
   status: PlanStatus;
   updated: string;
