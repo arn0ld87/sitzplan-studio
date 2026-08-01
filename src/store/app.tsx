@@ -340,7 +340,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     rawDispatch({ type: "hydrate", data: next });
   }, []);
 
-  // Persistenz mit echtem Statusverlauf: Änderungen → Speichert … → Gespeichert
+  // Persistenz: sofort schreiben, Status als Verlauf zeigen
   const first = useRef(true);
   useEffect(() => {
     if (!hydrated) return;
@@ -348,17 +348,19 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       first.current = false;
       return;
     }
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch {
+      setSaveState("ungespeichert");
+      return;
+    }
     setSaveState("aenderungen");
-    const t1 = setTimeout(() => {
-      setSaveState("speichert");
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-        setTimeout(() => setSaveState("gespeichert"), 320);
-      } catch {
-        setSaveState("ungespeichert");
-      }
-    }, 380);
-    return () => clearTimeout(t1);
+    const t1 = setTimeout(() => setSaveState("speichert"), 220);
+    const t2 = setTimeout(() => setSaveState("gespeichert"), 560);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
   }, [data, hydrated]);
 
   const value = useMemo<Ctx>(
