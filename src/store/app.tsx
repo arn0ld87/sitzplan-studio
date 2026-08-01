@@ -26,41 +26,23 @@ import {
   klasseZuRow,
   planZuRow,
   raumZuRow,
-  rowZuKlasse,
-  rowZuPlan,
-  rowZuRaum,
   schuelerZuRow,
   regelZuRow,
-  rowZuRegel,
   type SitzregelRow,
   type KlasseRow,
   type PlanRow,
   type RaumRow,
   type SchuelerRow,
 } from "@/data/mapping";
+import { STORE_VERSION, emptyData, zeilenZuAppData, type AppData } from "@/data/laden";
 import { supabase } from "@/integrations/supabase/client";
 import type { SaveState } from "@/components/ui-kit/SaveStatus";
 
-export const STORE_VERSION = 1;
 const HISTORY_LIMIT = 40;
 
-export type AppData = {
-  version: number;
-  classes: SchoolClass[];
-  rooms: Room[];
-  plans: SeatingPlan[];
-  rules: SeatRule[];
-  trash: TrashItem[];
-};
-
-export const emptyData: AppData = {
-  version: STORE_VERSION,
-  classes: [],
-  rooms: [],
-  plans: [],
-  rules: [],
-  trash: [],
-};
+// Form und Filterregeln liegen in `@/data/laden` — dort ohne React und Supabase
+// prüfbar. Hier weiterhin exportiert, damit die bisherigen Importpfade gelten.
+export { STORE_VERSION, emptyData, type AppData };
 
 export type Action =
   | { type: "hydrate"; data: AppData }
@@ -389,66 +371,13 @@ async function ladeDaten(): Promise<AppData> {
   const fehler = k.error || s.error || r.error || p.error || rg.error;
   if (fehler) throw new Error(fehler.message);
 
-  const klassen = (k.data ?? []) as unknown as KlasseRow[];
-  const schueler = (s.data ?? []) as unknown as SchuelerRow[];
-  const raeume = (r.data ?? []) as unknown as RaumRow[];
-  const plaene = (p.data ?? []) as unknown as PlanRow[];
-  const regeln = (rg.data ?? []) as unknown as SitzregelRow[];
-
-  const klasseObj = new Map<string, SchoolClass>();
-  klassen.forEach((row, i) =>
-    klasseObj.set(
-      row.id,
-      rowZuKlasse(
-        row,
-        schueler.filter((x) => x.klasse_id === row.id),
-        i % 8,
-      ),
-    ),
-  );
-  const raumObj = new Map<string, Room>(raeume.map((row) => [row.id, rowZuRaum(row)]));
-  const planObj = new Map<string, SeatingPlan>(
-    plaene.map((row) => [row.id, rowZuPlan(row, raumObj.get(row.raum_id)?.name ?? "Raum")]),
-  );
-
-  const trash: TrashItem[] = [];
-  for (const row of klassen)
-    if (row.deleted_at)
-      trash.push({
-        id: row.id,
-        kind: "klasse",
-        name: row.name,
-        deletedAt: row.deleted_at,
-        payload: klasseObj.get(row.id)!,
-      });
-  for (const row of raeume)
-    if (row.deleted_at)
-      trash.push({
-        id: row.id,
-        kind: "raum",
-        name: row.name,
-        deletedAt: row.deleted_at,
-        payload: raumObj.get(row.id)!,
-      });
-  for (const row of plaene)
-    if (row.deleted_at)
-      trash.push({
-        id: row.id,
-        kind: "sitzplan",
-        name: row.name,
-        deletedAt: row.deleted_at,
-        payload: planObj.get(row.id)!,
-      });
-  trash.sort((a, b) => b.deletedAt.localeCompare(a.deletedAt));
-
-  return {
-    version: STORE_VERSION,
-    classes: klassen.filter((row) => !row.deleted_at).map((row) => klasseObj.get(row.id)!),
-    rooms: raeume.filter((row) => !row.deleted_at).map((row) => raumObj.get(row.id)!),
-    plans: plaene.filter((row) => !row.deleted_at).map((row) => planObj.get(row.id)!),
-    rules: regeln.filter((row) => !row.deleted_at).map(rowZuRegel),
-    trash,
-  };
+  return zeilenZuAppData({
+    klassen: (k.data ?? []) as unknown as KlasseRow[],
+    schueler: (s.data ?? []) as unknown as SchuelerRow[],
+    raeume: (r.data ?? []) as unknown as RaumRow[],
+    plaene: (p.data ?? []) as unknown as PlanRow[],
+    regeln: (rg.data ?? []) as unknown as SitzregelRow[],
+  });
 }
 
 type Ctx = {
