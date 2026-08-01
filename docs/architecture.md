@@ -125,3 +125,19 @@ umschreibt, zerlegt die Synchronisierung.
 - [ADR-0003](decisions/0003-eingefrorene-raumkopie-im-plan.md) — Plan friert den Raum ein
 - [ADR-0004](decisions/0004-soft-delete-und-papierkorb.md) — Soft-Delete statt echtem Löschen
 - [ADR-0005](decisions/0005-dateibasierte-routen.md) — dateibasierte Routen
+- [ADR-0006](decisions/0006-native-macos-client.md) — nativer macOS-Client im eigenen Repository
+
+## Ein zweiter Client
+
+Seit ADR-0006 gibt es einen zweiten Client: eine native macOS-App in Swift und
+SwiftUI, im eigenen Repository `sitzplan_macos`. Sie nutzt dasselbe
+Supabase-Projekt, dasselbe Schema und dieselben RLS-Policies — ein Backend,
+zwei Clients.
+
+Für dieses Repository folgt daraus vor allem eines: `src/data/` ist nicht mehr
+nur die Wahrheit für die Web-App. Wer `mapping.ts`, `types.ts`, `seatId()` oder
+eine Migration ändert, ändert das Verhalten eines zweiten Clients mit.
+
+Die gemeinsamen Verträge liegen in [`contracts/`](../contracts/README.md) —
+plattformneutrale JSON-Fixtures, die beide Testsuiten lesen. Dieses Repository
+ist ihre Quelle der Wahrheit.
