@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   FURNITURE_SPECS,
+  MERKMALE,
   STUDENT_COLORS,
   allSeats,
   initials,
   makeFurniture,
+  merkmalLabel,
   newId,
   parseSeatId,
   seatCount,
@@ -57,14 +59,45 @@ describe("initials", () => {
 });
 
 describe("studentName", () => {
+  const ada = {
+    id: "1",
+    firstName: "Ada",
+    lastName: "Lovelace",
+    colorIndex: 0,
+    merkmale: [],
+    notiz: "",
+  };
+
   it("setzt Vor- und Nachname zusammen", () => {
-    expect(studentName({ id: "1", firstName: "Ada", lastName: "Lovelace", colorIndex: 0 })).toBe(
-      "Ada Lovelace",
-    );
+    expect(studentName(ada)).toBe("Ada Lovelace");
   });
 
   it("lässt bei fehlendem Nachnamen kein Leerzeichen stehen", () => {
-    expect(studentName({ id: "1", firstName: "Ada", lastName: "", colorIndex: 0 })).toBe("Ada");
+    expect(studentName({ ...ada, lastName: "" })).toBe("Ada");
+  });
+});
+
+describe("merkmalLabel", () => {
+  it("übersetzt einen Katalogschlüssel ins deutsche Label", () => {
+    expect(merkmalLabel("schwerhoerig")).toBe("Schwerhörigkeit");
+    expect(merkmalLabel("daz")).toBe("Deutsch als Zweitsprache");
+  });
+
+  it("gibt frei eingegebene Merkmale wörtlich zurück", () => {
+    // Der Katalog ist eine Vorschlagsliste. Was nicht darin steht, darf beim
+    // Anzeigen nicht verschwinden und nicht zu einem Platzhalter werden.
+    expect(merkmalLabel("sitzt ungern am Fenster")).toBe("sitzt ungern am Fenster");
+    expect(merkmalLabel("")).toBe("");
+  });
+
+  it("hält Katalogschlüssel frei von Zeichen, die eine Rundreise nicht überstehen", () => {
+    // Die Schlüssel landen unverändert in einem text[] und im KI-Prompt.
+    for (const m of MERKMALE) {
+      expect(m.id).toMatch(/^[a-z_]+$/);
+      expect(m.label.trim()).toBe(m.label);
+      expect(m.label).not.toBe("");
+    }
+    expect(new Set(MERKMALE.map((m) => m.id)).size).toBe(MERKMALE.length);
   });
 });
 

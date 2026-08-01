@@ -44,11 +44,21 @@ const NUTZER = "11111111-1111-4111-8111-111111111111";
 const KLASSE_ID = "22222222-2222-4222-8222-222222222222";
 const GELOESCHT_AM = "2026-08-01T10:00:00.000Z";
 
-function schueler(id: string, vorname: string, nachname: string, farbe: number): Student {
-  return { id, firstName: vorname, lastName: nachname, colorIndex: farbe };
+function schueler(
+  id: string,
+  vorname: string,
+  nachname: string,
+  farbe: number,
+  merkmale: string[] = [],
+  notiz = "",
+): Student {
+  return { id, firstName: vorname, lastName: nachname, colorIndex: farbe, merkmale, notiz };
 }
 
-const ANNA = schueler("s-anna", "Anna", "Berg", 0);
+// Anna trägt Merkmale und eine Notiz. Damit prüft jede Rundreise durch den
+// Papierkorb mit, ob die Felder das Löschen und Zurückholen überstehen — die
+// Nutzlast einer gelöschten Klasse trägt ihre Schüler vollständig mit sich.
+const ANNA = schueler("s-anna", "Anna", "Berg", 0, ["adhs", "eigenes Merkmal"], "sitzt gern vorn");
 const BEN = schueler("s-ben", "Ben", "Cordes", 1);
 const CLARA = schueler("s-clara", "Clara", "Dietz", 2);
 

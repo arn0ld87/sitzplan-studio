@@ -183,8 +183,28 @@ export type SchuelerRow = {
   nachname: string;
   initialen: string;
   farb_index: number;
+  /** Fehlt bei Zeilen, die vor der Merkmals-Migration entstanden sind. */
+  merkmale?: string[] | null;
+  /** Fehlt bei Zeilen, die vor der Merkmals-Migration entstanden sind. */
+  notiz?: string | null;
   deleted_at: string | null;
 };
+
+/**
+ * Merkmale einer Zeile in eine verlässliche Liste bringen.
+ *
+ * Toleriert, was aus einer älteren Zeile oder einem anderen Client kommen kann:
+ * `null`, `undefined`, Nicht-Zeichenketten, Leerstrings und Dubletten. Nach
+ * außen ist das Ergebnis immer ein Feld eindeutiger, nicht leerer Werte.
+ */
+function merkmaleAusRow(wert: unknown): string[] {
+  if (!Array.isArray(wert)) return [];
+  const sauber = wert
+    .filter((m): m is string => typeof m === "string")
+    .map((m) => m.trim())
+    .filter(Boolean);
+  return [...new Set(sauber)];
+}
 
 export type RaumRow = {
   id: string;
@@ -238,6 +258,8 @@ export function schuelerZuRow(
     nachname: s.lastName,
     initialen: initials(`${s.firstName} ${s.lastName}`) || s.firstName.slice(0, 2).toUpperCase(),
     farb_index: ((s.colorIndex % 8) + 8) % 8,
+    merkmale: merkmaleAusRow(s.merkmale),
+    notiz: s.notiz ?? "",
     deleted_at: deletedAt,
   };
 }
@@ -288,6 +310,8 @@ export function rowZuKlasse(
       firstName: s.vorname,
       lastName: s.nachname,
       colorIndex: s.farb_index,
+      merkmale: merkmaleAusRow(s.merkmale),
+      notiz: s.notiz ?? "",
     })),
   };
 }
