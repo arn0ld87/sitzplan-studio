@@ -18,6 +18,7 @@ import { Route as KlassenIdRouteImport } from './routes/klassen.$id'
 import { Route as RaeumeIndexRouteImport } from './routes/raeume.index'
 import { Route as RaeumeIdRouteImport } from './routes/raeume.$id'
 import { Route as SitzplaeneIndexRouteImport } from './routes/sitzplaene.index'
+import { Route as SitzplaeneIdRouteImport } from './routes/sitzplaene.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -64,6 +65,11 @@ const SitzplaeneIndexRoute = SitzplaeneIndexRouteImport.update({
   path: '/sitzplaene/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SitzplaeneIdRoute = SitzplaeneIdRouteImport.update({
+  id: '/sitzplaene/$id',
+  path: '/sitzplaene/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -72,6 +78,7 @@ export interface FileRoutesByFullPath {
   '/signin': typeof SigninRoute
   '/klassen/$id': typeof KlassenIdRoute
   '/raeume/$id': typeof RaeumeIdRoute
+  '/sitzplaene/$id': typeof SitzplaeneIdRoute
   '/klassen/': typeof KlassenIndexRoute
   '/raeume/': typeof RaeumeIndexRoute
   '/sitzplaene/': typeof SitzplaeneIndexRoute
@@ -83,6 +90,7 @@ export interface FileRoutesByTo {
   '/signin': typeof SigninRoute
   '/klassen/$id': typeof KlassenIdRoute
   '/raeume/$id': typeof RaeumeIdRoute
+  '/sitzplaene/$id': typeof SitzplaeneIdRoute
   '/klassen': typeof KlassenIndexRoute
   '/raeume': typeof RaeumeIndexRoute
   '/sitzplaene': typeof SitzplaeneIndexRoute
@@ -95,6 +103,7 @@ export interface FileRoutesById {
   '/signin': typeof SigninRoute
   '/klassen/$id': typeof KlassenIdRoute
   '/raeume/$id': typeof RaeumeIdRoute
+  '/sitzplaene/$id': typeof SitzplaeneIdRoute
   '/klassen/': typeof KlassenIndexRoute
   '/raeume/': typeof RaeumeIndexRoute
   '/sitzplaene/': typeof SitzplaeneIndexRoute
@@ -108,6 +117,7 @@ export interface FileRouteTypes {
     | '/signin'
     | '/klassen/$id'
     | '/raeume/$id'
+    | '/sitzplaene/$id'
     | '/klassen/'
     | '/raeume/'
     | '/sitzplaene/'
@@ -119,6 +129,7 @@ export interface FileRouteTypes {
     | '/signin'
     | '/klassen/$id'
     | '/raeume/$id'
+    | '/sitzplaene/$id'
     | '/klassen'
     | '/raeume'
     | '/sitzplaene'
@@ -130,6 +141,7 @@ export interface FileRouteTypes {
     | '/signin'
     | '/klassen/$id'
     | '/raeume/$id'
+    | '/sitzplaene/$id'
     | '/klassen/'
     | '/raeume/'
     | '/sitzplaene/'
@@ -142,6 +154,7 @@ export interface RootRouteChildren {
   SigninRoute: typeof SigninRoute
   KlassenIdRoute: typeof KlassenIdRoute
   RaeumeIdRoute: typeof RaeumeIdRoute
+  SitzplaeneIdRoute: typeof SitzplaeneIdRoute
   KlassenIndexRoute: typeof KlassenIndexRoute
   RaeumeIndexRoute: typeof RaeumeIndexRoute
   SitzplaeneIndexRoute: typeof SitzplaeneIndexRoute
@@ -212,6 +225,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitzplaeneIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sitzplaene/$id': {
+      id: '/sitzplaene/$id'
+      path: '/sitzplaene/$id'
+      fullPath: '/sitzplaene/$id'
+      preLoaderRoute: typeof SitzplaeneIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -222,6 +242,7 @@ const rootRouteChildren: RootRouteChildren = {
   SigninRoute: SigninRoute,
   KlassenIdRoute: KlassenIdRoute,
   RaeumeIdRoute: RaeumeIdRoute,
+  SitzplaeneIdRoute: SitzplaeneIdRoute,
   KlassenIndexRoute: KlassenIndexRoute,
   RaeumeIndexRoute: RaeumeIndexRoute,
   SitzplaeneIndexRoute: SitzplaeneIndexRoute,
