@@ -18,8 +18,8 @@ Antworten auf Deutsch, technische Bezeichner im Original.
 ## Vor dem Ändern
 
 Dieses Repo **ist** in `code-review-graph` registriert (Alias `sitzplan_app`,
-seit 2026-08-01). Also zuerst dort fragen — 393 Knoten und 3739 Kanten zu
-befragen ist billiger, als 100 Dateien zu lesen:
+seit 2026-08-01). Also zuerst dort fragen — 647 Knoten und 6082 Kanten über
+128 Dateien zu befragen ist billiger, als die Dateien zu lesen:
 
 - `semantic_search_nodes` statt `Grep`, `get_impact_radius` vor jeder Änderung
   mit Reichweite, `query_graph` für Aufrufer und Tests.
@@ -35,7 +35,7 @@ Danach:
 - `Grep` nach dem Domänenbegriff auf Deutsch (`sitzregeln`, `raster_cm`,
   `canvas_document`), nicht auf Englisch.
 - Domänentypen zuerst lesen: [`src/data/types.ts`](src/data/types.ts).
-  Sie erklären Geometrie, Konflikte und Papierkorb in 150 Zeilen.
+  Sie erklären Geometrie, Sitzplatzkennungen und Papierkorb in 185 Zeilen.
 - Für Supabase-Schemafragen die Migrationen lesen, nicht die generierten Typen.
 
 ## Gate vor Commit (sequentiell, kein Auto-Fix-Loop)
@@ -50,11 +50,23 @@ bun run build       # muss durchlaufen
 Kurzform: `/gate`. Einzelheiten und Schemasonderfälle:
 [`docs/runbooks/pre-push-gate.md`](docs/runbooks/pre-push-gate.md).
 
-Vier Testdateien decken `src/data/mapping.ts`, `src/data/types.ts`,
-`src/lib/zeit.ts` und `SaveStatus` ab — genau die Stellen, an denen stille
-Fehler teuer werden. Wer dort etwas ändert, erweitert die Tests, statt sie
-passend zu machen. Für Routing, Druckansicht und Anmeldung gibt es keine Tests;
-dort ersetzt sorgfältiges Lesen und einmal Durchklicken das grüne Häkchen.
+Neun Testdateien decken die Stellen ab, an denen stille Fehler teuer werden:
+
+| Datei | Prüft |
+| --- | --- |
+| `src/data/mapping.test.ts` | Rundreise DB → Domäne → DB, tolerante Altfälle |
+| `src/data/types.test.ts` | Geometrie, `seatId()`, Möbelmaße, Farbvergabe |
+| `src/data/laden.test.ts` | Zeilen zu `AppData`, Papierkorb-Nutzlast |
+| `src/data/papierkorb.test.ts` | Soft-Delete-Filter, Wiederherstellen |
+| `src/data/sitzregeln.test.ts` | Nachbarschaft und Regelverstöße |
+| `src/lib/raster.test.ts` | Rasterrundung in Zentimetern |
+| `src/lib/zeit.test.ts` | relative Zeitangaben über Monats- und Jahresgrenzen |
+| `src/components/ui-kit/SaveStatus.test.tsx` | Zustand als Symbol **und** Text |
+| `src/components/plan/room3d/geometrie.test.ts` | 3D-Projektion der Raumgeometrie |
+
+Wer dort etwas ändert, erweitert die Tests, statt sie passend zu machen. Für
+Routing, Druckansicht und Anmeldung gibt es keine Tests; dort ersetzt
+sorgfältiges Lesen und einmal Durchklicken das grüne Häkchen.
 
 ## Häufige Fallen
 
