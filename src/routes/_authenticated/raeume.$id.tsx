@@ -289,29 +289,30 @@ function RaumEditor() {
                   [
                     ["x", "X (cm)", aktiv.x],
                     ["y", "Y (cm)", aktiv.y],
-                    ["w", "Breite (cm)", aktiv.w],
-                    ["h", "Tiefe (cm)", aktiv.h],
                   ] as const
                 ).map(([key, label, wert]) => (
                   <label key={key} className="block">
                     <span className="block text-[11px] text-ink-3">{label}</span>
                     <input
                       type="number"
-                      step={key === "x" || key === "y" ? room.grid : 5}
+                      step={room.grid}
                       value={wert}
                       onChange={(e) => {
                         const v = Number(e.target.value);
                         if (!Number.isFinite(v)) return;
                         if (key === "x") patch(aktiv.id, { x: Math.max(0, v) });
-                        else if (key === "y") patch(aktiv.id, { y: Math.max(0, v) });
-                        else if (key === "w") patch(aktiv.id, { w: Math.max(20, v) });
-                        else patch(aktiv.id, { h: Math.max(20, v) });
+                        else patch(aktiv.id, { y: Math.max(0, v) });
                       }}
                       className="num mt-0.5 h-8 w-full rounded-[6px] border border-line-control bg-elevated px-2 text-[13px]"
                     />
                   </label>
                 ))}
               </div>
+
+              <p className="num mt-2 text-[12px] text-ink-3">
+                Maß {FURNITURE_SPECS[aktiv.kind].w} × {FURNITURE_SPECS[aktiv.kind].h} cm ·{" "}
+                {FURNITURE_SPECS[aktiv.kind].seats} Sitzplätze
+              </p>
 
               <div className="mt-3">
                 <span className="block text-[11px] text-ink-3">Drehung</span>
