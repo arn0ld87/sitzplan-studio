@@ -23,17 +23,38 @@ export function Modal({
   const returnTo = useRef<HTMLElement | null>(null);
   const titleId = useId();
 
+  // `onClose` ist bei allen Aufrufern eine Inline-Funktion und damit bei jedem
+  // Rendern eine neue Identität. Stünde sie in den Abhängigkeiten des
+  // Fokus-Effekts, liefe dieser nach jedem Tastendruck erneut und setzte den
+  // Fokus zurück auf das erste Feld — man käme über einen Buchstaben je Feld
+  // nicht hinaus. Deshalb liegt sie in einer Ref, die kein Rendern auslöst.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
+
+  // Erster Effekt: Fokus. Hängt ausschließlich am Öffnen und Schließen.
   useEffect(() => {
     if (!open) return;
     returnTo.current = document.activeElement as HTMLElement | null;
     const t = setTimeout(() => {
       panelRef.current?.querySelector<HTMLElement>("input, select, textarea")?.focus();
     }, 0);
+    return () => {
+      clearTimeout(t);
+      returnTo.current?.focus?.();
+    };
+  }, [open]);
+
+  // Zweiter Effekt: Tastatur. Getrennt, weil er anders als der Fokus-Effekt
+  // gefahrlos wiederholt angehängt werden darf.
+  useEffect(() => {
+    if (!open) return;
 
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") {
         e.preventDefault();
-        onClose();
+        onCloseRef.current();
         return;
       }
       if (e.key !== "Tab") return;
@@ -52,12 +73,8 @@ export function Modal({
       }
     }
     document.addEventListener("keydown", onKey);
-    return () => {
-      clearTimeout(t);
-      document.removeEventListener("keydown", onKey);
-      returnTo.current?.focus?.();
-    };
-  }, [open, onClose]);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
 
   if (!open) return null;
 
