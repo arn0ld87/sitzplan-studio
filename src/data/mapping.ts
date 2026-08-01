@@ -12,6 +12,8 @@ import {
   type SeatingPlan,
   type Student,
   type PlanStatus,
+  type RuleKind,
+  type SeatRule,
 } from "./types";
 
 export const RAUM_DOKUMENT_VERSION = 3;
@@ -300,5 +302,39 @@ export function rowZuPlan(row: PlanRow, raumName: string): SeatingPlan {
     status: row.status,
     updated: row.updated_at ?? row.deleted_at ?? new Date().toISOString(),
     assignments,
+  };
+}
+
+// ---- Sitzregeln ----
+
+export type SitzregelRow = {
+  id: string;
+  user_id: string;
+  klasse_id: string;
+  schueler_a: string;
+  schueler_b: string;
+  art: RuleKind;
+  deleted_at: string | null;
+};
+
+export function regelZuRow(r: SeatRule, userId: string, deletedAt: string | null): SitzregelRow {
+  return {
+    id: r.id,
+    user_id: userId,
+    klasse_id: r.classId,
+    schueler_a: r.a,
+    schueler_b: r.b,
+    art: r.kind,
+    deleted_at: deletedAt,
+  };
+}
+
+export function rowZuRegel(row: SitzregelRow): SeatRule {
+  return {
+    id: row.id,
+    classId: row.klasse_id,
+    a: row.schueler_a,
+    b: row.schueler_b,
+    kind: row.art,
   };
 }

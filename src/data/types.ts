@@ -133,3 +133,14 @@ export type TrashItem = {
   deletedAt: string;
   payload: SchoolClass | Room | SeatingPlan;
 };
+
+/** Sitzregel zwischen zwei Schülern derselben Klasse. */
+export type RuleKind = "nicht_neben" | "muss_neben";
+
+export type SeatRule = {
+  id: string;
+  classId: string;
+  a: string;
+  b: string;
+  kind: RuleKind;
+};
