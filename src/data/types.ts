@@ -20,13 +20,13 @@ export function initials(name: string) {
   return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase();
 }
 
-export function newId(prefix: string) {
-  // UUIDs, damit Datensätze direkt Primärschlüssel der Datenbank sein können.
-  const rnd =
-    typeof crypto !== "undefined" && "randomUUID" in crypto
-      ? crypto.randomUUID().slice(0, 8)
-      : Math.random().toString(36).slice(2, 10);
-  return `${prefix}_${rnd}`;
+/** UUID — die Kennung ist zugleich der Primärschlüssel in der Datenbank. */
+export function newId(_prefix?: string) {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
+  });
 }
 
 export type Student = {
