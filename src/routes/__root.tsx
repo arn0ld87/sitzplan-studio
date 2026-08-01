@@ -123,11 +123,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <StoreProvider>
-        <AppShell>
-          <Outlet />
-        </AppShell>
-      </StoreProvider>
+      <Outlet />
     </QueryClientProvider>
   );
 }
