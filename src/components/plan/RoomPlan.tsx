@@ -1,6 +1,7 @@
 import { Fragment, useRef } from "react";
 import {
   FURNITURE_SPECS,
+  seatPositions,
   studentColor,
   initials,
   studentName,
@@ -29,17 +30,6 @@ export function PlanDefs({ grid }: { grid: number }) {
       </pattern>
     </defs>
   );
-}
-
-function seatPositions(f: Furniture) {
-  const spec = FURNITURE_SPECS[f.kind];
-  if (spec.seats === 1) return [{ cx: spec.w / 2, cy: spec.h / 2 }];
-  if (spec.seats === 2)
-    return [
-      { cx: spec.w * 0.25, cy: spec.h / 2 },
-      { cx: spec.w * 0.75, cy: spec.h / 2 },
-    ];
-  return [];
 }
 
 export function FurnitureShape({ kind }: { kind: Furniture["kind"] }) {
@@ -378,7 +368,7 @@ export function RoomPlan({
               <FurnitureShape kind={f.kind} />
             </g>
             {f.seats.map((seatId, i) => {
-              const pos = seatPositions(f)[i];
+              const pos = seatPositions(f.kind)[i];
               if (!pos) return null;
               const studentId = assignments[seatId];
               const student = studentId ? studentsById[studentId] : undefined;

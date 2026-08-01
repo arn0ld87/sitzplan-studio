@@ -9,6 +9,7 @@ import {
   parseSeatId,
   seatCount,
   seatId,
+  seatPositions,
   studentColor,
   studentName,
   type FurnitureKind,
@@ -220,5 +221,51 @@ describe("seatCount und allSeats", () => {
   it("kommt mit einem leeren Raum zurecht", () => {
     expect(seatCount({ furniture: [] })).toBe(0);
     expect(allSeats({ furniture: [] })).toEqual([]);
+  });
+});
+
+describe("seatPositions", () => {
+  const ARTEN = Object.keys(FURNITURE_SPECS) as FurnitureKind[];
+
+  it("liefert für jede Möbelart genau so viele Punkte wie Sitzplätze", () => {
+    for (const kind of ARTEN) {
+      expect(seatPositions(kind)).toHaveLength(FURNITURE_SPECS[kind].seats);
+    }
+  });
+
+  it("setzt den einzelnen Sitzplatz in die Mitte der Tischfläche", () => {
+    const spec = FURNITURE_SPECS.einzeltisch;
+    expect(seatPositions("einzeltisch")).toEqual([{ cx: spec.w / 2, cy: spec.h / 2 }]);
+  });
+
+  it("verteilt zwei Sitzplätze symmetrisch auf den Doppeltisch", () => {
+    const spec = FURNITURE_SPECS.doppeltisch;
+    const [links, rechts] = seatPositions("doppeltisch");
+    expect(links?.cx).toBeCloseTo(spec.w * 0.25);
+    expect(rechts?.cx).toBeCloseTo(spec.w * 0.75);
+    // Gleicher Abstand zur Tischmitte, gleiche Tiefe.
+    expect(spec.w / 2 - (links?.cx ?? 0)).toBeCloseTo((rechts?.cx ?? 0) - spec.w / 2);
+    expect(links?.cy).toBe(rechts?.cy);
+  });
+
+  it("hält jeden Sitzplatz innerhalb der Möbelfläche", () => {
+    for (const kind of ARTEN) {
+      const spec = FURNITURE_SPECS[kind];
+      for (const { cx, cy } of seatPositions(kind)) {
+        expect(cx).toBeGreaterThanOrEqual(0);
+        expect(cx).toBeLessThanOrEqual(spec.w);
+        expect(cy).toBeGreaterThanOrEqual(0);
+        expect(cy).toBeLessThanOrEqual(spec.h);
+      }
+    }
+  });
+
+  it("passt zu den Sitzplatzkennungen, die makeFurniture vergibt", () => {
+    // 2D-Zeichnung und 3D-Ansicht greifen beide über den Rang auf diese Punkte
+    // zu — es muss zu jedem Sitzplatz genau ein Punkt gehören.
+    for (const kind of ARTEN) {
+      const f = makeFurniture(kind, 0, 0);
+      expect(seatPositions(kind)).toHaveLength(f.seats.length);
+    }
   });
 });
