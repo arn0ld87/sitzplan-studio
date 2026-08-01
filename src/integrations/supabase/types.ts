@@ -14,7 +14,243 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      klassen: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          id: string
+          name: string
+          notizen: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          name: string
+          notizen?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          name?: string
+          notizen?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      raeume: {
+        Row: {
+          breite_cm: number
+          canvas_document: Json
+          created_at: string
+          deleted_at: string | null
+          dokument_version: number
+          id: string
+          laenge_cm: number
+          name: string
+          raster_cm: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          breite_cm: number
+          canvas_document?: Json
+          created_at?: string
+          deleted_at?: string | null
+          dokument_version?: number
+          id?: string
+          laenge_cm: number
+          name: string
+          raster_cm: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          breite_cm?: number
+          canvas_document?: Json
+          created_at?: string
+          deleted_at?: string | null
+          dokument_version?: number
+          id?: string
+          laenge_cm?: number
+          name?: string
+          raster_cm?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      schueler: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          farb_index: number
+          id: string
+          initialen: string
+          klasse_id: string
+          nachname: string
+          updated_at: string
+          user_id: string
+          vorname: string
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          farb_index: number
+          id?: string
+          initialen: string
+          klasse_id: string
+          nachname: string
+          updated_at?: string
+          user_id: string
+          vorname: string
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          farb_index?: number
+          id?: string
+          initialen?: string
+          klasse_id?: string
+          nachname?: string
+          updated_at?: string
+          user_id?: string
+          vorname?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schueler_klasse_id_fkey"
+            columns: ["klasse_id"]
+            isOneToOne: false
+            referencedRelation: "klassen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sitzplaene: {
+        Row: {
+          canvas_document: Json
+          created_at: string
+          deleted_at: string | null
+          dokument_version: number
+          id: string
+          klasse_id: string
+          name: string
+          raum_id: string
+          revision: number
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          canvas_document: Json
+          created_at?: string
+          deleted_at?: string | null
+          dokument_version?: number
+          id?: string
+          klasse_id: string
+          name: string
+          raum_id: string
+          revision?: number
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          canvas_document?: Json
+          created_at?: string
+          deleted_at?: string | null
+          dokument_version?: number
+          id?: string
+          klasse_id?: string
+          name?: string
+          raum_id?: string
+          revision?: number
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sitzplaene_klasse_id_fkey"
+            columns: ["klasse_id"]
+            isOneToOne: false
+            referencedRelation: "klassen"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sitzplaene_raum_id_fkey"
+            columns: ["raum_id"]
+            isOneToOne: false
+            referencedRelation: "raeume"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sitzregeln: {
+        Row: {
+          art: string
+          created_at: string
+          deleted_at: string | null
+          id: string
+          klasse_id: string
+          schueler_a: string
+          schueler_b: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          art: string
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          klasse_id: string
+          schueler_a: string
+          schueler_b: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          art?: string
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          klasse_id?: string
+          schueler_a?: string
+          schueler_b?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sitzregeln_klasse_id_fkey"
+            columns: ["klasse_id"]
+            isOneToOne: false
+            referencedRelation: "klassen"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sitzregeln_schueler_a_fkey"
+            columns: ["schueler_a"]
+            isOneToOne: false
+            referencedRelation: "schueler"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sitzregeln_schueler_b_fkey"
+            columns: ["schueler_b"]
+            isOneToOne: false
+            referencedRelation: "schueler"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
