@@ -5,6 +5,8 @@ import { Button } from "@/components/ui-kit/Button";
 import { PageHeader } from "@/components/PageHeader";
 import { SearchField } from "@/components/ui-kit/SearchField";
 import { EmptyState } from "@/components/ui-kit/EmptyState";
+import { KeineTreffer } from "@/components/ui-kit/KeineTreffer";
+import { SortHeader, type SortRichtung } from "@/components/ui-kit/SortHeader";
 import { ConfirmDialog } from "@/components/ui-kit/ConfirmDialog";
 import { StatusChip } from "@/components/ui-kit/StatusChip";
 import { ClassDot } from "@/components/ui-kit/ClassDot";
@@ -41,6 +43,16 @@ function Sitzplaene() {
   const [form, setForm] = useState({ title: "", classId: "", roomId: "" });
   const [fehler, setFehler] = useState("");
   const [loeschen, setLoeschen] = useState<string | null>(null);
+  const [sortSpalte, setSortSpalte] = useState<"title" | "room" | "updated">("updated");
+  const [sortRichtung, setSortRichtung] = useState<SortRichtung>("ab");
+
+  function sortieren(spalte: "title" | "room" | "updated") {
+    if (spalte === sortSpalte) setSortRichtung((r) => (r === "auf" ? "ab" : "auf"));
+    else {
+      setSortSpalte(spalte);
+      setSortRichtung(spalte === "updated" ? "ab" : "auf");
+    }
+  }
 
   const bereit = data.classes.length > 0 && data.rooms.length > 0;
 
@@ -67,6 +79,15 @@ function Sitzplaene() {
         (klassen[p.classId]?.name ?? "").toLowerCase().includes(t),
     );
   }, [data.plans, klassen, q]);
+
+  const sortiert = useMemo(() => {
+    const vz = sortRichtung === "auf" ? 1 : -1;
+    return [...gefiltert].sort((a, b) => {
+      if (sortSpalte === "title") return a.title.localeCompare(b.title, "de") * vz;
+      if (sortSpalte === "room") return a.room.name.localeCompare(b.room.name, "de") * vz;
+      return a.updated.localeCompare(b.updated) * vz;
+    });
+  }, [gefiltert, sortSpalte, sortRichtung]);
 
   const zuLoeschen = data.plans.find((p) => p.id === loeschen);
 
@@ -134,20 +155,52 @@ function Sitzplaene() {
               )
             }
           />
-        ) : gefiltert.length === 0 ? (
-          <p className="text-[14px] text-ink-2">Kein Sitzplan passt zu „{q}“.</p>
+        ) : sortiert.length === 0 ? (
+          <KeineTreffer suche={q} onReset={() => setQ("")} />
         ) : (
           <ul className="overflow-hidden rounded-[8px] border border-line bg-panel">
-            {gefiltert.map((p, i) => {
+            <li className="flex items-center gap-3 border-b border-line bg-sunken px-4 py-2">
+              <span className="w-7 shrink-0" />
+              <span className="min-w-0 flex-1">
+                <SortHeader
+                  spalte="title"
+                  label="Bezeichnung"
+                  aktiv={sortSpalte}
+                  richtung={sortRichtung}
+                  onSort={sortieren}
+                />
+              </span>
+              <SortHeader
+                spalte="room"
+                label="Raum"
+                aktiv={sortSpalte}
+                richtung={sortRichtung}
+                onSort={sortieren}
+                className="hidden sm:inline-flex"
+              />
+              <SortHeader
+                spalte="updated"
+                label="Geändert"
+                aktiv={sortSpalte}
+                richtung={sortRichtung}
+                onSort={sortieren}
+              />
+              <span className="w-[72px] shrink-0" />
+            </li>
+            {sortiert.map((p, i) => {
               const cls = klassen[p.classId];
               const belegt = Object.keys(p.assignments).length;
               return (
                 <li
                   key={p.id}
-                  className={`flex flex-wrap items-center gap-3 px-4 py-3 ${i > 0 ? "border-t border-line" : ""}`}
+                  className={`group relative flex flex-wrap items-center gap-3 px-4 py-3 transition-colors duration-[160ms] ease-out hover:bg-sunken ${i > 0 ? "border-t border-line" : ""}`}
                 >
                   {cls && <ClassDot name={cls.name} colorIndex={cls.colorIndex} size={28} />}
-                  <Link to="/sitzplaene/$id" params={{ id: p.id }} className="min-w-0 flex-1">
+                  <Link
+                    to="/sitzplaene/$id"
+                    params={{ id: p.id }}
+                    className="min-w-0 flex-1 before:absolute before:inset-0 before:content-['']"
+                  >
                     <span className="block truncate text-[14px] font-medium">{p.title}</span>
                     <span className="block truncate text-[13px] text-ink-3">
                       {p.room.name} · geändert {relativeZeit(p.updated)}
@@ -161,6 +214,7 @@ function Sitzplaene() {
                     variant="quiet"
                     size="iconSm"
                     aria-label={`${p.title} löschen`}
+                    className="relative"
                     onClick={() => setLoeschen(p.id)}
                   >
                     <Trash2 size={16} strokeWidth={1.5} />
@@ -169,7 +223,7 @@ function Sitzplaene() {
                     to="/sitzplaene/$id"
                     params={{ id: p.id }}
                     aria-label={`${p.title} öffnen`}
-                    className="text-ink-3 hover:text-ink"
+                    className="relative text-ink-3 hover:text-ink"
                   >
                     <ChevronRight size={16} strokeWidth={1.5} />
                   </Link>
