@@ -70,7 +70,11 @@ jobs:
           {
             echo "## Testabdeckung"
             echo
-            if [ -f coverage-lauf.txt ]; then
+            # Auf die Tabellenmarke pruefen, nicht auf die Datei: tee legt sie
+            # sofort an, auch wenn vitest gleich beim Start faellt. Ein Test auf
+            # -f waere immer wahr und wuerde eine leere Tabelle als Messung
+            # ausgeben.
+            if grep -q "% Coverage report" coverage-lauf.txt 2>/dev/null; then
               echo '```'
               # Nur die Abdeckungstabelle, nicht der ganze Testlauf.
               sed -n '/% Coverage report/,$p' coverage-lauf.txt
