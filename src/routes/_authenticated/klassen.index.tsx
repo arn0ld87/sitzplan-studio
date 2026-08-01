@@ -211,7 +211,7 @@ function Klassen() {
                   to="/klassen/$id"
                   params={{ id: c.id }}
                   aria-label={`${c.name} öffnen`}
-                  className="relative text-ink-3 hover:text-ink"
+                  className="relative grid h-6 w-6 shrink-0 place-items-center rounded-[5px] text-ink-3 hover:text-ink"
                 >
                   <ChevronRight size={16} strokeWidth={1.5} />
                 </Link>
