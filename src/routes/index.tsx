@@ -180,7 +180,7 @@ function Uebersicht() {
         </div>
 
 
-        <aside className="space-y-6 reveal" style={{ "--i": 2 } as never}>
+        <aside className="space-y-6 reveal" style={{ "--i": 3 } as never}>
           <section aria-labelledby="klassen-kurz">
             <h2 id="klassen-kurz" className="eyebrow">
               Klassen
