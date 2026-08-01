@@ -49,8 +49,49 @@ jobs:
       - name: Schritt 2 von 4 — lint
         run: bun run lint
 
+      # Schritt 3 misst zugleich die Abdeckung. Ein zweiter Testlauf nur fuer
+      # die Zahl waere verschwendete Laufzeit. `shell: bash` setzt pipefail —
+      # ohne das wuerde `tee` einen roten Testlauf verschlucken.
       - name: Schritt 3 von 4 — test
-        run: bun run test
+        shell: bash
+        run: bun run test:coverage 2>&1 | tee coverage-lauf.txt
 
       - name: Schritt 4 von 4 — build
         run: bun run build
+
+      # Die Zahl gehoert dorthin, wo sie jemand sieht, ohne ins Log zu steigen.
+      # Bewusst ohne Schwelle: Eine harte Grenze wuerde jetzt zu Tests
+      # verleiten, die Zeilen abdecken statt Verhalten zu pruefen. Die Schwelle
+      # kommt als eigenes Issue, wenn die Tests aus #4 bis #6 stehen.
+      - name: Abdeckung in die Job-Zusammenfassung schreiben
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Testabdeckung"
+            echo
+            if [ -f coverage-lauf.txt ]; then
+              echo '```'
+              # Nur die Abdeckungstabelle, nicht der ganze Testlauf.
+              sed -n '/% Coverage report/,$p' coverage-lauf.txt
+              echo '```'
+              echo
+              echo "Gemessen wird die Domaenenlogik: \`src/data\`, \`src/lib\`, \`src/components/ui-kit\`."
+              echo "Routen und generierte Dateien bleiben aussen vor — sie verzerren die Quote,"
+              echo "ohne etwas ueber die Qualitaet auszusagen (siehe \`vitest.config.ts\`)."
+              echo
+              echo "Keine Schwelle: Die Abdeckung ist im Aufbau. Ein roter Build wegen einer"
+              echo "Prozentzahl kaeme zu frueh."
+            else
+              echo "Kein Abdeckungsbericht vorhanden — der Testschritt ist vermutlich vorher gefallen."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Abdeckungsbericht als Artefakt ablegen
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: abdeckung
+          path: coverage/
+          retention-days: 7
+          if-no-files-found: ignore
