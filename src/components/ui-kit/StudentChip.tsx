@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { initials, studentColor } from "@/data/demo";
+import { initials, studentColor } from "@/data/types";
 
 export function StudentChip({
   name,
@@ -9,6 +9,8 @@ export function StudentChip({
   onClick,
   draggable,
   onDragStart,
+  onPointerDown,
+  title,
 }: {
   name: string;
   colorIndex: number;
@@ -17,6 +19,8 @@ export function StudentChip({
   onClick?: () => void;
   draggable?: boolean;
   onDragStart?: (e: React.DragEvent) => void;
+  onPointerDown?: (e: React.PointerEvent) => void;
+  title?: string;
 }) {
   const dot = size === 40 ? 26 : 22;
   return (
@@ -25,10 +29,12 @@ export function StudentChip({
       onClick={onClick}
       draggable={draggable}
       onDragStart={onDragStart}
+      onPointerDown={onPointerDown}
       aria-pressed={selected}
+      title={title ?? name}
       style={{ height: size }}
       className={cn(
-        "inline-flex items-center gap-2 rounded-full border bg-elevated pl-1 pr-3 text-[13px] transition-[border-color,box-shadow] duration-[180ms] ease-out",
+        "inline-flex max-w-full items-center gap-2 rounded-full border bg-elevated pl-1 pr-3 text-[13px] transition-[border-color,box-shadow] duration-[180ms] ease-out",
         selected
           ? "border-[color:var(--select)] shadow-[0_0_0_3px_var(--select-soft)]"
           : "border-line-control hover:border-[color:var(--line-plan)]",

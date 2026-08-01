@@ -1,59 +1,200 @@
+import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
+import { Plus, DoorOpen, Trash2, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui-kit/Button";
 import { PageHeader } from "@/components/PageHeader";
+import { SearchField } from "@/components/ui-kit/SearchField";
+import { EmptyState } from "@/components/ui-kit/EmptyState";
+import { ConfirmDialog } from "@/components/ui-kit/ConfirmDialog";
+import { Field, Modal, inputClass } from "@/components/ui-kit/Modal";
 import { PlanThumb } from "@/components/plan/RoomPlan";
-import { rooms, seatCount } from "@/data/demo";
+import { seatCount } from "@/data/types";
+import { useStore } from "@/store/app";
 
 export const Route = createFileRoute("/raeume/")({
   head: () => ({
     meta: [
-      { title: "Räume — Sitzplan" },
+      { title: "Räume und Grundrisse — Sitzplan" },
       {
         name: "description",
-        content: "Raumvorlagen mit Grundriss, Maßen und Sitzplatzanzahl — zeichnen und anpassen.",
+        content:
+          "Raumvorlagen mit Maßen, Tischen und Sitzplätzen. Räume anlegen, zeichnen und wiederverwenden.",
       },
-      { property: "og:title", content: "Räume — Sitzplan" },
-      {
-        property: "og:description",
-        content: "Raumvorlagen mit Grundriss, Maßen und Sitzplatzanzahl.",
-      },
+      { property: "og:title", content: "Räume und Grundrisse — Sitzplan" },
+      { property: "og:description", content: "Raumvorlagen zeichnen und wiederverwenden." },
     ],
   }),
   component: Raeume,
 });
 
+const MASSE = { minW: 200, maxW: 2000, minH: 200, maxH: 2000 };
+
 function Raeume() {
+  const { data, dispatch } = useStore();
+  const [q, setQ] = useState("");
+  const [neu, setNeu] = useState(false);
+  const [form, setForm] = useState({ name: "", width: "800", height: "600", grid: "25" });
+  const [fehler, setFehler] = useState("");
+  const [loeschen, setLoeschen] = useState<string | null>(null);
+
+  const gefiltert = useMemo(() => {
+    const t = q.trim().toLowerCase();
+    return t ? data.rooms.filter((r) => r.name.toLowerCase().includes(t)) : data.rooms;
+  }, [data.rooms, q]);
+
+  const zuLoeschen = data.rooms.find((r) => r.id === loeschen);
+
+  function anlegen() {
+    const name = form.name.trim();
+    const width = Number(form.width);
+    const height = Number(form.height);
+    const grid = Number(form.grid);
+    if (!name) return setFehler("Bitte einen Raumnamen angeben.");
+    if (data.rooms.some((r) => r.name.toLowerCase() === name.toLowerCase()))
+      return setFehler("Diesen Raumnamen gibt es bereits.");
+    if (!Number.isFinite(width) || width < MASSE.minW || width > MASSE.maxW)
+      return setFehler(`Breite zwischen ${MASSE.minW} und ${MASSE.maxW} cm.`);
+    if (!Number.isFinite(height) || height < MASSE.minH || height > MASSE.maxH)
+      return setFehler(`Tiefe zwischen ${MASSE.minH} und ${MASSE.maxH} cm.`);
+    if (![10, 20, 25, 50].includes(grid)) return setFehler("Rasterweite ungültig.");
+    dispatch({ type: "room/add", name, width, height, grid });
+    setNeu(false);
+    setForm({ name: "", width: "800", height: "600", grid: "25" });
+    setFehler("");
+  }
+
   return (
     <>
       <PageHeader
         crumbs={[{ label: "Sitzplan", to: "/" }, { label: "Räume" }]}
         title="Räume"
-        subtitle="Grundrisse mit Möbeln und Sitzplätzen. Ein Raum kann für beliebig viele Sitzpläne genutzt werden."
+        subtitle="Ein Raum wird einmal gezeichnet und lässt sich für beliebig viele Sitzpläne verwenden."
         actions={
-          <Button variant="primary">
-            <Plus size={16} strokeWidth={1.5} />
-            Neuer Raum
-          </Button>
+          <>
+            {data.rooms.length > 0 && <SearchField value={q} onChange={setQ} label="Raum suchen" />}
+            <Button variant="primary" onClick={() => setNeu(true)}>
+              <Plus size={16} strokeWidth={1.5} />
+              Raum anlegen
+            </Button>
+          </>
         }
       />
-      <div className="grid gap-3 px-5 py-7 sm:grid-cols-2 md:px-8 xl:grid-cols-3">
-        {rooms.map((r, i) => (
-          <Link
-            key={r.id}
-            to="/raeume/$id"
-            params={{ id: r.id }}
-            className="reveal rounded-[8px] border border-line bg-panel p-3 shadow-[var(--shadow-panel)] transition-[transform,border-color] duration-[180ms] ease-out hover:-translate-y-px hover:border-[color:var(--line-control)]"
-            style={{ "--i": i } as never}
-          >
-            <PlanThumb room={r} width={400} height={180} />
-            <span className="mt-2.5 block text-[14px] font-medium">{r.name}</span>
-            <span className="num block text-ink-3">
-              {r.width} × {r.height} cm · Raster {r.grid} cm · {seatCount(r)} Plätze
-            </span>
-          </Link>
-        ))}
+
+      <div className="px-5 py-7 md:px-8">
+        {data.rooms.length === 0 ? (
+          <EmptyState
+            icon={DoorOpen}
+            title="Noch kein Raum gezeichnet"
+            text="Legen Sie die Maße des Klassenzimmers fest. Anschließend setzen Sie Tische, Pult, Tafel, Tür und Fenster im Editor."
+            action={
+              <Button variant="primary" onClick={() => setNeu(true)}>
+                <Plus size={16} strokeWidth={1.5} />
+                Ersten Raum anlegen
+              </Button>
+            }
+          />
+        ) : gefiltert.length === 0 ? (
+          <p className="text-[14px] text-ink-2">Kein Raum passt zu „{q}“.</p>
+        ) : (
+          <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {gefiltert.map((r) => (
+              <li
+                key={r.id}
+                className="flex items-center gap-3 rounded-[8px] border border-line bg-panel p-4 transition-colors hover:border-[color:var(--line-plan)]"
+              >
+                <PlanThumb room={r} width={52} height={38} />
+                <Link to="/raeume/$id" params={{ id: r.id }} className="min-w-0 flex-1">
+                  <span className="block truncate text-[14px] font-medium">{r.name}</span>
+                  <span className="num block text-[12px] text-ink-3">
+                    {r.width} × {r.height} cm · {seatCount(r)} Plätze
+                  </span>
+                </Link>
+                <Button
+                  variant="quiet"
+                  size="iconSm"
+                  aria-label={`${r.name} löschen`}
+                  onClick={() => setLoeschen(r.id)}
+                >
+                  <Trash2 size={16} strokeWidth={1.5} />
+                </Button>
+                <Link
+                  to="/raeume/$id"
+                  params={{ id: r.id }}
+                  aria-label={`${r.name} öffnen`}
+                  className="text-ink-3 hover:text-ink"
+                >
+                  <ChevronRight size={16} strokeWidth={1.5} />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
+
+      <Modal
+        open={neu}
+        title="Neuer Raum"
+        description="Maße in Zentimetern. Sie lassen sich später jederzeit ändern."
+        submitLabel="Raum anlegen"
+        onSubmit={anlegen}
+        onClose={() => {
+          setNeu(false);
+          setFehler("");
+        }}
+      >
+        <Field label="Name" error={fehler}>
+          <input
+            className={inputClass}
+            value={form.name}
+            maxLength={40}
+            placeholder="Raum 204"
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+          />
+        </Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Breite (cm)">
+            <input
+              className={`${inputClass} num`}
+              type="number"
+              value={form.width}
+              onChange={(e) => setForm({ ...form, width: e.target.value })}
+            />
+          </Field>
+          <Field label="Tiefe (cm)">
+            <input
+              className={`${inputClass} num`}
+              type="number"
+              value={form.height}
+              onChange={(e) => setForm({ ...form, height: e.target.value })}
+            />
+          </Field>
+        </div>
+        <Field label="Rasterweite (cm)" hint="Objekte rasten beim Verschieben ein">
+          <select
+            className={inputClass}
+            value={form.grid}
+            onChange={(e) => setForm({ ...form, grid: e.target.value })}
+          >
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+          </select>
+        </Field>
+      </Modal>
+
+      <ConfirmDialog
+        open={Boolean(zuLoeschen)}
+        title={`${zuLoeschen?.name ?? ""} in den Papierkorb legen?`}
+        description="Die Raumvorlage verschwindet aus der Liste, bleibt aber wiederherstellbar."
+        consequence="Bereits erstellte Sitzpläne behalten ihre eigene Kopie des Grundrisses und bleiben unverändert."
+        confirmLabel="In den Papierkorb"
+        onConfirm={() => {
+          if (loeschen) dispatch({ type: "room/delete", id: loeschen });
+          setLoeschen(null);
+        }}
+        onCancel={() => setLoeschen(null)}
+      />
     </>
   );
 }

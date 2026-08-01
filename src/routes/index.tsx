@@ -1,224 +1,272 @@
-import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Plus, ArrowUpRight } from "lucide-react";
+import { Users, DoorOpen, Grid2x2, Plus, ArrowRight, Info, Check } from "lucide-react";
 import { Button } from "@/components/ui-kit/Button";
-import { SearchField } from "@/components/ui-kit/SearchField";
-import { PlanThumb } from "@/components/plan/RoomPlan";
-import { classes, plans, rooms, getClass, getRoom, seatCount } from "@/data/demo";
-import { ClassDot } from "@/components/ui-kit/ClassDot";
+import { PageHeader } from "@/components/PageHeader";
 import { StatusChip } from "@/components/ui-kit/StatusChip";
+import { ClassDot } from "@/components/ui-kit/ClassDot";
 import { relativeZeit } from "@/lib/zeit";
+import { seatCount } from "@/data/types";
+import { useStore } from "@/store/app";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Übersicht — Sitzplan" },
+      { title: "Sitzplan — Klassen, Räume und Sitzpläne für Lehrkräfte" },
       {
         name: "description",
         content:
-          "Zuletzt bearbeitete Sitzpläne, Raumvorlagen und Klassen auf einen Blick — das Lehrerwerkzeug Sitzplan.",
+          "Sitzplan bündelt Klassenlisten, Raumgrundrisse und Sitzordnungen in einer ruhigen Oberfläche. Alle Daten bleiben lokal im Browser.",
       },
-      { property: "og:title", content: "Übersicht — Sitzplan" },
+      { property: "og:title", content: "Sitzplan — Klassen, Räume und Sitzpläne" },
       {
         property: "og:description",
-        content: "Zuletzt bearbeitete Sitzpläne, Raumvorlagen und Klassen auf einen Blick.",
+        content: "Klassen verwalten, Räume zeichnen, Sitzpläne erstellen.",
       },
     ],
   }),
   component: Uebersicht,
 });
 
-const OHNE_PLAN = [
-  { id: "6d", meta: "zuletzt geplant im Juni" },
-  { id: "8a", meta: "zuletzt geplant im Juni" },
-  { id: "10b", meta: "noch nie geplant" },
-];
-
+function Schritt({
+  nummer,
+  titel,
+  text,
+  cta,
+  to,
+  erledigt,
+  gesperrt,
+  grund,
+}: {
+  nummer: number;
+  titel: string;
+  text: string;
+  cta: string;
+  to: string;
+  erledigt: boolean;
+  gesperrt: boolean;
+  grund?: string;
+}) {
+  return (
+    <li className="flex gap-4 rounded-[8px] border border-line bg-panel p-5">
+      <span
+        aria-hidden
+        className={`num grid h-8 w-8 shrink-0 place-items-center rounded-full border text-[13px] ${
+          erledigt
+            ? "border-[color:var(--action)] bg-action-soft text-action-soft-ink"
+            : gesperrt
+              ? "border-line bg-sunken text-ink-disabled"
+              : "border-line-control bg-elevated text-ink"
+        }`}
+      >
+        {erledigt ? <Check size={16} strokeWidth={2} /> : nummer}
+      </span>
+      <div className="min-w-0 flex-1">
+        <h3 className={`text-[15px] font-semibold ${gesperrt ? "text-ink-3" : ""}`}>{titel}</h3>
+        <p className="prose-measure mt-1 text-[14px] text-ink-2">{text}</p>
+        {gesperrt && grund && <p className="mt-1 text-[13px] text-ink-3">{grund}</p>}
+        <div className="mt-3">
+          {gesperrt ? (
+            <Button variant="secondary" size="sm" disabled>
+              {cta}
+            </Button>
+          ) : (
+            <Button variant={erledigt ? "secondary" : "primary"} size="sm" asChild>
+              <Link to={to}>
+                {cta}
+                <ArrowRight size={16} strokeWidth={1.5} />
+              </Link>
+            </Button>
+          )}
+        </div>
+      </div>
+    </li>
+  );
+}
 
 function Uebersicht() {
-  const [q, setQ] = useState("");
-  const heute = new Intl.DateTimeFormat("de-DE", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).format(new Date());
+  const { data } = useStore();
+  const hatKlassen = data.classes.length > 0;
+  const hatRaeume = data.rooms.length > 0;
+  const hatPlaene = data.plans.length > 0;
+  const leer = !hatKlassen && !hatRaeume && !hatPlaene;
 
-  const liste = plans.filter((p) => p.title.toLowerCase().includes(q.toLowerCase()));
+  const bereiteKlassen = data.classes.filter((c) => c.students.length > 0);
+  const bereiteRaeume = data.rooms.filter((r) => seatCount(r) > 0);
+  const kannPlan = bereiteKlassen.length > 0 && bereiteRaeume.length > 0;
+
+  const ohnePlan = data.classes.filter((c) => !data.plans.some((p) => p.classId === c.id));
+  const letzte = [...data.plans]
+    .sort((a, b) => b.updated.localeCompare(a.updated))
+    .slice(0, 6);
 
   return (
     <>
-      <header className="border-b border-line bg-panel px-5 py-5 md:px-8">
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:flex-wrap sm:items-center sm:justify-between">
-          <div className="min-w-0">
-            <h1 className="page-title truncate">Guten Morgen</h1>
-            <p className="num mt-1 text-ink-3">{heute}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <SearchField value={q} onChange={setQ} label="Sitzpläne suchen" />
-            <Button variant="primary">
-              <Plus size={16} strokeWidth={1.5} />
-              Neuer Sitzplan
+      <PageHeader
+        crumbs={[{ label: "Sitzplan" }]}
+        title="Übersicht"
+        subtitle="Klassen, Räume und Sitzpläne an einer Stelle. Der Weg führt immer von der Klasse über den Raum zum Sitzplan."
+        actions={
+          !leer && (
+            <Button variant="primary" asChild>
+              <Link to="/sitzplaene">
+                <Plus size={16} strokeWidth={1.5} />
+                Sitzplan erstellen
+              </Link>
             </Button>
-          </div>
-        </div>
-      </header>
+          )
+        }
+      />
 
-      <div className="grid gap-8 px-5 py-7 md:px-8 lg:grid-cols-[minmax(0,1fr)_312px]">
-        <div className="min-w-0 space-y-8">
-          <section aria-labelledby="zuletzt" className="reveal">
-            <h2 id="zuletzt" className="section-title">
-              Zuletzt bearbeitet
+      <div className="grid gap-8 px-5 py-7 md:px-8 lg:grid-cols-[minmax(0,1fr)_280px]">
+        <div className="space-y-8">
+          <section aria-labelledby="start">
+            <h2 id="start" className="section-title">
+              {leer ? "In drei Schritten zum ersten Sitzplan" : "Nächste Schritte"}
             </h2>
-            <ul className="mt-3 divide-y divide-[color:var(--line)] overflow-hidden rounded-[8px] border border-line bg-panel shadow-[var(--shadow-panel)]">
-              {liste.map((p) => {
-                const room = getRoom(p.roomId)!;
-                const cls = getClass(p.classId)!;
-                const belegt = Object.keys(p.assignments).length;
-                return (
-                  <li key={p.id}>
-                    <Link
-                      to="/sitzplaene/$id"
-                      params={{ id: p.id }}
-                      className="group grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3.5 px-4 py-3 transition-colors hover:bg-elevated"
+            <ol className="mt-3 space-y-2.5">
+              <Schritt
+                nummer={1}
+                titel="Klasse anlegen"
+                text="Name der Klasse und die Schülerinnen und Schüler. Farben und Initialen vergibt die Anwendung."
+                cta={hatKlassen ? "Klassen öffnen" : "Klasse anlegen"}
+                to="/klassen"
+                erledigt={bereiteKlassen.length > 0}
+                gesperrt={false}
+              />
+              <Schritt
+                nummer={2}
+                titel="Raum zeichnen"
+                text="Maße festlegen, dann Tische, Pult, Tafel, Tür und Fenster im Raster setzen."
+                cta={hatRaeume ? "Räume öffnen" : "Raum anlegen"}
+                to="/raeume"
+                erledigt={bereiteRaeume.length > 0}
+                gesperrt={!hatKlassen}
+                grund="Erst eine Klasse anlegen."
+              />
+              <Schritt
+                nummer={3}
+                titel="Sitzplan erstellen"
+                text="Klasse und Raum verbinden, danach die Schüler auf die Plätze ziehen."
+                cta={hatPlaene ? "Sitzpläne öffnen" : "Sitzplan erstellen"}
+                to="/sitzplaene"
+                erledigt={hatPlaene}
+                gesperrt={!kannPlan}
+                grund={
+                  bereiteKlassen.length === 0
+                    ? "Erst eine Klasse mit Schülern anlegen."
+                    : "Erst einen Raum mit Sitzplätzen zeichnen."
+                }
+              />
+            </ol>
+          </section>
+
+          {hatPlaene && (
+            <section aria-labelledby="zuletzt">
+              <h2 id="zuletzt" className="section-title">
+                Zuletzt bearbeitet
+              </h2>
+              <ul className="mt-3 overflow-hidden rounded-[8px] border border-line bg-panel">
+                {letzte.map((p, i) => {
+                  const cls = data.classes.find((c) => c.id === p.classId);
+                  return (
+                    <li
+                      key={p.id}
+                      className={`flex flex-wrap items-center gap-3 px-4 py-3 ${i > 0 ? "border-t border-line" : ""}`}
                     >
-                      <PlanThumb room={room} width={44} height={32} />
-                      <span className="min-w-0">
+                      {cls && <ClassDot name={cls.name} colorIndex={cls.colorIndex} size={28} />}
+                      <Link to="/sitzplaene/$id" params={{ id: p.id }} className="min-w-0 flex-1">
                         <span className="block truncate text-[14px] font-medium">{p.title}</span>
-                        <span className="block truncate text-[13px] text-ink-2">
-                          {cls.name} · {room.name} · {belegt} von {seatCount(room)} Plätzen belegt
+                        <span className="block truncate text-[13px] text-ink-3">
+                          {p.room.name} · {relativeZeit(p.updated)}
                         </span>
+                      </Link>
+                      <span className="num shrink-0 text-[13px] text-ink-2">
+                        {Object.keys(p.assignments).length}/{seatCount(p.room)}
                       </span>
-                      <span className="flex items-center gap-3">
-                        <StatusChip status={p.status} className="hidden sm:inline-flex" />
-                        <span className="num hidden text-right text-ink-3 md:inline">
-                          {relativeZeit(p.updated)}
-                        </span>
+                      <StatusChip status={p.status} />
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          )}
 
-                        <ArrowUpRight
-                          size={16}
-                          strokeWidth={1.5}
-                          aria-hidden
-                          className="text-ink-3 opacity-0 transition-opacity group-hover:opacity-100"
-                        />
-                      </span>
-                    </Link>
-                  </li>
-                );
-              })}
-              {liste.length === 0 && (
-                <li className="px-4 py-6 text-[13px] text-ink-2">
-                  Kein Sitzplan passt zu „{q}“.
-                </li>
-              )}
-            </ul>
-          </section>
-
-          <section aria-labelledby="vorlagen" className="reveal" style={{ "--i": 1 } as never}>
-            <h2 id="vorlagen" className="section-title">
-              Raumvorlagen
-            </h2>
-            <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              {rooms.map((r) => (
-                <Link
-                  key={r.id}
-                  to="/raeume/$id"
-                  params={{ id: r.id }}
-                  className="rounded-[8px] border border-line bg-panel p-3 shadow-[var(--shadow-panel)] transition-[transform,border-color] duration-[180ms] ease-out hover:-translate-y-px hover:border-[color:var(--line-control)]"
-                >
-                  <PlanThumb room={r} width={200} height={92} />
-                  <span className="mt-2.5 block text-[14px] font-medium">{r.name}</span>
-                  <span className="num block text-ink-3">
-                    {r.width} × {r.height} cm · {seatCount(r)} Plätze
-                  </span>
-                </Link>
-              ))}
-              <button
-                type="button"
-                className="grid min-h-[150px] place-items-center rounded-[8px] border border-dashed border-line-control bg-transparent p-3 text-[13px] text-ink-2 transition-colors hover:border-[color:var(--action)] hover:text-action-soft-ink"
-              >
-                <span className="flex flex-col items-center gap-1.5">
-                  <Plus size={16} strokeWidth={1.5} />
-                  Raumvorlage anlegen
-                </span>
-              </button>
-            </div>
-          </section>
-
-          <section aria-labelledby="ohne-plan" className="reveal" style={{ "--i": 2 } as never}>
-            <h2 id="ohne-plan" className="section-title">
-              Klassen ohne aktuellen Sitzplan
-            </h2>
-            <ul className="mt-3 divide-y divide-[color:var(--line)] overflow-hidden rounded-[8px] border border-line bg-panel shadow-[var(--shadow-panel)]">
-              {OHNE_PLAN.map((e) => {
-                const c = getClass(e.id);
-                if (!c) return null;
-                return (
+          {ohnePlan.length > 0 && (
+            <section aria-labelledby="ohne-plan">
+              <h2 id="ohne-plan" className="section-title">
+                Klassen ohne aktuellen Sitzplan
+              </h2>
+              <ul className="mt-3 overflow-hidden rounded-[8px] border border-line bg-panel">
+                {ohnePlan.map((c, i) => (
                   <li
                     key={c.id}
-                    className="flex items-center gap-3.5 px-4 py-3 transition-colors hover:bg-elevated"
+                    className={`flex flex-wrap items-center gap-3 px-4 py-3 ${i > 0 ? "border-t border-line" : ""}`}
                   >
-                    <ClassDot name={c.name} colorIndex={c.colorIndex} />
+                    <ClassDot name={c.name} colorIndex={c.colorIndex} size={28} />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-[14px] font-medium">{c.name}</span>
-                      <span className="block truncate text-[13px] text-ink-2">
-                        {c.students.length} Schüler · {e.meta}
+                      <span className="block truncate text-[13px] text-ink-3">
+                        {c.students.length === 0
+                          ? "Noch keine Schüler eingetragen"
+                          : `${c.students.length} Schüler`}
                       </span>
                     </span>
-                    <button
-                      type="button"
-                      style={{ height: 34, borderColor: "#D2C5AF", background: "#FCFAF6" }}
-                      className="shrink-0 rounded-[8px] border px-3 text-[13px] font-medium transition-colors hover:border-[color:var(--action)]"
-                    >
-                      Sitzplan erstellen
-                    </button>
+                    {c.students.length === 0 || bereiteRaeume.length === 0 ? (
+                      <Button variant="secondary" size="sm" asChild>
+                        <Link
+                          to={c.students.length === 0 ? "/klassen/$id" : "/raeume"}
+                          {...(c.students.length === 0 ? { params: { id: c.id } } : {})}
+                        >
+                          {c.students.length === 0 ? "Schüler eintragen" : "Raum zeichnen"}
+                        </Link>
+                      </Button>
+                    ) : (
+                      <Button variant="secondary" size="sm" asChild>
+                        <Link to="/sitzplaene" search={{ neu: c.id }}>
+                          Sitzplan erstellen
+                        </Link>
+                      </Button>
+                    )}
                   </li>
-                );
-              })}
-            </ul>
-          </section>
+                ))}
+              </ul>
+            </section>
+          )}
         </div>
 
-
-        <aside className="space-y-6 reveal" style={{ "--i": 3 } as never}>
-          <section aria-labelledby="klassen-kurz">
-            <h2 id="klassen-kurz" className="eyebrow">
-              Klassen
-            </h2>
-            <ul className="mt-2 divide-y divide-[color:var(--line)] overflow-hidden rounded-[8px] border border-line bg-panel">
-              {classes.map((c) => (
-                <li key={c.id}>
-                  <Link
-                    to="/klassen/$id"
-                    params={{ id: c.id }}
-                    className="flex h-[40px] items-center gap-2.5 px-3 hover:bg-elevated"
-                  >
-                    <ClassDot name={c.name} colorIndex={c.colorIndex} />
-                    <span className="min-w-0 flex-1 truncate text-[13px]">{c.name}</span>
-                    <span className="num text-ink-3">{c.students.length}</span>
-                  </Link>
-                </li>
+        <aside className="space-y-5">
+          <div className="rounded-[8px] border border-line bg-panel p-4">
+            <h2 className="eyebrow">Bestand</h2>
+            <dl className="mt-2 space-y-2 text-[14px]">
+              {[
+                { icon: Users, label: "Klassen", wert: data.classes.length, to: "/klassen" },
+                { icon: DoorOpen, label: "Räume", wert: data.rooms.length, to: "/raeume" },
+                { icon: Grid2x2, label: "Sitzpläne", wert: data.plans.length, to: "/sitzplaene" },
+              ].map(({ icon: Icon, label, wert, to }) => (
+                <div key={label} className="flex items-center gap-2.5">
+                  <Icon size={16} strokeWidth={1.5} className="text-ink-3" />
+                  <dt className="min-w-0 flex-1">
+                    <Link to={to} className="underline-offset-2 hover:underline">
+                      {label}
+                    </Link>
+                  </dt>
+                  <dd className="num text-ink-2">{String(wert).padStart(2, "0")}</dd>
+                </div>
               ))}
-            </ul>
-          </section>
+            </dl>
+          </div>
 
-          <section
-            aria-labelledby="datenstand"
-            className="rounded-[8px] border border-line bg-info-bg p-3.5"
-          >
-            <div className="flex items-center justify-between gap-2">
-              <h2 id="datenstand" className="text-[13px] font-semibold text-info">
-                Datenstand
-              </h2>
-              <span className="rounded-[3px] border border-[color:var(--info)] px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-info">
-                Testbetrieb
-              </span>
-            </div>
-            <p className="prose-measure mt-1.5 text-[13px] text-info">
-              Diese Ansicht läuft mit Fantasiedaten. Namen, Klassen und Räume sind erfunden,
-              Änderungen werden nicht dauerhaft gespeichert.
+          <div className="rounded-[8px] border border-line bg-info-bg p-4">
+            <h2 className="flex items-center gap-2 text-[13px] font-semibold text-info">
+              <Info size={16} strokeWidth={1.5} aria-hidden />
+              Datenstand
+            </h2>
+            <p className="prose-measure mt-1.5 text-[13px] leading-[1.6] text-ink-2">
+              Alle Klassen, Räume und Sitzpläne liegen ausschließlich lokal in diesem Browser. Es
+              gibt kein Nutzerkonto und keine Übertragung an einen Server. Wird der Browserspeicher
+              geleert oder ein anderes Gerät verwendet, beginnt die Anwendung wieder leer.
             </p>
-          </section>
+          </div>
         </aside>
       </div>
     </>

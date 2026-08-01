@@ -10,9 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as EinstellungenRouteImport } from './routes/einstellungen'
 import { Route as PapierkorbRouteImport } from './routes/papierkorb'
-import { Route as SigninRouteImport } from './routes/signin'
 import { Route as KlassenIndexRouteImport } from './routes/klassen.index'
 import { Route as KlassenIdRouteImport } from './routes/klassen.$id'
 import { Route as RaeumeIndexRouteImport } from './routes/raeume.index'
@@ -25,19 +23,9 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EinstellungenRoute = EinstellungenRouteImport.update({
-  id: '/einstellungen',
-  path: '/einstellungen',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const PapierkorbRoute = PapierkorbRouteImport.update({
   id: '/papierkorb',
   path: '/papierkorb',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SigninRoute = SigninRouteImport.update({
-  id: '/signin',
-  path: '/signin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const KlassenIndexRoute = KlassenIndexRouteImport.update({
@@ -73,9 +61,7 @@ const SitzplaeneIdRoute = SitzplaeneIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/einstellungen': typeof EinstellungenRoute
   '/papierkorb': typeof PapierkorbRoute
-  '/signin': typeof SigninRoute
   '/klassen/$id': typeof KlassenIdRoute
   '/raeume/$id': typeof RaeumeIdRoute
   '/sitzplaene/$id': typeof SitzplaeneIdRoute
@@ -85,9 +71,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/einstellungen': typeof EinstellungenRoute
   '/papierkorb': typeof PapierkorbRoute
-  '/signin': typeof SigninRoute
   '/klassen/$id': typeof KlassenIdRoute
   '/raeume/$id': typeof RaeumeIdRoute
   '/sitzplaene/$id': typeof SitzplaeneIdRoute
@@ -98,9 +82,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/einstellungen': typeof EinstellungenRoute
   '/papierkorb': typeof PapierkorbRoute
-  '/signin': typeof SigninRoute
   '/klassen/$id': typeof KlassenIdRoute
   '/raeume/$id': typeof RaeumeIdRoute
   '/sitzplaene/$id': typeof SitzplaeneIdRoute
@@ -112,9 +94,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/einstellungen'
     | '/papierkorb'
-    | '/signin'
     | '/klassen/$id'
     | '/raeume/$id'
     | '/sitzplaene/$id'
@@ -124,9 +104,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/einstellungen'
     | '/papierkorb'
-    | '/signin'
     | '/klassen/$id'
     | '/raeume/$id'
     | '/sitzplaene/$id'
@@ -136,9 +114,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
-    | '/einstellungen'
     | '/papierkorb'
-    | '/signin'
     | '/klassen/$id'
     | '/raeume/$id'
     | '/sitzplaene/$id'
@@ -149,9 +125,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  EinstellungenRoute: typeof EinstellungenRoute
   PapierkorbRoute: typeof PapierkorbRoute
-  SigninRoute: typeof SigninRoute
   KlassenIdRoute: typeof KlassenIdRoute
   RaeumeIdRoute: typeof RaeumeIdRoute
   SitzplaeneIdRoute: typeof SitzplaeneIdRoute
@@ -169,25 +143,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/einstellungen': {
-      id: '/einstellungen'
-      path: '/einstellungen'
-      fullPath: '/einstellungen'
-      preLoaderRoute: typeof EinstellungenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/papierkorb': {
       id: '/papierkorb'
       path: '/papierkorb'
       fullPath: '/papierkorb'
       preLoaderRoute: typeof PapierkorbRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/signin': {
-      id: '/signin'
-      path: '/signin'
-      fullPath: '/signin'
-      preLoaderRoute: typeof SigninRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/klassen/': {
@@ -237,9 +197,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  EinstellungenRoute: EinstellungenRoute,
   PapierkorbRoute: PapierkorbRoute,
-  SigninRoute: SigninRoute,
   KlassenIdRoute: KlassenIdRoute,
   RaeumeIdRoute: RaeumeIdRoute,
   SitzplaeneIdRoute: SitzplaeneIdRoute,

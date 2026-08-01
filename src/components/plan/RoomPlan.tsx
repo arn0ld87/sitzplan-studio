@@ -1,20 +1,26 @@
-import { Fragment } from "react";
+import { Fragment, useRef } from "react";
 import {
   FURNITURE_SPECS,
   studentColor,
   initials,
+  studentName,
   type Furniture,
-  type Room,
+  type RoomGeometry,
   type Student,
-} from "@/data/demo";
+} from "@/data/types";
 
 export type PlanMode = "room" | "seating";
 
-export function PlanDefs() {
+export function PlanDefs({ grid }: { grid: number }) {
   return (
     <defs>
-      <pattern id="sp-grid" width="25" height="25" patternUnits="userSpaceOnUse">
-        <path d="M25 0 H0 V25" fill="none" stroke="var(--grid-line)" strokeWidth="1" />
+      <pattern id="sp-grid" width={grid} height={grid} patternUnits="userSpaceOnUse">
+        <path
+          d={`M${grid} 0 H0 V${grid}`}
+          fill="none"
+          stroke="var(--grid-line)"
+          strokeWidth="1"
+        />
       </pattern>
       <pattern
         id="sp-hatch"
@@ -133,72 +139,61 @@ export function FurnitureShape({ kind }: { kind: Furniture["kind"] }) {
   }
 }
 
-export function Seat({
+function Seat({
   cx,
   cy,
   r,
   student,
-  conflict,
-  selected,
-  onClick,
+  carried,
+  interactive,
+  onDown,
+  onUp,
+  onDropStudent,
   label,
 }: {
   cx: number;
   cy: number;
   r: number;
   student?: Student | undefined;
-  conflict?: boolean;
-  selected?: boolean;
-  onClick?: () => void;
+  carried?: boolean;
+  interactive?: boolean;
+  onDown?: () => void;
+  onUp?: () => void;
+  onDropStudent?: () => void;
   label: string;
 }) {
   return (
     <g
-      role={onClick ? "button" : undefined}
-      tabIndex={onClick ? 0 : undefined}
+      role={interactive ? "button" : undefined}
+      tabIndex={interactive ? 0 : undefined}
       aria-label={label}
-      onClick={onClick}
+      onPointerDown={onDown}
+      onPointerUp={onUp}
+      onDragOver={onDropStudent ? (e) => e.preventDefault() : undefined}
+      onDrop={
+        onDropStudent
+          ? (e) => {
+              e.preventDefault();
+              onDropStudent();
+            }
+          : undefined
+      }
       onKeyDown={(e) => {
-        if (onClick && (e.key === "Enter" || e.key === " ")) {
+        if (!interactive) return;
+        if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          onClick();
+          onDown?.();
         }
       }}
-      style={{ cursor: onClick ? "pointer" : "default" }}
+      style={{ cursor: interactive ? "pointer" : "default" }}
     >
-      {conflict && (
-        <>
-          <circle
-            cx={cx}
-            cy={cy}
-            r={r + 5}
-            fill="none"
-            stroke="#8A5A12"
-            strokeWidth="1.5"
-            strokeDasharray="4 3"
-          />
-          <circle cx={cx + r + 3} cy={cy - r - 3} r="6" fill="var(--warning-bg)" stroke="#8A5A12" />
-          <text
-            x={cx + r + 3}
-            y={cy - r + 1}
-            textAnchor="middle"
-            fontSize="9"
-            fontWeight="700"
-            fill="#8A5A12"
-          >
-            !
-          </text>
-        </>
-      )}
       <circle
         cx={cx}
         cy={cy}
         r={r}
         fill={student ? studentColor(student.colorIndex) : "var(--elevated)"}
-        stroke={
-          selected ? "var(--select)" : student ? "var(--line-plan)" : "var(--line-control)"
-        }
-        strokeWidth={selected ? 2.6 : student ? 1.5 : 1.2}
+        stroke={carried ? "var(--select)" : student ? "var(--line-plan)" : "var(--line-control)"}
+        strokeWidth={carried ? 2.6 : student ? 1.5 : 1.2}
         strokeDasharray={student ? undefined : "3 3"}
       />
       <text
@@ -211,7 +206,7 @@ export function Seat({
         fill={student ? "#15110D" : "var(--ink-3)"}
         style={{ pointerEvents: "none" }}
       >
-        {student ? initials(student.name) : r > 13 ? "frei" : ""}
+        {student ? initials(studentName(student)) : r > 13 ? "frei" : ""}
       </text>
     </g>
   );
@@ -223,37 +218,82 @@ export function RoomPlan({
   showGrid = true,
   assignments = {},
   studentsById = {},
-  conflictSeats = [],
   selectedId,
   onSelect,
-  selectedSeatId,
-  onSeatClick,
+  onMoveFurniture,
+  carriedStudentId,
+  onSeatDown,
+  onSeatUp,
+  onSeatDropStudent,
   className,
 }: {
-  room: Room;
+  room: RoomGeometry;
   mode?: PlanMode;
   showGrid?: boolean;
   assignments?: Record<string, string>;
   studentsById?: Record<string, Student>;
-  conflictSeats?: string[];
   selectedId?: string | null;
   onSelect?: (id: string | null) => void;
-  selectedSeatId?: string | null;
-  onSeatClick?: (seatId: string) => void;
+  onMoveFurniture?: (id: string, x: number, y: number) => void;
+  carriedStudentId?: string | null;
+  onSeatDown?: (seatId: string) => void;
+  onSeatUp?: (seatId: string) => void;
+  onSeatDropStudent?: (seatId: string) => void;
   className?: string;
 }) {
   const pad = 46;
   const r = mode === "seating" ? 16 : 11;
+  const svgRef = useRef<SVGSVGElement>(null);
+  const drag = useRef<{ id: string; dx: number; dy: number } | null>(null);
+
+  function toSvg(e: React.PointerEvent) {
+    const svg = svgRef.current;
+    if (!svg) return null;
+    const ctm = svg.getScreenCTM();
+    if (!ctm) return null;
+    const pt = svg.createSVGPoint();
+    pt.x = e.clientX;
+    pt.y = e.clientY;
+    const p = pt.matrixTransform(ctm.inverse());
+    return { x: p.x, y: p.y };
+  }
+
+  function startDrag(e: React.PointerEvent, f: Furniture) {
+    if (!onMoveFurniture) return;
+    const p = toSvg(e);
+    if (!p) return;
+    drag.current = { id: f.id, dx: p.x - f.x, dy: p.y - f.y };
+    (e.target as Element).setPointerCapture?.(e.pointerId);
+  }
+
+  function moveDrag(e: React.PointerEvent) {
+    const d = drag.current;
+    if (!d || !onMoveFurniture) return;
+    const p = toSvg(e);
+    if (!p) return;
+    const g = room.grid || 25;
+    const x = Math.round((p.x - d.dx) / g) * g;
+    const y = Math.round((p.y - d.dy) / g) * g;
+    onMoveFurniture(d.id, x, y);
+  }
 
   return (
     <svg
+      ref={svgRef}
       viewBox={`${-pad} ${-pad} ${room.width + pad * 2} ${room.height + pad * 2}`}
       className={className}
       role="img"
       aria-label={`Grundriss ${room.name}`}
       onClick={() => onSelect?.(null)}
+      onPointerMove={moveDrag}
+      onPointerUp={() => {
+        drag.current = null;
+      }}
+      onPointerLeave={() => {
+        drag.current = null;
+      }}
     >
-      <PlanDefs />
+      <PlanDefs grid={room.grid || 25} />
       <rect
         x={-pad}
         y={-pad}
@@ -272,14 +312,7 @@ export function RoomPlan({
 
       {/* Bemaßung */}
       <g fontFamily="var(--font-mono)" fontSize="12" fill="var(--ink-3)">
-        <line
-          x1="0"
-          y1={-24}
-          x2={room.width}
-          y2={-24}
-          stroke="var(--line-strong)"
-          strokeWidth="1"
-        />
+        <line x1="0" y1={-24} x2={room.width} y2={-24} stroke="var(--line-strong)" strokeWidth="1" />
         <line x1="0" y1={-30} x2="0" y2={-18} stroke="var(--line-strong)" />
         <line x1={room.width} y1={-30} x2={room.width} y2={-18} stroke="var(--line-strong)" />
         <text x={room.width / 2} y={-30} textAnchor="middle">
@@ -322,13 +355,19 @@ export function RoomPlan({
                 e.stopPropagation();
                 onSelect(f.id);
               }}
+              onPointerDown={(e) => {
+                if (!onSelect) return;
+                e.stopPropagation();
+                onSelect(f.id);
+                startDrag(e, f);
+              }}
               onKeyDown={(e) => {
                 if (onSelect && (e.key === "Enter" || e.key === " ")) {
                   e.preventDefault();
                   onSelect(f.id);
                 }
               }}
-              style={{ cursor: onSelect ? "pointer" : "default" }}
+              style={{ cursor: onMoveFurniture ? "move" : onSelect ? "pointer" : "default" }}
             >
               <FurnitureShape kind={f.kind} />
             </g>
@@ -337,6 +376,7 @@ export function RoomPlan({
               if (!pos) return null;
               const studentId = assignments[seatId];
               const student = studentId ? studentsById[studentId] : undefined;
+              const interactive = mode === "seating" && Boolean(onSeatDown);
               return (
                 <Seat
                   key={seatId}
@@ -344,18 +384,22 @@ export function RoomPlan({
                   cy={pos.cy}
                   r={r}
                   student={mode === "seating" ? student : undefined}
-                  conflict={conflictSeats.includes(seatId)}
-                  selected={selectedSeatId === seatId}
-                  {...(onSeatClick ? { onClick: () => onSeatClick(seatId) } : {})}
+                  carried={Boolean(student && carriedStudentId && student.id === carriedStudentId)}
+                  interactive={interactive}
+                  {...(interactive && onSeatDown ? { onDown: () => onSeatDown(seatId) } : {})}
+                  {...(interactive && onSeatUp ? { onUp: () => onSeatUp(seatId) } : {})}
+                  {...(interactive && onSeatDropStudent
+                    ? { onDropStudent: () => onSeatDropStudent(seatId) }
+                    : {})}
                   label={
-                    student ? `Platz mit ${student.name}` : "Freier Sitzplatz — Schüler zuweisen"
+                    student
+                      ? `Platz mit ${studentName(student)} — auswählen zum Umsetzen`
+                      : "Freier Sitzplatz — Schüler zuweisen"
                   }
                 />
               );
             })}
-            {selected && (
-              <SelectionFrame w={FURNITURE_SPECS[f.kind].w} h={FURNITURE_SPECS[f.kind].h} />
-            )}
+            {selected && <SelectionFrame w={spec.w} h={spec.h} />}
           </g>
         );
       })}
@@ -373,14 +417,7 @@ function SelectionFrame({ w, h }: { w: number; h: number }) {
   ];
   return (
     <g style={{ pointerEvents: "none" }}>
-      <rect
-        width={w}
-        height={h}
-        fill="none"
-        stroke="var(--select)"
-        strokeWidth="2.6"
-        rx="3"
-      />
+      <rect width={w} height={h} fill="none" stroke="var(--select)" strokeWidth="2.6" rx="3" />
       <rect
         x={-8}
         y={-8}
@@ -422,7 +459,7 @@ export function PlanThumb({
   width = 44,
   height = 32,
 }: {
-  room: Room;
+  room: RoomGeometry;
   width?: number;
   height?: number;
 }) {

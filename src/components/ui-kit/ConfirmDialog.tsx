@@ -20,21 +20,54 @@ export function ConfirmDialog({
   onCancel: () => void;
 }) {
   const ref = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const returnTo = useRef<HTMLElement | null>(null);
+
   useEffect(() => {
-    if (open) ref.current?.focus();
-  }, [open]);
+    if (!open) return;
+    returnTo.current = document.activeElement as HTMLElement | null;
+    ref.current?.focus();
+
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onCancel();
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const nodes = panelRef.current?.querySelectorAll<HTMLElement>("button, [href], input");
+      if (!nodes || nodes.length === 0) return;
+      const first = nodes[0]!;
+      const last = nodes[nodes.length - 1]!;
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      returnTo.current?.focus?.();
+    };
+  }, [open, onCancel]);
+
   if (!open) return null;
 
   return (
     <div
       className="fixed inset-0 z-50 grid place-items-center bg-[rgba(38,33,28,0.32)] p-4"
-      onKeyDown={(e) => e.key === "Escape" && onCancel()}
+      onClick={onCancel}
     >
       <div
+        ref={panelRef}
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="cd-title"
         aria-describedby="cd-desc"
+        onClick={(e) => e.stopPropagation()}
         className="w-full max-w-[440px] rounded-[10px] border border-line bg-elevated p-5 shadow-[var(--shadow-overlay)]"
       >
         <div className="flex gap-3">

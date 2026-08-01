@@ -1,29 +1,9 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import {
-  LayoutGrid,
-  Users,
-  DoorOpen,
-  Grid2x2,
-  Trash2,
-  Settings,
-  type LucideIcon,
-} from "lucide-react";
+import { LayoutGrid, Users, DoorOpen, Grid2x2, Trash2, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { classes, rooms, plans } from "@/data/demo";
+import { useStore } from "@/store/app";
 
 type NavItem = { to: string; label: string; icon: LucideIcon; count?: number };
-
-const MAIN: NavItem[] = [
-  { to: "/", label: "Übersicht", icon: LayoutGrid },
-  { to: "/klassen", label: "Klassen", icon: Users, count: classes.length },
-  { to: "/raeume", label: "Räume", icon: DoorOpen, count: rooms.length },
-  { to: "/sitzplaene", label: "Sitzpläne", icon: Grid2x2, count: plans.length },
-];
-
-const SECONDARY: NavItem[] = [
-  { to: "/papierkorb", label: "Papierkorb", icon: Trash2, count: 2 },
-  { to: "/einstellungen", label: "Einstellungen", icon: Settings },
-];
 
 export function Wordmark({ compact }: { compact?: boolean }) {
   return (
@@ -59,7 +39,7 @@ function NavRow({ item, active }: { item: NavItem; active: boolean }) {
     >
       <Icon size={16} strokeWidth={1.5} className="shrink-0" />
       <span className="min-w-0 flex-1 truncate">{item.label}</span>
-      {item.count !== undefined && (
+      {item.count !== undefined && item.count > 0 && (
         <span className="num text-ink-3">{String(item.count).padStart(2, "0")}</span>
       )}
     </Link>
@@ -68,6 +48,18 @@ function NavRow({ item, active }: { item: NavItem; active: boolean }) {
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const isActive = useActive();
+  const { data } = useStore();
+
+  const MAIN: NavItem[] = [
+    { to: "/", label: "Übersicht", icon: LayoutGrid },
+    { to: "/klassen", label: "Klassen", icon: Users, count: data.classes.length },
+    { to: "/raeume", label: "Räume", icon: DoorOpen, count: data.rooms.length },
+    { to: "/sitzplaene", label: "Sitzpläne", icon: Grid2x2, count: data.plans.length },
+  ];
+  const SECONDARY: NavItem[] = [
+    { to: "/papierkorb", label: "Papierkorb", icon: Trash2, count: data.trash.length },
+  ];
+
   return (
     <div className="min-h-screen bg-canvas">
       <a
@@ -90,22 +82,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <NavRow key={i.to} item={i} active={isActive(i.to)} />
           ))}
         </nav>
-        <div className="border-t border-line p-2.5">
-          <Link
-            to="/signin"
-            className="flex items-center gap-2.5 rounded-[6px] p-1.5 hover:bg-sunken"
-          >
-            <span
-              aria-hidden
-              className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-line-control bg-elevated text-[12px] font-semibold"
-            >
-              RH
-            </span>
-            <span className="min-w-0">
-              <span className="block truncate text-[13px] font-medium">Rike Haldern</span>
-              <span className="block truncate text-[12px] text-ink-3">Gesamtschule Nord</span>
-            </span>
-          </Link>
+        <div className="border-t border-line px-3.5 py-3">
+          <p className="text-[12px] leading-[1.5] text-ink-3">
+            Alle Daten liegen ausschließlich lokal in diesem Browser.
+          </p>
         </div>
       </aside>
 

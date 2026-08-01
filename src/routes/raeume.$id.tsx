@@ -1,430 +1,405 @@
-import { useMemo, useState } from "react";
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-  ArrowLeft,
   Undo2,
   Redo2,
-  Minus,
-  Plus,
   RotateCw,
   Copy,
   Trash2,
-  Table2,
+  Grid3x3,
+  Pencil,
+  Square,
+  Rows2,
+  Presentation,
+  PanelTop,
+  DoorClosed,
+  Blinds,
 } from "lucide-react";
 import { Button } from "@/components/ui-kit/Button";
-import { SaveStatus, type SaveState } from "@/components/ui-kit/SaveStatus";
-import { RoomPlan, FurnitureShape } from "@/components/plan/RoomPlan";
+import { PageHeader } from "@/components/PageHeader";
+import { SaveStatus } from "@/components/ui-kit/SaveStatus";
+import { ConfirmDialog } from "@/components/ui-kit/ConfirmDialog";
+import { Field, Modal, inputClass } from "@/components/ui-kit/Modal";
+import { RoomPlan } from "@/components/plan/RoomPlan";
 import {
   FURNITURE_SPECS,
-  getRoom,
+  makeFurniture,
+  newId,
   seatCount,
   type Furniture,
   type FurnitureKind,
-} from "@/data/demo";
+} from "@/data/types";
+import { useStore } from "@/store/app";
 
 export const Route = createFileRoute("/raeume/$id")({
-  loader: ({ params }) => {
-    const room = getRoom(params.id);
-    if (!room) throw notFound();
-    return { name: room.name, width: room.width, height: room.height };
-  },
-  head: ({ loaderData }) => {
-    if (!loaderData)
-      return {
-        meta: [{ title: "Raum nicht gefunden — Sitzplan" }, { name: "robots", content: "noindex" }],
-      };
-    return {
-      meta: [
-        { title: `${loaderData.name} bearbeiten — Sitzplan` },
-        {
-          name: "description",
-          content: `Grundriss von ${loaderData.name} (${loaderData.width} × ${loaderData.height} cm) mit Möbeln und Sitzplätzen bearbeiten.`,
-        },
-        { property: "og:title", content: `${loaderData.name} bearbeiten — Sitzplan` },
-        {
-          property: "og:description",
-          content: `Grundriss von ${loaderData.name} mit Möbeln und Sitzplätzen bearbeiten.`,
-        },
-      ],
-    };
-  },
-  component: Raumeditor,
+  head: () => ({
+    meta: [
+      { title: "Raum zeichnen — Sitzplan" },
+      {
+        name: "description",
+        content:
+          "Grundriss bearbeiten: Tische, Pult, Tafel, Tür und Fenster setzen, verschieben, drehen und duplizieren.",
+      },
+      { property: "og:title", content: "Raum zeichnen — Sitzplan" },
+      { property: "og:description", content: "Grundriss mit Rasterfang und Tastatursteuerung." },
+    ],
+  }),
+  component: RaumEditor,
 });
 
-const PALETTE: FurnitureKind[] = [
-  "einzeltisch",
-  "doppeltisch",
-  "pult",
-  "tafel",
-  "tuer",
-  "fenster",
+const PALETTE: { kind: FurnitureKind; icon: typeof Square }[] = [
+  { kind: "einzeltisch", icon: Square },
+  { kind: "doppeltisch", icon: Rows2 },
+  { kind: "pult", icon: PanelTop },
+  { kind: "tafel", icon: Presentation },
+  { kind: "tuer", icon: DoorClosed },
+  { kind: "fenster", icon: Blinds },
 ];
 
-function Raumeditor() {
+function RaumEditor() {
   const { id } = Route.useParams();
-  const base = getRoom(id)!;
-  const [furniture, setFurniture] = useState<Furniture[]>(base.furniture);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const { data, dispatch, saveState, undo, redo, canUndo, canRedo } = useStore();
+  const room = data.rooms.find((r) => r.id === id);
+
+  const [selected, setSelected] = useState<string | null>(null);
   const [showGrid, setShowGrid] = useState(true);
-  const [zoom, setZoom] = useState(100);
-  const [past, setPast] = useState<Furniture[][]>([]);
-  const [future, setFuture] = useState<Furniture[][]>([]);
-  const [saveState, setSaveState] = useState<SaveState>("gespeichert");
+  const [form, setForm] = useState<{ name: string; width: string; height: string; grid: string } | null>(
+    null,
+  );
+  const [fehler, setFehler] = useState("");
+  const [loeschen, setLoeschen] = useState(false);
 
-  const room = useMemo(() => ({ ...base, furniture }), [base, furniture]);
-  const selected = furniture.find((f) => f.id === selectedId) ?? null;
+  const furniture = useMemo(() => room?.furniture ?? [], [room]);
+  const aktiv = furniture.find((f) => f.id === selected) ?? null;
 
-  function commit(next: Furniture[]) {
-    setPast((p) => [...p, furniture]);
-    setFuture([]);
-    setFurniture(next);
-    setSaveState("aenderungen");
-  }
+  const setFurniture = useCallback(
+    (next: Furniture[]) => {
+      if (!room) return;
+      dispatch({ type: "room/furniture", id: room.id, furniture: next });
+    },
+    [dispatch, room],
+  );
 
-  function undo() {
-    setPast((p) => {
-      if (p.length === 0) return p;
-      const prev = p[p.length - 1]!;
-      setFuture((f) => [furniture, ...f]);
-      setFurniture(prev);
-      return p.slice(0, -1);
-    });
-  }
-  function redo() {
-    setFuture((f) => {
-      if (f.length === 0) return f;
-      setPast((p) => [...p, furniture]);
-      setFurniture(f[0]!);
-      return f.slice(1);
-    });
-  }
+  const patch = useCallback(
+    (fid: string, p: Partial<Furniture>) => {
+      setFurniture(furniture.map((f) => (f.id === fid ? { ...f, ...p } : f)));
+    },
+    [furniture, setFurniture],
+  );
 
-  function update(patch: Partial<Furniture>) {
-    if (!selected) return;
-    commit(furniture.map((f) => (f.id === selected.id ? { ...f, ...patch } : f)));
-  }
+  const einfuegen = useCallback(
+    (kind: FurnitureKind) => {
+      if (!room) return;
+      const g = room.grid || 25;
+      const spec = FURNITURE_SPECS[kind];
+      const x = Math.round((room.width / 2 - spec.w / 2) / g) * g;
+      const y = Math.round((room.height / 2 - spec.h / 2) / g) * g;
+      const f = makeFurniture(kind, Math.max(0, x), Math.max(0, y));
+      setFurniture([...furniture, f]);
+      setSelected(f.id);
+    },
+    [furniture, room, setFurniture],
+  );
 
-  function addFurniture(kind: FurnitureKind) {
-    const n = `${kind}-${Date.now()}`;
-    const spec = FURNITURE_SPECS[kind];
-    const nf: Furniture = {
-      id: n,
-      kind,
-      x: 100,
-      y: 150,
-      rotation: 0,
-      seats:
-        spec.seats === 2 ? [`${n}-a`, `${n}-b`] : spec.seats === 1 ? [`${n}-a`] : [],
+  const drehen = useCallback(() => {
+    if (!aktiv) return;
+    patch(aktiv.id, { rotation: (((aktiv.rotation + 90) % 360) as Furniture["rotation"]) });
+  }, [aktiv, patch]);
+
+  const duplizieren = useCallback(() => {
+    if (!aktiv || !room) return;
+    const g = room.grid || 25;
+    const nid = newId(aktiv.kind);
+    const kopie: Furniture = {
+      ...aktiv,
+      id: nid,
+      x: aktiv.x + g,
+      y: aktiv.y + g,
+      seats: aktiv.seats.map((_, i) => `${nid}-s${i + 1}`),
     };
-    commit([...furniture, nf]);
-    setSelectedId(n);
+    setFurniture([...furniture, kopie]);
+    setSelected(kopie.id);
+  }, [aktiv, furniture, room, setFurniture]);
+
+  const entfernen = useCallback(() => {
+    if (!aktiv) return;
+    setFurniture(furniture.filter((f) => f.id !== aktiv.id));
+    setSelected(null);
+  }, [aktiv, furniture, setFurniture]);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const target = e.target as HTMLElement | null;
+      if (target && ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName)) return;
+      const meta = e.metaKey || e.ctrlKey;
+      if (meta && e.key.toLowerCase() === "z") {
+        e.preventDefault();
+        if (e.shiftKey) redo();
+        else undo();
+        return;
+      }
+      if (!aktiv || !room) return;
+      const g = e.shiftKey ? 1 : room.grid || 25;
+      const moves: Record<string, [number, number]> = {
+        ArrowLeft: [-g, 0],
+        ArrowRight: [g, 0],
+        ArrowUp: [0, -g],
+        ArrowDown: [0, g],
+      };
+      const m = moves[e.key];
+      if (m) {
+        e.preventDefault();
+        patch(aktiv.id, { x: aktiv.x + m[0], y: aktiv.y + m[1] });
+        return;
+      }
+      if (e.key.toLowerCase() === "r") {
+        e.preventDefault();
+        drehen();
+      } else if (e.key.toLowerCase() === "d") {
+        e.preventDefault();
+        duplizieren();
+      } else if (e.key === "Delete" || e.key === "Backspace") {
+        e.preventDefault();
+        entfernen();
+      } else if (e.key === "Escape") {
+        setSelected(null);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [aktiv, room, patch, drehen, duplizieren, entfernen, undo, redo]);
+
+  if (!room) {
+    return (
+      <div className="px-5 py-10 md:px-8">
+        <h1 className="page-title">Raum nicht gefunden</h1>
+        <p className="mt-2 text-[14px] text-ink-2">
+          Dieser Raum wurde gelöscht oder es liegen keine Daten in diesem Browser.
+        </p>
+        <Button className="mt-5" variant="secondary" asChild>
+          <Link to="/raeume">Zurück zu den Räumen</Link>
+        </Button>
+      </div>
+    );
   }
 
-  function duplicate() {
-    if (!selected) return;
-    const n = `${selected.kind}-${Date.now()}`;
-    commit([
-      ...furniture,
-      { ...selected, id: n, x: selected.x + 25, y: selected.y + 25, seats: selected.seats.map((s) => `${n}-${s.slice(-1)}`) },
-    ]);
-    setSelectedId(n);
-  }
-
-  function remove() {
-    if (!selected) return;
-    commit(furniture.filter((f) => f.id !== selected.id));
-    setSelectedId(null);
+  function speichern() {
+    if (!form || !room) return;
+    const name = form.name.trim();
+    const width = Number(form.width);
+    const height = Number(form.height);
+    const grid = Number(form.grid);
+    if (!name) return setFehler("Bitte einen Namen angeben.");
+    if (!Number.isFinite(width) || width < 200 || width > 2000)
+      return setFehler("Breite zwischen 200 und 2000 cm.");
+    if (!Number.isFinite(height) || height < 200 || height > 2000)
+      return setFehler("Tiefe zwischen 200 und 2000 cm.");
+    dispatch({ type: "room/update", id: room.id, name, width, height, grid });
+    setForm(null);
+    setFehler("");
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-52px)] flex-col md:min-h-screen">
-      {/* 1 — Toolbar */}
-      <div className="flex h-[52px] shrink-0 items-center gap-3 border-b border-line bg-panel px-3">
-        <Button variant="quiet" size="sm" asChild>
-          <Link to="/raeume">
-            <ArrowLeft size={16} strokeWidth={1.5} />
-            Räume
-          </Link>
-        </Button>
-        <span aria-hidden className="h-6 w-px bg-[color:var(--line)]" />
-        <div className="min-w-0">
-          <p className="truncate text-[14px] font-semibold">{room.name}</p>
-          <p className="num truncate text-ink-3">
-            {room.width} × {room.height} cm · Raster {room.grid} cm · {seatCount(room)} Plätze
-          </p>
-        </div>
-        <div className="ml-auto flex items-center gap-2">
-          <div className="flex items-center gap-1">
+    <>
+      <PageHeader
+        crumbs={[
+          { label: "Sitzplan", to: "/" },
+          { label: "Räume", to: "/raeume" },
+          { label: room.name },
+        ]}
+        title={room.name}
+        subtitle={`${room.width} × ${room.height} cm · Raster ${room.grid} cm · ${seatCount(room)} Sitzplätze`}
+        actions={
+          <>
+            <SaveStatus state={saveState} />
             <Button
-              variant="quiet"
-              size="iconSm"
-              aria-label="Rückgängig"
-              onClick={undo}
-              disabled={past.length === 0}
+              variant="secondary"
+              onClick={() =>
+                setForm({
+                  name: room.name,
+                  width: String(room.width),
+                  height: String(room.height),
+                  grid: String(room.grid),
+                })
+              }
             >
-              <Undo2 size={16} strokeWidth={1.5} />
+              <Pencil size={16} strokeWidth={1.5} />
+              Maße ändern
             </Button>
-            <Button
-              variant="quiet"
-              size="iconSm"
-              aria-label="Wiederherstellen"
-              onClick={redo}
-              disabled={future.length === 0}
-            >
-              <Redo2 size={16} strokeWidth={1.5} />
-            </Button>
-          </div>
-          <label className="hidden items-center gap-1.5 text-[13px] text-ink-2 lg:flex">
-            <input
-              type="checkbox"
-              checked={showGrid}
-              onChange={(e) => setShowGrid(e.target.checked)}
-              className="h-4 w-4 accent-[color:var(--select)]"
-            />
-            Raster
-          </label>
-          <div className="hidden items-center rounded-[6px] border border-line-control bg-elevated sm:flex">
-            <Button
-              variant="quiet"
-              size="iconSm"
-              aria-label="Verkleinern"
-              onClick={() => setZoom((z) => Math.max(50, z - 10))}
-            >
-              <Minus size={16} strokeWidth={1.5} />
-            </Button>
-            <span className="num w-12 text-center text-ink-2">{zoom} %</span>
-            <Button
-              variant="quiet"
-              size="iconSm"
-              aria-label="Vergrößern"
-              onClick={() => setZoom((z) => Math.min(160, z + 10))}
-            >
-              <Plus size={16} strokeWidth={1.5} />
-            </Button>
-          </div>
-          <SaveStatus state={saveState} className="hidden md:inline-flex" />
-          <Button variant="secondary" size="sm" onClick={() => setSaveState("gespeichert")}>
-            Raumdaten
-          </Button>
-        </div>
-      </div>
+          </>
+        }
+      />
 
-      <div className="flex min-h-0 flex-1">
-        {/* 2 — Palette */}
-        <aside className="hidden w-[212px] shrink-0 overflow-y-auto border-r border-line bg-panel p-3 lg:block">
-          <h2 className="eyebrow">Möbel einfügen</h2>
-          <ul className="mt-2 space-y-1">
-            {PALETTE.map((kind) => {
-              const spec = FURNITURE_SPECS[kind];
-              return (
-                <li key={kind}>
-                  <button
-                    type="button"
-                    onClick={() => addFurniture(kind)}
-                    className="flex w-full items-center gap-2.5 rounded-[6px] border border-transparent p-1.5 text-left transition-colors hover:border-[color:var(--line)] hover:bg-elevated"
-                  >
-                    <svg
-                      width="52"
-                      height="30"
-                      viewBox={`-4 -4 ${spec.w + 8} ${spec.h + 8}`}
-                      aria-hidden
-                      className="shrink-0"
-                    >
-                      <FurnitureShape kind={kind} />
-                    </svg>
-                    <span className="min-w-0">
-                      <span className="block truncate text-[13px]">{spec.label}</span>
-                      <span className="num block text-ink-3">
-                        {spec.w} × {spec.h}
-                      </span>
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+      <div className="grid gap-0 lg:grid-cols-[236px_minmax(0,1fr)]">
+        <aside className="border-b border-line bg-panel p-4 lg:border-b-0 lg:border-r">
+          <h2 className="eyebrow">Objekte einfügen</h2>
+          <div className="mt-2 grid grid-cols-2 gap-1.5 lg:grid-cols-1">
+            {PALETTE.map(({ kind, icon: Icon }) => (
+              <Button
+                key={kind}
+                variant="secondary"
+                size="sm"
+                className="justify-start"
+                onClick={() => einfuegen(kind)}
+              >
+                <Icon size={16} strokeWidth={1.5} />
+                {FURNITURE_SPECS[kind].label}
+              </Button>
+            ))}
+          </div>
+
+          <hr className="my-4 border-t border-line" />
+          <h2 className="eyebrow">Auswahl</h2>
+          {aktiv ? (
+            <>
+              <p className="mt-1.5 text-[13px]">
+                {FURNITURE_SPECS[aktiv.kind].label}
+                <span className="num ml-2 text-ink-3">
+                  {aktiv.x}/{aktiv.y}
+                </span>
+              </p>
+              <div className="mt-2 grid grid-cols-3 gap-1.5">
+                <Button variant="secondary" size="sm" onClick={drehen} aria-label="Drehen (R)">
+                  <RotateCw size={16} strokeWidth={1.5} />
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={duplizieren}
+                  aria-label="Duplizieren (D)"
+                >
+                  <Copy size={16} strokeWidth={1.5} />
+                </Button>
+                <Button variant="danger" size="sm" onClick={entfernen} aria-label="Löschen (Entf)">
+                  <Trash2 size={16} strokeWidth={1.5} />
+                </Button>
+              </div>
+              <p className="mt-2 text-[12px] leading-[1.5] text-ink-3">
+                Pfeiltasten verschieben im Raster, mit Umschalt zentimeterweise. R dreht, D
+                dupliziert, Entf löscht.
+              </p>
+            </>
+          ) : (
+            <p className="mt-1.5 text-[13px] text-ink-3">
+              Kein Objekt ausgewählt. Klicken Sie ein Objekt im Grundriss an oder ziehen Sie es mit
+              der Maus.
+            </p>
+          )}
+
+          <hr className="my-4 border-t border-line" />
+          <div className="flex flex-wrap gap-1.5">
+            <Button variant="quiet" size="sm" onClick={undo} disabled={!canUndo}>
+              <Undo2 size={16} strokeWidth={1.5} />
+              Rückgängig
+            </Button>
+            <Button variant="quiet" size="sm" onClick={redo} disabled={!canRedo}>
+              <Redo2 size={16} strokeWidth={1.5} />
+              Wiederholen
+            </Button>
+            <Button
+              variant="quiet"
+              size="sm"
+              aria-pressed={showGrid}
+              onClick={() => setShowGrid((v) => !v)}
+            >
+              <Grid3x3 size={16} strokeWidth={1.5} />
+              Raster
+            </Button>
+          </div>
+          <Button
+            className="mt-4 w-full"
+            variant="danger"
+            size="sm"
+            onClick={() => setLoeschen(true)}
+          >
+            <Trash2 size={16} strokeWidth={1.5} />
+            Raum löschen
+          </Button>
         </aside>
 
-        {/* 3 — Plan */}
-        <div className="relative min-w-0 flex-1 overflow-auto bg-canvas p-6">
-          <div className="mx-auto" style={{ maxWidth: `${(zoom / 100) * 860}px` }}>
+        <div className="p-4 md:p-6">
+          {furniture.length === 0 && (
+            <p className="mb-3 rounded-[6px] border border-line bg-panel px-3 py-2 text-[13px] text-ink-2">
+              Der Raum ist leer. Fügen Sie links Tische und Einbauten ein — Doppeltische bringen zwei
+              Sitzplätze mit.
+            </p>
+          )}
+          <div className="overflow-hidden rounded-[8px] border border-line bg-plan">
             <RoomPlan
               room={room}
               mode="room"
               showGrid={showGrid}
-              selectedId={selectedId}
-              onSelect={setSelectedId}
-              className="h-auto w-full rounded-[8px] border border-line bg-plan shadow-[var(--shadow-panel)]"
+              selectedId={selected}
+              onSelect={setSelected}
+              onMoveFurniture={(fid, x, y) => patch(fid, { x, y })}
+              className="block h-auto w-full"
             />
           </div>
-
-          {selected && (
-            <div className="pointer-events-none sticky bottom-0 flex justify-center pt-6">
-              <div className="pointer-events-auto flex items-center gap-1 rounded-[8px] border border-line bg-elevated p-1.5 shadow-[var(--shadow-overlay)]">
-                <span className="px-2 text-[13px] font-medium">
-                  {FURNITURE_SPECS[selected.kind].label}
-                </span>
-                <span aria-hidden className="h-5 w-px bg-[color:var(--line)]" />
-                <Button
-                  variant="quiet"
-                  size="sm"
-                  onClick={() =>
-                    update({ rotation: (((selected.rotation + 90) % 360) as 0 | 90 | 180 | 270) })
-                  }
-                >
-                  <RotateCw size={16} strokeWidth={1.5} />
-                  Drehen <kbd>R</kbd>
-                </Button>
-                <Button variant="quiet" size="sm" onClick={duplicate}>
-                  <Copy size={16} strokeWidth={1.5} />
-                  Duplizieren <kbd>D</kbd>
-                </Button>
-                <Button
-                  variant="quiet"
-                  size="sm"
-                  className="text-danger hover:bg-danger-bg"
-                  onClick={remove}
-                >
-                  <Trash2 size={16} strokeWidth={1.5} />
-                  Löschen
-                </Button>
-              </div>
-            </div>
-          )}
         </div>
-
-        {/* 4 — Inspector */}
-        <aside className="hidden w-[296px] shrink-0 overflow-y-auto border-l border-line bg-panel p-4 xl:block">
-          {!selected ? (
-            <>
-              <h2 className="eyebrow">Inspector</h2>
-              <p className="prose-measure mt-2 text-[13px] text-ink-2">
-                Kein Objekt ausgewählt. Klicken Sie ein Möbelstück im Plan an, um Position, Drehung
-                und Sitzplätze zu bearbeiten.
-              </p>
-              <Tastatur />
-            </>
-          ) : (
-            <>
-              <h2 className="eyebrow">Objekt</h2>
-              <div className="mt-2 flex items-center gap-3 rounded-[6px] border border-line bg-elevated p-2.5">
-                <svg
-                  width="56"
-                  height="34"
-                  viewBox={`-4 -4 ${FURNITURE_SPECS[selected.kind].w + 8} ${FURNITURE_SPECS[selected.kind].h + 8}`}
-                  aria-hidden
-                >
-                  <FurnitureShape kind={selected.kind} />
-                </svg>
-                <div className="min-w-0">
-                  <p className="truncate text-[14px] font-medium">
-                    {FURNITURE_SPECS[selected.kind].label}
-                  </p>
-                  <p className="num text-ink-3">{selected.id}</p>
-                </div>
-              </div>
-
-              <h3 className="eyebrow mt-5">Position</h3>
-              <div className="mt-2 grid grid-cols-2 gap-2">
-                {(["x", "y"] as const).map((axis) => (
-                  <label key={axis} className="block">
-                    <span className="text-[12px] text-ink-2">{axis.toUpperCase()} in cm</span>
-                    <input
-                      type="number"
-                      step={room.grid}
-                      value={selected[axis]}
-                      onChange={(e) => update({ [axis]: Number(e.target.value) })}
-                      className="num mt-1 h-10 w-full rounded-[6px] border border-line-control bg-elevated px-2.5"
-                    />
-                  </label>
-                ))}
-              </div>
-
-              <h3 className="eyebrow mt-5">Maße</h3>
-              <div className="mt-2 grid grid-cols-2 gap-2">
-                {(["w", "h"] as const).map((k) => (
-                  <label key={k} className="block">
-                    <span className="text-[12px] text-ink-2">
-                      {k === "w" ? "Breite" : "Tiefe"} in cm
-                    </span>
-                    <input
-                      readOnly
-                      disabled
-                      value={FURNITURE_SPECS[selected.kind][k]}
-                      className="num mt-1 h-10 w-full rounded-[6px] border border-line bg-sunken px-2.5 text-ink-2"
-                    />
-                  </label>
-                ))}
-              </div>
-              <p className="mt-1 text-[12px] text-ink-3">
-                Maße sind je Möbeltyp festgelegt und nicht editierbar.
-              </p>
-
-              <h3 className="eyebrow mt-5">Drehung</h3>
-              <div
-                role="group"
-                aria-label="Drehung in Grad"
-                className="mt-2 grid grid-cols-4 gap-1 rounded-[6px] border border-line bg-sunken p-1"
-              >
-                {([0, 90, 180, 270] as const).map((deg) => (
-                  <button
-                    key={deg}
-                    type="button"
-                    aria-pressed={selected.rotation === deg}
-                    onClick={() => update({ rotation: deg })}
-                    className={`num h-8 rounded-[3px] transition-colors ${
-                      selected.rotation === deg
-                        ? "bg-elevated font-semibold text-ink shadow-[var(--shadow-panel)]"
-                        : "text-ink-2 hover:text-ink"
-                    }`}
-                  >
-                    {deg}°
-                  </button>
-                ))}
-              </div>
-
-              <h3 className="eyebrow mt-5">Sitzplätze</h3>
-              {selected.seats.length === 0 ? (
-                <p className="mt-2 text-[13px] text-ink-2">Dieses Objekt hat keine Sitzplätze.</p>
-              ) : (
-                <ul className="mt-2 divide-y divide-[color:var(--line)] rounded-[6px] border border-line bg-elevated">
-                  {selected.seats.map((s, i) => (
-                    <li key={s} className="flex items-center gap-2 px-2.5 py-2 text-[13px]">
-                      <Table2 size={16} strokeWidth={1.5} className="text-ink-3" />
-                      Platz {i + 1}
-                      <span className="num ml-auto text-ink-3">{s}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-              <Tastatur />
-            </>
-          )}
-        </aside>
       </div>
-    </div>
-  );
-}
 
-function Tastatur() {
-  return (
-    <div className="mt-6 border-t border-line pt-4">
-      <h3 className="eyebrow">Tastatur</h3>
-      <ul className="mt-2 space-y-1.5 text-[13px] text-ink-2">
-        <li>
-          <kbd>Tab</kbd> Objekt wechseln
-        </li>
-        <li>
-          <kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd> um ein Raster verschieben
-        </li>
-        <li>
-          <kbd>R</kbd> drehen · <kbd>D</kbd> duplizieren
-        </li>
-        <li>
-          <kbd>Entf</kbd> löschen · <kbd>Esc</kbd> Auswahl aufheben
-        </li>
-      </ul>
-    </div>
+      <Modal
+        open={Boolean(form)}
+        title="Raum bearbeiten"
+        submitLabel="Änderungen speichern"
+        onSubmit={speichern}
+        onClose={() => {
+          setForm(null);
+          setFehler("");
+        }}
+      >
+        <Field label="Name" error={fehler}>
+          <input
+            className={inputClass}
+            value={form?.name ?? ""}
+            maxLength={40}
+            onChange={(e) => setForm((f) => (f ? { ...f, name: e.target.value } : f))}
+          />
+        </Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Breite (cm)">
+            <input
+              className={`${inputClass} num`}
+              type="number"
+              value={form?.width ?? ""}
+              onChange={(e) => setForm((f) => (f ? { ...f, width: e.target.value } : f))}
+            />
+          </Field>
+          <Field label="Tiefe (cm)">
+            <input
+              className={`${inputClass} num`}
+              type="number"
+              value={form?.height ?? ""}
+              onChange={(e) => setForm((f) => (f ? { ...f, height: e.target.value } : f))}
+            />
+          </Field>
+        </div>
+        <Field label="Rasterweite (cm)">
+          <select
+            className={inputClass}
+            value={form?.grid ?? "25"}
+            onChange={(e) => setForm((f) => (f ? { ...f, grid: e.target.value } : f))}
+          >
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+          </select>
+        </Field>
+      </Modal>
+
+      <ConfirmDialog
+        open={loeschen}
+        title={`${room.name} in den Papierkorb legen?`}
+        description="Die Raumvorlage verschwindet aus der Liste, bleibt aber wiederherstellbar."
+        consequence="Bereits erstellte Sitzpläne behalten ihre eigene Kopie des Grundrisses."
+        confirmLabel="In den Papierkorb"
+        onConfirm={() => {
+          dispatch({ type: "room/delete", id: room.id });
+          window.history.back();
+        }}
+        onCancel={() => setLoeschen(false)}
+      />
+    </>
   );
 }

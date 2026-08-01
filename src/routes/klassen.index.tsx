@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Plus, Pencil, Trash2, Upload } from "lucide-react";
+import { Plus, Users, ChevronRight, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui-kit/Button";
-import { SearchField } from "@/components/ui-kit/SearchField";
 import { PageHeader } from "@/components/PageHeader";
-import { ConfirmDialog } from "@/components/ui-kit/ConfirmDialog";
+import { SearchField } from "@/components/ui-kit/SearchField";
 import { ClassDot } from "@/components/ui-kit/ClassDot";
-import { classes } from "@/data/demo";
+import { ConfirmDialog } from "@/components/ui-kit/ConfirmDialog";
+import { EmptyState } from "@/components/ui-kit/EmptyState";
+import { Field, Modal, inputClass } from "@/components/ui-kit/Modal";
+import { useStore } from "@/store/app";
 
 export const Route = createFileRoute("/klassen/")({
   head: () => ({
@@ -15,169 +17,169 @@ export const Route = createFileRoute("/klassen/")({
       {
         name: "description",
         content:
-          "Alle Klassen mit Schülerzahl, Sitzregeln und zugehörigen Sitzplänen in einer kompakten Tabelle.",
+          "Alle Klassen mit Schülerzahl und Notiz. Klassen anlegen, bearbeiten und in den Papierkorb legen.",
       },
       { property: "og:title", content: "Klassen verwalten — Sitzplan" },
-      {
-        property: "og:description",
-        content: "Alle Klassen mit Schülerzahl, Sitzregeln und Sitzplänen in einer Tabelle.",
-      },
+      { property: "og:description", content: "Klassen anlegen, bearbeiten und Schüler pflegen." },
     ],
   }),
   component: Klassen,
 });
 
 function Klassen() {
+  const { data, dispatch } = useStore();
   const [q, setQ] = useState("");
+  const [neu, setNeu] = useState(false);
+  const [name, setName] = useState("");
+  const [note, setNote] = useState("");
+  const [fehler, setFehler] = useState("");
   const [loeschen, setLoeschen] = useState<string | null>(null);
-  const gefiltert = classes.filter((c) =>
-    (c.name + c.note).toLowerCase().includes(q.toLowerCase()),
-  );
+
+  const gefiltert = useMemo(() => {
+    const t = q.trim().toLowerCase();
+    if (!t) return data.classes;
+    return data.classes.filter(
+      (c) =>
+        c.name.toLowerCase().includes(t) ||
+        c.note.toLowerCase().includes(t) ||
+        c.students.some((s) => `${s.firstName} ${s.lastName}`.toLowerCase().includes(t)),
+    );
+  }, [data.classes, q]);
+
+  const zuLoeschen = data.classes.find((c) => c.id === loeschen);
+  const planZahl = zuLoeschen ? data.plans.filter((p) => p.classId === zuLoeschen.id).length : 0;
+
+  function anlegen() {
+    const n = name.trim();
+    if (!n) return setFehler("Bitte einen Namen angeben.");
+    if (n.length > 40) return setFehler("Höchstens 40 Zeichen.");
+    if (data.classes.some((c) => c.name.toLowerCase() === n.toLowerCase()))
+      return setFehler("Diesen Klassennamen gibt es bereits.");
+    dispatch({ type: "class/add", name: n, note: note.trim().slice(0, 120) });
+    setNeu(false);
+    setName("");
+    setNote("");
+    setFehler("");
+  }
 
   return (
     <>
       <PageHeader
         crumbs={[{ label: "Sitzplan", to: "/" }, { label: "Klassen" }]}
         title="Klassen"
-        subtitle="Klassenlisten, Sitzregeln und die daraus erzeugten Sitzpläne. Änderungen wirken sich erst nach dem Speichern auf bestehende Pläne aus."
+        subtitle="Jede Klasse hat eine eigene Farbe. Schüler werden innerhalb der Klasse gepflegt."
         actions={
           <>
-            <SearchField value={q} onChange={setQ} label="Klassen suchen" />
-            <Button variant="primary">
+            {data.classes.length > 0 && <SearchField value={q} onChange={setQ} label="Klasse suchen" />}
+            <Button variant="primary" onClick={() => setNeu(true)}>
               <Plus size={16} strokeWidth={1.5} />
-              Neue Klasse
+              Klasse anlegen
             </Button>
           </>
         }
       />
 
       <div className="px-5 py-7 md:px-8">
-        {gefiltert.length === 0 ? (
-          <LeerZustand />
+        {data.classes.length === 0 ? (
+          <EmptyState
+            icon={Users}
+            title="Noch keine Klasse angelegt"
+            text="Eine Klasse ist der Ausgangspunkt: Sie enthält die Schülerinnen und Schüler, die später auf die Plätze verteilt werden."
+            action={
+              <Button variant="primary" onClick={() => setNeu(true)}>
+                <Plus size={16} strokeWidth={1.5} />
+                Erste Klasse anlegen
+              </Button>
+            }
+          />
+        ) : gefiltert.length === 0 ? (
+          <p className="text-[14px] text-ink-2">Keine Klasse passt zu „{q}“.</p>
         ) : (
-          <div className="overflow-hidden rounded-[8px] border border-line bg-panel shadow-[var(--shadow-panel)]">
-            <table className="w-full border-collapse text-left">
-              <caption className="sr-only">Übersicht aller Klassen</caption>
-              <thead>
-                <tr className="bg-sunken">
-                  {["Klasse", "Schüler", "Sitzregeln", "Sitzpläne", "Aktionen"].map((h, i) => (
-                    <th
-                      key={h}
-                      scope="col"
-                      className={`eyebrow border-b border-line px-4 py-2.5 ${
-                        i === 0 ? "" : "text-right"
-                      } ${i > 1 ? "hidden sm:table-cell" : ""}`}
-                    >
-                      {i === 4 ? <span className="sr-only">Aktionen</span> : h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {gefiltert.map((c, i) => (
-                  <tr
-                    key={c.id}
-                    className="group reveal border-b border-line last:border-0 hover:bg-elevated"
-                    style={{ "--i": i } as never}
-                  >
-                    <td className="px-4 py-3">
-                      <Link
-                        to="/klassen/$id"
-                        params={{ id: c.id }}
-                        className="flex min-w-0 items-center gap-2.5"
-                      >
-                        <ClassDot name={c.name} colorIndex={c.colorIndex} />
-                        <span className="min-w-0">
-                          <span className="block truncate text-[14px] font-medium">{c.name}</span>
-                          <span className="block truncate text-[13px] text-ink-2">{c.note}</span>
-                        </span>
-                      </Link>
-                    </td>
-                    <td className="num px-4 py-3 text-right text-ink-2">{c.students.length}</td>
-                    <td className="num hidden px-4 py-3 text-right text-ink-2 sm:table-cell">
-                      {c.rules.length}
-                    </td>
-                    <td className="num hidden px-4 py-3 text-right text-ink-2 sm:table-cell">
-                      {c.planIds.length}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex justify-end gap-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
-                        <Button variant="quiet" size="iconSm" aria-label={`${c.name} bearbeiten`}>
-                          <Pencil size={16} strokeWidth={1.5} />
-                        </Button>
-                        <Button
-                          variant="quiet"
-                          size="iconSm"
-                          aria-label={`${c.name} löschen`}
-                          className="text-danger hover:bg-danger-bg"
-                          onClick={() => setLoeschen(c.id)}
-                        >
-                          <Trash2 size={16} strokeWidth={1.5} />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <ul className="overflow-hidden rounded-[8px] border border-line bg-panel">
+            {gefiltert.map((c, i) => (
+              <li
+                key={c.id}
+                className={`flex items-center gap-3 px-4 py-3 ${i > 0 ? "border-t border-line" : ""}`}
+              >
+                <ClassDot name={c.name} colorIndex={c.colorIndex} />
+                <Link to="/klassen/$id" params={{ id: c.id }} className="min-w-0 flex-1">
+                  <span className="block truncate text-[14px] font-medium">{c.name}</span>
+                  <span className="block truncate text-[13px] text-ink-3">
+                    {c.note || "Ohne Notiz"}
+                  </span>
+                </Link>
+                <span className="num shrink-0 text-[13px] text-ink-2">
+                  {String(c.students.length).padStart(2, "0")} Schüler
+                </span>
+                <Button
+                  variant="quiet"
+                  size="iconSm"
+                  aria-label={`${c.name} löschen`}
+                  onClick={() => setLoeschen(c.id)}
+                >
+                  <Trash2 size={16} strokeWidth={1.5} />
+                </Button>
+                <Link
+                  to="/klassen/$id"
+                  params={{ id: c.id }}
+                  aria-label={`${c.name} öffnen`}
+                  className="text-ink-3 hover:text-ink"
+                >
+                  <ChevronRight size={16} strokeWidth={1.5} />
+                </Link>
+              </li>
+            ))}
+          </ul>
         )}
       </div>
 
+      <Modal
+        open={neu}
+        title="Neue Klasse"
+        description="Name und optional eine kurze Notiz, etwa Fach oder Jahrgang."
+        submitLabel="Klasse anlegen"
+        onSubmit={anlegen}
+        onClose={() => {
+          setNeu(false);
+          setFehler("");
+        }}
+      >
+        <Field label="Name" hint="z. B. 7a oder Kurs Deutsch" error={fehler}>
+          <input
+            className={inputClass}
+            value={name}
+            maxLength={40}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="7a"
+          />
+        </Field>
+        <Field label="Notiz" hint="Optional, höchstens 120 Zeichen">
+          <input
+            className={inputClass}
+            value={note}
+            maxLength={120}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Klassenleitung, Fach, Halbjahr"
+          />
+        </Field>
+      </Modal>
+
       <ConfirmDialog
-        open={loeschen !== null}
-        title="Klasse löschen?"
-        description={`„${classes.find((c) => c.id === loeschen)?.name ?? ""}“ wird aus der Liste entfernt. Bestehende Sitzpläne dieser Klasse verlieren ihre Zuordnung und werden als Entwurf abgelegt.`}
-        consequence="Die Klasse liegt 30 Tage im Papierkorb und kann bis dahin vollständig wiederhergestellt werden."
+        open={Boolean(zuLoeschen)}
+        title={`${zuLoeschen?.name ?? ""} in den Papierkorb legen?`}
+        description="Die Klasse verschwindet aus der Liste, bleibt aber im Papierkorb wiederherstellbar."
+        consequence={
+          planZahl > 0
+            ? `${zuLoeschen?.students.length ?? 0} Schüler und ${planZahl} zugehörige Sitzpläne wandern mit in den Papierkorb.`
+            : `${zuLoeschen?.students.length ?? 0} Schüler wandern mit in den Papierkorb.`
+        }
+        confirmLabel="In den Papierkorb"
+        onConfirm={() => {
+          if (loeschen) dispatch({ type: "class/delete", id: loeschen });
+          setLoeschen(null);
+        }}
         onCancel={() => setLoeschen(null)}
-        onConfirm={() => setLoeschen(null)}
       />
     </>
-  );
-}
-
-function LeerZustand() {
-  return (
-    <div className="mx-auto max-w-[460px] py-10 text-center">
-      <svg width="132" height="96" viewBox="0 0 132 96" aria-hidden className="mx-auto">
-        <rect
-          x="6"
-          y="10"
-          width="120"
-          height="76"
-          rx="6"
-          fill="var(--panel)"
-          stroke="var(--line-strong)"
-        />
-        <line x1="6" y1="28" x2="126" y2="28" stroke="var(--line-strong)" />
-        <circle cx="30" cy="52" r="9" fill="none" stroke="var(--line-control)" strokeWidth="1.5" />
-        <circle cx="60" cy="52" r="9" fill="none" stroke="var(--line-control)" strokeWidth="1.5" />
-        <circle
-          cx="90"
-          cy="52"
-          r="9"
-          fill="none"
-          stroke="var(--action)"
-          strokeWidth="1.5"
-          strokeDasharray="4 3"
-        />
-        <line x1="22" y1="72" x2="110" y2="72" stroke="var(--line-control)" strokeDasharray="4 4" />
-      </svg>
-      <h2 className="section-title mt-5">Noch keine Klasse angelegt</h2>
-      <p className="prose-measure mx-auto mt-1.5 text-[14px] text-ink-2">
-        Eine Klasse besteht aus einer Namensliste und optionalen Sitzregeln. Aus ihr lassen sich
-        beliebig viele Sitzpläne für verschiedene Räume erzeugen.
-      </p>
-      <div className="mt-5 flex justify-center gap-2">
-        <Button variant="primary">
-          <Plus size={16} strokeWidth={1.5} />
-          Erste Klasse anlegen
-        </Button>
-        <Button variant="secondary">
-          <Upload size={16} strokeWidth={1.5} />
-          CSV importieren
-        </Button>
-      </div>
-    </div>
   );
 }
