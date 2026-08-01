@@ -84,3 +84,16 @@ body:
       options:
         - label: Ich habe die offenen Issues durchgesehen und keinen passenden gefunden.
           required: true
+
+  - type: checkboxes
+    id: keine-personendaten
+    attributes:
+      label: Datenschutz
+      description: >
+        Dieses Repo ist öffentlich. Schülernamen, Klassenlisten und
+        Anmeldedaten gehören nicht in ein Issue. Das gilt auch hier: Wer die
+        Schulsituation schildert oder den heutigen Behelf beschreibt, nennt
+        schnell einen echten Namen.
+      options:
+        - label: Mein Vorschlag enthält keine echten Schülerdaten. Namen in Beispielen und Screenshots sind unkenntlich gemacht oder erfunden.
+          required: true

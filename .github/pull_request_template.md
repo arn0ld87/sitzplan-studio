@@ -35,8 +35,9 @@ Vor dem Push lokal gelaufen (siehe [`docs/runbooks/pre-push-gate.md`](docs/runbo
 - [ ] `bun run test`
 - [ ] `bun run build`
 
-Das Gate läuft zusätzlich in CI. Lokal zuerst laufen zu lassen spart die
-Wartezeit auf einen roten Lauf, der schon vorher absehbar war.
+Diese vier Schritte laufen bislang **nur lokal** — im Repo liegt noch kein
+Workflow, der sie erzwingt (siehe #1). Ein unausgefülltes Kästchen heißt
+also: ungeprüft. Niemand fängt das hinterher auf.
 
 ## Designsystem
 
@@ -56,9 +57,15 @@ Radius, Schatten und Schriftgröße.
 
 <!-- Löschen, wenn weder Migration noch Leseabfrage berührt wurde. -->
 
-- [ ] Neue Tabellen haben eine RLS-Policy auf `user_id`
+- [ ] Neue Tabellen haben `ALTER TABLE … ENABLE ROW LEVEL SECURITY`
+- [ ] Und **alle vier** Policies gegen `auth.uid()`: `select`, `insert`, `update`, `delete`
+- [ ] Neue Tabellen haben `user_id`, `created_at`, `updated_at`, `deleted_at` und den Trigger `set_updated_at`
 - [ ] Jede neue Leseabfrage auf Nutzdaten filtert `deleted_at IS NULL`
 - [ ] Das Muster `<objektId>__sitz_<n>` bleibt unangetastet
+
+Eine Tabelle ohne aktiviertes RLS ist ein Sicherheitsvorfall, kein Schönheitsfehler.
+Ein fehlendes `insert` oder `update` fällt dagegen nicht als Lücke auf, sondern als
+kaputte Funktion — beides gehört geprüft, bevor die Migration gemergt wird.
 
 ## Offen geblieben
 
