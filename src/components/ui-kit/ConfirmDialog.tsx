@@ -23,6 +23,16 @@ export function ConfirmDialog({
   const panelRef = useRef<HTMLDivElement>(null);
   const returnTo = useRef<HTMLElement | null>(null);
 
+  // Wie in `Modal.tsx`: `onCancel` ist bei jedem Aufrufer eine Inline-Funktion.
+  // In den Abhängigkeiten unten würde sie den Effekt nach jedem Rendern neu
+  // ausführen und den Fokus zurück auf die erste Schaltfläche setzen. Hier fällt
+  // das mangels Eingabefeldern kaum auf — falsch ist es trotzdem, und ein
+  // späteres Feld im Dialog machte daraus denselben Fehler.
+  const onCancelRef = useRef(onCancel);
+  useEffect(() => {
+    onCancelRef.current = onCancel;
+  });
+
   useEffect(() => {
     if (!open) return;
     returnTo.current = document.activeElement as HTMLElement | null;
@@ -31,7 +41,7 @@ export function ConfirmDialog({
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") {
         e.preventDefault();
-        onCancel();
+        onCancelRef.current();
         return;
       }
       if (e.key !== "Tab") return;
@@ -52,7 +62,7 @@ export function ConfirmDialog({
       document.removeEventListener("keydown", onKey);
       returnTo.current?.focus?.();
     };
-  }, [open, onCancel]);
+  }, [open]);
 
   if (!open) return null;
 
