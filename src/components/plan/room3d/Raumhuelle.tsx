@@ -30,13 +30,15 @@ function useRastergeometrie(raum: Pick<RoomGeometry, "width" | "height" | "grid"
     const { breite, tiefe } = raumMasse(raum);
     const punkte: number[] = [];
     const y = 0.002; // knapp über dem Boden, sonst flimmern Linie und Fläche
-    for (let cm = 0; cm <= raum.width + 0.001; cm += weite) {
-      const x = cmZuEinheit(cm) - breite / 2;
-      punkte.push(x, y, -tiefe / 2, x, y, tiefe / 2);
-    }
-    for (let cm = 0; cm <= raum.height + 0.001; cm += weite) {
-      const z = cmZuEinheit(cm) - tiefe / 2;
-      punkte.push(-breite / 2, y, z, breite / 2, y, z);
+    if (weite > 0) {
+      for (let cm = 0; cm <= raum.width + 0.001; cm += weite) {
+        const x = cmZuEinheit(cm) - breite / 2;
+        punkte.push(x, y, -tiefe / 2, x, y, tiefe / 2);
+      }
+      for (let cm = 0; cm <= raum.height + 0.001; cm += weite) {
+        const z = cmZuEinheit(cm) - tiefe / 2;
+        punkte.push(-breite / 2, y, z, breite / 2, y, z);
+      }
     }
     const g = new THREE.BufferGeometry();
     g.setAttribute("position", new THREE.Float32BufferAttribute(punkte, 3));

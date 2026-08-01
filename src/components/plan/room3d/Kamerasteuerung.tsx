@@ -70,7 +70,7 @@ export function Kamerasteuerung({
       c.dispose();
       steuerung.current = null;
     };
-  }, [kamera, gl, raum, invalidate]);
+  }, [kamera, gl, raum.width, raum.height, invalidate]);
 
   // Kamerastand setzen: beim Aufbau, bei Moduswechsel und bei jedem Zurücksetzen.
   useEffect(() => {
@@ -81,13 +81,14 @@ export function Kamerasteuerung({
     c.target.set(...stand.ziel);
     c.update();
     invalidate();
-  }, [kamera, raum, modus, zuruecksetzen, invalidate]);
+  }, [kamera, raum.width, raum.height, modus, zuruecksetzen, invalidate]);
 
   // Das Verschieben (Pan) darf den Blickpunkt nicht beliebig weit forttragen.
-  const grenze = useRef(new THREE.Vector3());
+  const grenze = useRef<THREE.Vector3 | null>(null);
   useFrame(() => {
     const c = steuerung.current;
     if (!c) return;
+    if (!grenze.current) grenze.current = new THREE.Vector3();
     const { breite, tiefe, hoehe } = raumMasse(raum);
     const rand = 0.6;
     const ziel = c.target;

@@ -77,13 +77,24 @@ function Hinweiskasten({
  * Raumansicht nicht mitreißen — die 2D-Bearbeitung bleibt erreichbar.
  */
 class SzeneGrenze extends Component<
-  { children: ReactNode; ersatz: ReactNode },
+  { children: ReactNode; ersatz: ReactNode; resetKey?: string | number; onFehler?: (fehler: Error) => void },
   { fehler: boolean }
 > {
   override state = { fehler: false };
 
   static getDerivedStateFromError() {
     return { fehler: true };
+  }
+
+  override componentDidCatch(fehler: Error, fehlerInfo: { componentStack?: string }) {
+    console.error("3D-Szene Fehler:", fehler, fehlerInfo);
+    this.props.onFehler?.(fehler);
+  }
+
+  override componentDidUpdate(prevProps: SzeneGrenze["props"]) {
+    if (this.state.fehler && prevProps.resetKey !== this.props.resetKey) {
+      this.setState({ fehler: false });
+    }
   }
 
   override render() {
@@ -135,6 +146,7 @@ export function RoomPlan3D({
   const [webgl, setWebgl] = useState(true);
   const [modus, setModus] = useState<Ansichtsmodus>("perspektive");
   const [zuruecksetzen, setZuruecksetzen] = useState(0);
+  const [fehlerZaehler, setFehlerZaehler] = useState(0);
 
   useEffect(() => {
     setImBrowser(true);
@@ -174,6 +186,8 @@ export function RoomPlan3D({
     <div>
       <div className={rahmen}>
         <SzeneGrenze
+          resetKey={`${room.name}-${fehlerZaehler}`}
+          onFehler={() => setFehlerZaehler((n) => n + 1)}
           ersatz={
             <Hinweiskasten
               titel="3D-Ansicht konnte nicht aufgebaut werden"
@@ -191,6 +205,7 @@ export function RoomPlan3D({
               modus={modus}
               zuruecksetzen={zuruecksetzen}
               beschriftung={raumBeschreiben(room)}
+              onFehler={() => setFehlerZaehler((n) => n + 1)}
             />
           </Suspense>
         </SzeneGrenze>

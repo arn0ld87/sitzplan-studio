@@ -238,17 +238,18 @@ function fensterBauen(w: Werkstoffe): Bauteil[] {
   const hoehe = cmZuEinheit(MOEBEL_AUFBAU.fenster.hoehe);
   const rahmen = cmZuEinheit(8);
   const lichteHoehe = hoehe - 2 * rahmen;
+  const lichteBreite = breite - 2 * rahmen;
   return [
     // Vier Rahmenschenkel statt eines Kastens — nur so ist die Scheibe zu sehen.
     kasten(w.rahmen, [breite, rahmen, tiefe], [0, rahmen / 2, 0]),
     kasten(w.rahmen, [breite, rahmen, tiefe], [0, hoehe - rahmen / 2, 0]),
-    kasten(w.rahmen, [breite, hoehe, rahmen], [0, hoehe / 2, -(tiefe - rahmen) / 2]),
-    kasten(w.rahmen, [breite, hoehe, rahmen], [0, hoehe / 2, (tiefe - rahmen) / 2]),
+    kasten(w.rahmen, [rahmen, hoehe, tiefe], [-(breite - rahmen) / 2, hoehe / 2, 0]),
+    kasten(w.rahmen, [rahmen, hoehe, tiefe], [(breite - rahmen) / 2, hoehe / 2, 0]),
     // Ein Kämpfer teilt die Scheibe — ohne ihn wirkt sie zu groß.
-    kasten(w.rahmen, [breite * 0.8, lichteHoehe, rahmen * 0.6], [0, hoehe / 2, 0]),
-    kasten(w.glas, [breite * 0.3, lichteHoehe, tiefe - 2 * rahmen], [0, hoehe / 2, 0]),
+    kasten(w.rahmen, [lichteBreite, rahmen * 0.6, tiefe - 2 * rahmen], [0, hoehe / 2, 0]),
+    kasten(w.glas, [lichteBreite, lichteHoehe, tiefe - 2 * rahmen], [0, hoehe / 2, 0]),
     // Fensterbank nach innen.
-    kasten(w.korpus, [breite * 2.4, cmZuEinheit(3), tiefe], [breite * 0.8, -cmZuEinheit(1.5), 0]),
+    kasten(w.korpus, [breite, cmZuEinheit(3), tiefe], [0, -cmZuEinheit(1.5), 0]),
   ];
 }
 
