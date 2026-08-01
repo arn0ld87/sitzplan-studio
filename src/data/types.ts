@@ -21,6 +21,7 @@ export function initials(name: string) {
 }
 
 export function newId(prefix: string) {
+  // UUIDs, damit Datensätze direkt Primärschlüssel der Datenbank sein können.
   const rnd =
     typeof crypto !== "undefined" && "randomUUID" in crypto
       ? crypto.randomUUID().slice(0, 8)
