@@ -10,11 +10,20 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SigninRouteImport } from './routes/signin'
 import { Route as KlassenIndexRouteImport } from './routes/klassen.index'
+import { Route as KlassenIdRouteImport } from './routes/klassen.$id'
+import { Route as RaeumeIndexRouteImport } from './routes/raeume.index'
+import { Route as SitzplaeneIndexRouteImport } from './routes/sitzplaene.index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SigninRoute = SigninRouteImport.update({
+  id: '/signin',
+  path: '/signin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const KlassenIndexRoute = KlassenIndexRouteImport.update({
@@ -22,31 +31,70 @@ const KlassenIndexRoute = KlassenIndexRouteImport.update({
   path: '/klassen/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const KlassenIdRoute = KlassenIdRouteImport.update({
+  id: '/klassen/$id',
+  path: '/klassen/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RaeumeIndexRoute = RaeumeIndexRouteImport.update({
+  id: '/raeume/',
+  path: '/raeume/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitzplaeneIndexRoute = SitzplaeneIndexRouteImport.update({
+  id: '/sitzplaene/',
+  path: '/sitzplaene/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/signin': typeof SigninRoute
+  '/klassen/$id': typeof KlassenIdRoute
   '/klassen/': typeof KlassenIndexRoute
+  '/raeume/': typeof RaeumeIndexRoute
+  '/sitzplaene/': typeof SitzplaeneIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/signin': typeof SigninRoute
+  '/klassen/$id': typeof KlassenIdRoute
   '/klassen': typeof KlassenIndexRoute
+  '/raeume': typeof RaeumeIndexRoute
+  '/sitzplaene': typeof SitzplaeneIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/signin': typeof SigninRoute
+  '/klassen/$id': typeof KlassenIdRoute
   '/klassen/': typeof KlassenIndexRoute
+  '/raeume/': typeof RaeumeIndexRoute
+  '/sitzplaene/': typeof SitzplaeneIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/klassen/'
+  fullPaths:
+    '/' | '/signin' | '/klassen/$id' | '/klassen/' | '/raeume/' | '/sitzplaene/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/klassen'
-  id: '__root__' | '/' | '/klassen/'
+  to: '/' | '/signin' | '/klassen/$id' | '/klassen' | '/raeume' | '/sitzplaene'
+  id:
+    | '__root__'
+    | '/'
+    | '/signin'
+    | '/klassen/$id'
+    | '/klassen/'
+    | '/raeume/'
+    | '/sitzplaene/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  SigninRoute: typeof SigninRoute
+  KlassenIdRoute: typeof KlassenIdRoute
   KlassenIndexRoute: typeof KlassenIndexRoute
+  RaeumeIndexRoute: typeof RaeumeIndexRoute
+  SitzplaeneIndexRoute: typeof SitzplaeneIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -58,6 +106,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/signin': {
+      id: '/signin'
+      path: '/signin'
+      fullPath: '/signin'
+      preLoaderRoute: typeof SigninRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/klassen/': {
       id: '/klassen/'
       path: '/klassen'
@@ -65,12 +120,37 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KlassenIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/klassen/$id': {
+      id: '/klassen/$id'
+      path: '/klassen/$id'
+      fullPath: '/klassen/$id'
+      preLoaderRoute: typeof KlassenIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/raeume/': {
+      id: '/raeume/'
+      path: '/raeume'
+      fullPath: '/raeume/'
+      preLoaderRoute: typeof RaeumeIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitzplaene/': {
+      id: '/sitzplaene/'
+      path: '/sitzplaene'
+      fullPath: '/sitzplaene/'
+      preLoaderRoute: typeof SitzplaeneIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  SigninRoute: SigninRoute,
+  KlassenIdRoute: KlassenIdRoute,
   KlassenIndexRoute: KlassenIndexRoute,
+  RaeumeIndexRoute: RaeumeIndexRoute,
+  SitzplaeneIndexRoute: SitzplaeneIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
