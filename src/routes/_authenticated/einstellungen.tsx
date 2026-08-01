@@ -80,6 +80,37 @@ function Einstellungen() {
       <div className="px-5 py-6 md:px-8">
         <div className="max-w-[620px] space-y-4">
           <section className="rounded-[8px] border border-line bg-elevated p-5">
+            <h2 className="text-[15px] font-semibold">Konto</h2>
+            <dl className="mt-3 divide-y divide-[color:var(--line)] border-y border-line">
+              <div className="flex items-baseline justify-between gap-4 py-2.5">
+                <dt className="text-[13px] text-ink-2">E-Mail-Adresse</dt>
+                <dd className="truncate text-[13px] font-medium">{email || "—"}</dd>
+              </div>
+              {(
+                [
+                  ["Klassen", data.classes.length],
+                  ["Räume", data.rooms.length],
+                  ["Sitzpläne", data.plans.length],
+                ] as const
+              ).map(([label, wert]) => (
+                <div key={label} className="flex items-baseline justify-between gap-4 py-2.5">
+                  <dt className="text-[13px] text-ink-2">{label}</dt>
+                  <dd className="num text-[13px]">{wert}</dd>
+                </div>
+              ))}
+            </dl>
+            <Button
+              variant="secondary"
+              className="mt-4"
+              onClick={abmelden}
+              disabled={abmeldend}
+            >
+              <LogOut size={16} strokeWidth={1.5} />
+              {abmeldend ? "Wird abgemeldet …" : "Abmelden"}
+            </Button>
+          </section>
+
+          <section className="rounded-[8px] border border-line bg-elevated p-5">
             <h2 className="text-[15px] font-semibold">Alle meine Daten exportieren</h2>
             <p className="mt-1.5 text-[13px] leading-[1.55] text-ink-2">
               Lädt Klassen, Schülerinnen und Schüler, Räume, Sitzpläne und den Papierkorb als
