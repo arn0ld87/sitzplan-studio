@@ -6,6 +6,8 @@ import { SearchField } from "@/components/ui-kit/SearchField";
 import { PlanThumb } from "@/components/plan/RoomPlan";
 import { classes, plans, rooms, getClass, getRoom, seatCount } from "@/data/demo";
 import { ClassDot } from "@/components/ui-kit/ClassDot";
+import { StatusChip } from "@/components/ui-kit/StatusChip";
+import { relativeZeit } from "@/lib/zeit";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -26,11 +28,12 @@ export const Route = createFileRoute("/")({
   component: Uebersicht,
 });
 
-const STATUS: Record<string, { label: string; cls: string }> = {
-  aktiv: { label: "Aktiv", cls: "text-success bg-success-bg" },
-  entwurf: { label: "Entwurf", cls: "text-warning bg-warning-bg" },
-  archiv: { label: "Archiviert", cls: "text-ink-2 bg-sunken" },
-};
+const OHNE_PLAN = [
+  { id: "6d", meta: "zuletzt geplant im Juni" },
+  { id: "8a", meta: "zuletzt geplant im Juni" },
+  { id: "10b", meta: "noch nie geplant" },
+];
+
 
 function Uebersicht() {
   const [q, setQ] = useState("");
