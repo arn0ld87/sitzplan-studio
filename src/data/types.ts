@@ -78,10 +78,15 @@ export const FURNITURE_SPECS: Record<
   fenster: { label: "Fenster", w: 15, h: 180, seats: 0 },
 };
 
+/** Sitzplatzkennung nach dem festen Muster `<objektId>__sitz_<n>`. */
+export function seatId(objektId: string, n: number) {
+  return `${objektId}__sitz_${n}`;
+}
+
 export function makeFurniture(kind: FurnitureKind, x: number, y: number): Furniture {
-  const id = newId(kind);
+  const id = newId();
   const n = FURNITURE_SPECS[kind].seats;
-  const seats = Array.from({ length: n }, (_, i) => `${id}-s${i + 1}`);
+  const seats = Array.from({ length: n }, (_, i) => seatId(id, i + 1));
   return { id, kind, x, y, rotation: 0, seats };
 }
 
@@ -102,7 +107,9 @@ export type SeatingPlan = {
   id: string;
   title: string;
   classId: string;
-  /** Kopie der Raumgeometrie zum Zeitpunkt des Anlegens. */
+  /** Raumvorlage, aus der der Plan entstanden ist. */
+  roomId: string;
+  /** Kopie der Raumgeometrie zum Zeitpunkt des Anlegens (eingefroren). */
   room: RoomGeometry;
   status: PlanStatus;
   updated: string;
