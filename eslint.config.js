@@ -56,5 +56,14 @@ export default tseslint.config(
       "react-refresh/only-export-components": "off",
     },
   },
+  {
+    // Edge Functions laufen in Deno bei Supabase, nicht im Browser-Bundle.
+    // Sie stehen deshalb nicht in `tsconfig.json` und werden von `tsc` nicht
+    // erfasst — Prettier und die ESLint-Grundregeln sollen aber greifen.
+    files: ["supabase/functions/**/*.ts"],
+    languageOptions: {
+      globals: { Deno: "readonly" },
+    },
+  },
   eslintPluginPrettier,
 );

@@ -1,1 +1,7 @@
 project_id = "ikosgyinhcuoflefumde"
+
+# Der Aufrufer muss angemeldet sein. Die Funktion liest die Daten anschließend
+# mit genau diesem Token weiter, sodass die RLS unverändert greift — und der
+# Gemini-Schlüssel niemals das Frontend erreicht. Siehe ADR-0007.
+[functions.ki-sitzplan]
+verify_jwt = true

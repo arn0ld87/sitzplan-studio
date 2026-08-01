@@ -126,3 +126,37 @@ Bleibt möglich, dann mit eigenem ADR.
 *Automatischer zweiter Versuch bei Regelverstößen.* Verdoppelt Token, Wartezeit
 und Fehlerpfade, um dem Nutzer eine Information vorzuenthalten, die er sehen
 sollte.
+
+## Nachtrag aus der Umsetzung (2026-08-01)
+
+Vier Dinge sind beim Bauen anders geworden oder genauer geworden, als der Plan
+sie beschrieb. Sie stehen hier, damit die Abweichung nicht als Schlamperei
+gelesen wird.
+
+**Die Nachprüfung läuft im Browser, nicht in der Funktion.** Der Plan hatte sie
+serverseitig vorgesehen. Sie liegt jetzt als [`src/data/ki-vorschlag.ts`](../../src/data/ki-vorschlag.ts)
+im Frontend, aus einem Grund: In Deno-Code der Edge Function liefe sie im Gate
+nicht mit — `vitest` erfasst `supabase/functions/` nicht, und `tsconfig.json`
+schließt das Verzeichnis aus. Dort wäre die Prüfung ungetestet, hier hat sie
+20 Tests. Vertretbar ist das, weil die Prüfung Qualitätssicherung ist und keine
+Vertrauensgrenze: Es sind die eigenen Daten des angemeldeten Nutzers, und wer
+sie umgeht, schadet allein sich selbst. Die Vertrauensgrenzen — Schlüssel,
+Deckel, RLS — bleiben vollständig in der Funktion.
+
+**`ki_aufrufe_heute_global()` darf nur `service_role` ausführen.** Der Plan gab
+das Recht an `authenticated`. Der Supabase-Linter beanstandet eine
+`SECURITY DEFINER`-Funktion, die angemeldete Nutzer über `/rest/v1/rpc/` selbst
+aufrufen können — zu Recht, denn niemand außer der Funktion braucht die
+Auslastung aller Konten. Sie ruft den Zähler jetzt mit dem Dienstschlüssel auf.
+
+**Die Interactions API erwartet `step_list`, nicht `turn_list`.** Also
+`input: [{ type: "text", text }]` und **nicht** `[{ role, content: [...] }]` —
+letzteres quittiert die API mit HTTP 400 und dem Hinweis, die steps-basierte
+Fassung zu verwenden. Die Token stehen in `usage.total_input_tokens` und
+`usage.total_output_tokens`.
+
+**Der Merkmalskatalog steht zweimal.** `MERKMAL_LABEL` in der Funktion spiegelt
+`MERKMALE` aus [`src/data/types.ts`](../../src/data/types.ts), weil Deno und
+Browser-Bundle sich kein Modul teilen. Der Ausfallmodus ist mild: Ein dort
+fehlender Schlüssel geht unübersetzt an das Modell. Wer den Katalog erweitert,
+ergänzt beide Stellen.
