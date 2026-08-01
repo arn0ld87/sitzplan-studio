@@ -199,6 +199,7 @@ export type PlanRow = {
   revision: number;
   dokument_version: number;
   deleted_at: string | null;
+  updated_at?: string;
 };
 
 export function klasseZuRow(c: SchoolClass, userId: string, deletedAt: string | null): KlasseRow {
@@ -297,7 +298,7 @@ export function rowZuPlan(row: PlanRow, raumName: string): SeatingPlan {
     roomId: row.raum_id,
     room,
     status: row.status,
-    updated: row.deleted_at ?? new Date().toISOString(),
+    updated: row.updated_at ?? row.deleted_at ?? new Date().toISOString(),
     assignments,
   };
 }
