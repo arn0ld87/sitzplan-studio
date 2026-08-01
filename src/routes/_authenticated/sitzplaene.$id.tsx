@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Undo2,
@@ -14,7 +14,7 @@ import {
   PanelLeftOpen,
   AlertTriangle,
   Undo,
-  Sparkles,
+  Star,
   Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui-kit/Button";
@@ -76,6 +76,8 @@ function SitzplanEditor() {
   const [kiLaeuft, setKiLaeuft] = useState(false);
   const [kiVorschau, setKiVorschau] = useState<GepruefterVorschlag | null>(null);
   const [kiFehler, setKiFehler] = useState<KiFehler | null>(null);
+  const warteRef = useRef<HTMLDivElement>(null);
+  const fokusVorWarten = useRef<HTMLElement | null>(null);
 
   const studentsById = useMemo<Record<string, Student>>(
     () => Object.fromEntries((cls?.students ?? []).map((s) => [s.id, s])),
@@ -126,6 +128,26 @@ function SitzplanEditor() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [undo, redo]);
+
+  // Der Wartedialog ist modal, enthält aber nichts Bedienbares — er hat
+  // bewusst kein „Abbrechen". Ohne Zutun bliebe der Fokus deshalb hinter dem
+  // Overlay auf der Schaltfläche, die den Dialog geöffnet hat: unsichtbar,
+  // aber mit Enter erneut auslösbar. Also Fokus auf den Dialog, Tab dort
+  // festhalten und danach dorthin zurückgeben, wo er herkam.
+  useEffect(() => {
+    if (!kiLaeuft) return;
+    fokusVorWarten.current = document.activeElement as HTMLElement | null;
+    warteRef.current?.focus();
+
+    function fangeTab(e: KeyboardEvent) {
+      if (e.key === "Tab") e.preventDefault();
+    }
+    document.addEventListener("keydown", fangeTab);
+    return () => {
+      document.removeEventListener("keydown", fangeTab);
+      fokusVorWarten.current?.focus?.();
+    };
+  }, [kiLaeuft]);
 
   if (!plan) {
     return (
@@ -245,15 +267,22 @@ function SitzplanEditor() {
     setKiFehler(null);
     setKiVorschau(null);
     setKiLaeuft(true);
-    const ergebnis = await erzeugeSitzplanVorschlag(
-      plan!.id,
-      plan!,
-      cls?.students ?? [],
-      data.rules,
-    );
-    setKiLaeuft(false);
-    if (ergebnis.ok) setKiVorschau(ergebnis.vorschau);
-    else setKiFehler(ergebnis.fehler);
+    try {
+      const ergebnis = await erzeugeSitzplanVorschlag(
+        plan!.id,
+        plan!,
+        cls?.students ?? [],
+        data.rules,
+      );
+      if (ergebnis.ok) setKiVorschau(ergebnis.vorschau);
+      else setKiFehler(ergebnis.fehler);
+    } catch (e) {
+      // Ohne `finally` bliebe der Wartedialog bei einer unerwarteten Ausnahme
+      // für immer stehen — und er hat kein Abbrechen. Die Ansicht wäre tot.
+      setKiFehler({ code: "unerwartet", nachricht: `Unerwarteter Fehler: ${String(e)}` });
+    } finally {
+      setKiLaeuft(false);
+    }
   }
 
   function seatDown(seatId: string) {
@@ -454,7 +483,7 @@ function SitzplanEditor() {
               onClick={() => void kiErzeugen()}
               disabled={kiLaeuft || plaetze === 0 || (cls?.students.length ?? 0) === 0}
             >
-              <Sparkles size={16} strokeWidth={1.5} />
+              <Star size={16} strokeWidth={1.5} />
               Plan mit KI erzeugen
             </Button>
             <div className="mt-2 flex flex-wrap gap-1.5">
@@ -513,14 +542,13 @@ function SitzplanEditor() {
             </div>
           )}
 
+          {/* Vorschlagsbereich nach docs/designsystem.md: Terrakotta-Stern,
+              Erklärung, zwei Aktionen. Kein Funkeln — das steht dort
+              ausdrücklich, ein Sparkles-Icon verstieße dagegen. */}
           {kiVorschau && (
-            <div className="mb-3 rounded-[8px] border border-[color:var(--select)] bg-panel p-3 shadow-[0_0_0_3px_var(--select-soft)]">
+            <div className="mb-3 rounded-[8px] border border-line bg-panel p-3">
               <div className="flex flex-wrap items-center gap-3">
-                <Sparkles
-                  size={16}
-                  strokeWidth={1.5}
-                  className="shrink-0 text-[color:var(--select)]"
-                />
+                <Star size={16} strokeWidth={1.5} className="shrink-0 text-[color:var(--action)]" />
                 <span className="min-w-0 flex-1 text-[13px] font-medium">
                   Vorschlag der KI — noch nicht übernommen. Die Zeichnung zeigt ihn zur Ansicht.
                 </span>
@@ -750,7 +778,11 @@ function SitzplanEditor() {
           aria-labelledby="ki-warte-titel"
           aria-busy="true"
         >
-          <div className="w-full max-w-[380px] rounded-[10px] border border-line bg-elevated p-5 text-center shadow-[var(--shadow-overlay)]">
+          <div
+            ref={warteRef}
+            tabIndex={-1}
+            className="w-full max-w-[380px] rounded-[10px] border border-line bg-elevated p-5 text-center shadow-[var(--shadow-overlay)] focus:outline-none"
+          >
             <Loader2
               size={24}
               strokeWidth={1.5}

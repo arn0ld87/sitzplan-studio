@@ -6,6 +6,12 @@
 -- Wer seine eigenen Zeilen ändern oder weich löschen darf, setzt damit sein
 -- eigenes Limit zurück — die vier Policies der Regel wären hier genau die
 -- Lücke, die sie sonst schließen. Begründung: docs/plaene/0001.
+--
+-- Die Edge Function schreibt die Zeile **vor** dem Modellaufruf, damit zwei
+-- gleichzeitige Aufrufe nicht beide am selben Zählerstand vorbeikommen, und
+-- trägt die Token danach mit dem Dienstschlüssel nach. Genau dafür gibt es
+-- `GRANT ALL … TO service_role`: Der Nachtrag ist möglich, ohne dass Nutzer
+-- ein UPDATE-Recht auf ihr eigenes Protokoll bekommen.
 
 CREATE TABLE IF NOT EXISTS public.ki_aufrufe (
   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),

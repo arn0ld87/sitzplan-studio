@@ -13,6 +13,9 @@ import {
 import type { PlanAusschnitt } from "@/data/sitzregeln";
 import type { SeatRule, Student } from "@/data/types";
 
+/** Obergrenze für das Warten auf die Edge Function. */
+const ZEITLIMIT_MS = 60_000;
+
 export type KiFehler = {
   /** Maschinenlesbarer Code der Funktion, etwa `deckel_konto_tag`. */
   code: string;
@@ -38,6 +41,11 @@ export async function erzeugeSitzplanVorschlag(
 ): Promise<KiErgebnis> {
   const { data, error } = await supabase.functions.invoke("ki-sitzplan", {
     body: { planId, modus: "erzeugen" },
+    // Ohne Obergrenze wartet der Client ewig, und der Wartedialog hat bewusst
+    // kein „Abbrechen" — eine hängende Funktion legte damit die ganze Ansicht
+    // still. 60 Sekunden sind das Vierfache der gemessenen Dauer (7–15 s);
+    // was länger braucht, ist kaputt und nicht langsam.
+    timeout: ZEITLIMIT_MS,
   });
 
   if (error) return { ok: false, fehler: await lesbarerFehler(error) };
@@ -75,6 +83,12 @@ async function lesbarerFehler(error: unknown): Promise<KiFehler> {
     }
   }
   const text = error instanceof Error ? error.message : String(error);
+  if (/timeout|abort/i.test(text)) {
+    return {
+      code: "zeitlimit",
+      nachricht: `Die KI hat nach ${ZEITLIMIT_MS / 1000} Sekunden nicht geantwortet. Der Aufruf kann trotzdem gekostet haben.`,
+    };
+  }
   return {
     code: "netz",
     nachricht: `Der Vorschlag konnte nicht geholt werden. ${text}`,

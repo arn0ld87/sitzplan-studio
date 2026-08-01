@@ -277,11 +277,17 @@ Deno.serve(async (req: Request) => {
   const vorEinemTag = new Date(jetzt - 24 * 60 * 60 * 1000).toISOString();
   const vorEinerMinute = new Date(jetzt - 60 * 1000).toISOString();
 
-  const { count: tagKonto } = await alsNutzer
+  // Schlägt eine Zählabfrage fehl, wird **abgebrochen** statt durchgelassen.
+  // `count` wäre dann `null`, `?? 0` machte daraus „noch nichts verbraucht" —
+  // ausgerechnet bei einer gestörten Datenbank fiele damit jeder Deckel weg.
+  const { count: tagKonto, error: tagFehler } = await alsNutzer
     .from("ki_aufrufe")
     .select("id", { count: "exact", head: true })
     .gte("created_at", vorEinemTag);
-  if ((tagKonto ?? 0) >= DECKEL.tagJeKonto) {
+  if (tagFehler || tagKonto === null) {
+    return fehler("deckel_unpruefbar", "Das Tageslimit ist gerade nicht prüfbar.", 503);
+  }
+  if (tagKonto >= DECKEL.tagJeKonto) {
     return fehler(
       "deckel_konto_tag",
       `Erreicht: ${DECKEL.tagJeKonto} Vorschläge in 24 Stunden. Morgen wieder.`,
@@ -289,16 +295,22 @@ Deno.serve(async (req: Request) => {
     );
   }
 
-  const { count: minuteKonto } = await alsNutzer
+  const { count: minuteKonto, error: minuteFehler } = await alsNutzer
     .from("ki_aufrufe")
     .select("id", { count: "exact", head: true })
     .gte("created_at", vorEinerMinute);
-  if ((minuteKonto ?? 0) >= DECKEL.minuteJeKonto) {
+  if (minuteFehler || minuteKonto === null) {
+    return fehler("deckel_unpruefbar", "Das Minutenlimit ist gerade nicht prüfbar.", 503);
+  }
+  if (minuteKonto >= DECKEL.minuteJeKonto) {
     return fehler("deckel_konto_minute", "Zu viele Vorschläge in kurzer Zeit. Kurz warten.", 429);
   }
 
-  const { data: global } = await alsDienst.rpc("ki_aufrufe_heute_global");
-  if (Number(global ?? 0) >= DECKEL.tagGlobal) {
+  const { data: global, error: globalFehler } = await alsDienst.rpc("ki_aufrufe_heute_global");
+  if (globalFehler || global === null) {
+    return fehler("deckel_unpruefbar", "Die Gesamtgrenze ist gerade nicht prüfbar.", 503);
+  }
+  if (Number(global) >= DECKEL.tagGlobal) {
     return fehler(
       "deckel_global",
       "Die Tagesgrenze aller Konten ist erreicht. Später erneut versuchen.",
@@ -325,11 +337,17 @@ Deno.serve(async (req: Request) => {
   if (schuelerFehler) return fehler("datenbank", schuelerFehler.message, 500);
   if (!schueler?.length) return fehler("keine_schueler", "Die Klasse hat keine Schüler.", 400);
 
-  const { data: regeln } = await alsNutzer
+  // Der Fehler darf hier nicht verschluckt werden: Ohne Regeln plante das
+  // Modell fröhlich weiter und lieferte einen Vorschlag, der genau die Regeln
+  // verletzt, wegen derer die Lehrkraft ihn geholt hat — ohne Hinweis darauf,
+  // dass sie nie ankamen.
+  const { data: regeln, error: regelFehler } = await alsNutzer
     .from("sitzregeln")
     .select("schueler_a, schueler_b, art")
     .eq("klasse_id", plan.klasse_id)
     .is("deleted_at", null);
+  if (regelFehler)
+    return fehler("datenbank", `Sitzregeln nicht lesbar: ${regelFehler.message}`, 500);
 
   const doc = (plan.canvas_document ?? {}) as {
     raumGeometrie?: {
@@ -360,11 +378,35 @@ Deno.serve(async (req: Request) => {
     (regeln ?? []) as RegelZeile[],
   );
 
+  // ---- Platz im Deckel belegen, bevor Geld fließt ----
+  //
+  // Die Prüfung oben ist ein Blick in die Vergangenheit: Zwei gleichzeitige
+  // Aufrufe sehen denselben Stand und kämen beide durch. Deshalb wird die
+  // Protokollzeile **vor** dem Aufruf geschrieben statt danach. Sie zählt ab
+  // sofort mit, und ein Aufruf, der zwar Geld kostet, dessen Antwort aber
+  // unbrauchbar ist, fällt nicht aus der Zählung heraus. Die Token werden
+  // hinterher nachgetragen.
+  //
+  // Der Preis: Ein Aufruf, der schon am Netz scheitert, ist mitgezählt, obwohl
+  // er nichts gekostet hat. Das ist die richtige Richtung zum Irren.
+  const { data: reservierung, error: reservierungFehler } = await alsNutzer
+    .from("ki_aufrufe")
+    .insert({ user_id: userId, sitzplan_id: planId, modus })
+    .select("id")
+    .single();
+  if (reservierungFehler || !reservierung) {
+    return fehler("protokoll", "Der Aufruf ließ sich nicht protokollieren.", 500);
+  }
+
   // ---- Gemini ----
   let antwort: Response;
   try {
     antwort = await fetch(ENDPUNKT, {
       method: "POST",
+      // Ohne Zeitgrenze hinge die Funktion bis zum Plattform-Limit und
+      // verbrauchte die ganze Zeit Laufzeit. 45 s sind das Dreifache der
+      // gemessenen Dauer; der Client wartet mit 60 s etwas länger.
+      signal: AbortSignal.timeout(45_000),
       headers: { "content-type": "application/json", "x-goog-api-key": apiKey },
       body: JSON.stringify({
         model: MODELL,
@@ -403,17 +445,17 @@ Deno.serve(async (req: Request) => {
   const tokenEin = Number(roh?.usage?.total_input_tokens ?? 0);
   const tokenAus = Number(roh?.usage?.total_output_tokens ?? 0);
 
-  // Protokollieren, nachdem der Aufruf stattgefunden hat — gezählt wird, was
-  // Geld gekostet hat, nicht was versucht wurde. Ein Fehlschlag hier soll den
-  // Vorschlag nicht verschlucken; er wird geloggt und geht weiter.
-  const { error: protokollFehler } = await alsNutzer.from("ki_aufrufe").insert({
-    user_id: userId,
-    sitzplan_id: planId,
-    modus,
-    token_ein: tokenEin,
-    token_aus: tokenAus,
-  });
-  if (protokollFehler) console.error("[ki-sitzplan] Protokoll fehlgeschlagen:", protokollFehler);
+  // Token nachtragen. Das darf nur der Dienstschlüssel: `ki_aufrufe` hat
+  // bewusst keine UPDATE-Policy für Nutzer, damit niemand seine eigenen
+  // Protokollzeilen und damit sein Limit verändern kann. Schlägt es fehl,
+  // bleibt die Zeile mit 0 Token stehen — der Deckel stimmt weiterhin, nur die
+  // Kostenschätzung wird ungenau. Das ist kein Grund, den Vorschlag zu
+  // verschlucken.
+  const { error: nachtragFehler } = await alsDienst
+    .from("ki_aufrufe")
+    .update({ token_ein: tokenEin, token_aus: tokenAus })
+    .eq("id", reservierung.id);
+  if (nachtragFehler) console.error("[ki-sitzplan] Token nicht nachgetragen:", nachtragFehler);
 
   return json({
     vorschlag,
