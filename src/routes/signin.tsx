@@ -80,15 +80,16 @@ function SignIn() {
         </p>
 
         <div
-          role="tablist"
+          role="group"
           aria-label="Anmelden oder registrieren"
           className="mt-6 inline-flex rounded-[6px] border border-line-control bg-sunken p-0.5"
         >
           {(["anmelden", "registrieren"] as Modus[]).map((m) => (
             <button
               key={m}
-              role="tab"
-              aria-selected={modus === m}
+              type="button"
+              aria-pressed={modus === m}
+
               onClick={() => {
                 setModus(m);
                 setFehler(null);
