@@ -1,7 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { SAVE_STATES, SaveStatus, type SaveState } from "./SaveStatus";
+import { SaveStatus } from "./SaveStatus";
+import { SAVE_STATES, type SaveState } from "./save-states";
 
 describe("SaveStatus", () => {
   it.each(SAVE_STATES)("zeigt für '%s' einen lesbaren Text — nicht nur Farbe", (state) => {

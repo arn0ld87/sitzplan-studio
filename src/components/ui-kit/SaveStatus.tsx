@@ -8,9 +8,9 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { SaveState } from "./save-states";
 
-export type SaveState =
-  "gespeichert" | "aenderungen" | "speichert" | "offline" | "konflikt" | "ungespeichert";
+export type { SaveState };
 
 const MAP: Record<SaveState, { text: string; icon: LucideIcon; cls: string; spin?: boolean }> = {
   gespeichert: {
@@ -85,12 +85,3 @@ export function SaveStatus({
     </span>
   );
 }
-
-export const SAVE_STATES: SaveState[] = [
-  "gespeichert",
-  "aenderungen",
-  "speichert",
-  "offline",
-  "konflikt",
-  "ungespeichert",
-];

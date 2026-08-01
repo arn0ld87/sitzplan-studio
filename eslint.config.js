@@ -48,5 +48,13 @@ export default tseslint.config(
       "@typescript-eslint/no-unused-vars": "off",
     },
   },
+  {
+    // shadcn/ui ist generierter Fremdcode und wird nicht von Hand gepflegt.
+    // Der Store buendelt Provider, Reducer und Hooks bewusst in einer Datei.
+    files: ["src/components/ui/**", "src/store/**"],
+    rules: {
+      "react-refresh/only-export-components": "off",
+    },
+  },
   eslintPluginPrettier,
 );

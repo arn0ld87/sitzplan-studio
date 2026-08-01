@@ -611,7 +611,9 @@ export function StoreProvider({ userId, children }: { userId: string; children: 
       canUndo: past.current.length > 0,
       canRedo: future.current.length > 0,
     }),
-    // historyTick hält canUndo/canRedo aktuell
+    // canUndo/canRedo lesen aus past/future (Refs). React sieht deren
+    // Mutation nicht, historyTick erzwingt daher die Neuberechnung.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [data, hydrated, saveState, online, dispatch, retry, undo, redo, historyTick],
   );
 
