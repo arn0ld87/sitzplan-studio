@@ -77,7 +77,12 @@ function Hinweiskasten({
  * Raumansicht nicht mitreißen — die 2D-Bearbeitung bleibt erreichbar.
  */
 class SzeneGrenze extends Component<
-  { children: ReactNode; ersatz: ReactNode; resetKey?: string | number; onFehler?: (fehler: Error) => void },
+  {
+    children: ReactNode;
+    ersatz: ReactNode;
+    resetKey?: string | number;
+    onFehler?: (fehler: Error) => void;
+  },
   { fehler: boolean }
 > {
   override state = { fehler: false };
