@@ -1,4 +1,4 @@
-import { studentColor } from "@/data/demo";
+import { studentColor } from "@/data/types";
 
 export function ClassDot({
   name,
@@ -9,7 +9,7 @@ export function ClassDot({
   colorIndex: number;
   size?: number;
 }) {
-  const kuerzel = name.replace("Klasse ", "");
+  const kuerzel = name.replace(/^Klasse\s+/i, "").slice(0, 3);
   return (
     <span
       aria-hidden
