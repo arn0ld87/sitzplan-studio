@@ -23,7 +23,6 @@ import { useStore } from "@/store/app";
 
 type NavItem = { to: string; label: string; icon: LucideIcon; count?: number };
 
-
 function useActive() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   return (to: string) => (to === "/" ? pathname === "/" : pathname.startsWith(to));
@@ -197,7 +196,6 @@ export function AppShell({ children, email }: { children: React.ReactNode; email
         </nav>
         <NutzerBlock email={email} abmeldend={abmeldend} onAbmelden={abmelden} />
       </aside>
-
 
       <div className="md:pl-[236px]">
         <main id="inhalt" className="pb-[52px] md:pb-0">

@@ -106,34 +106,46 @@ describe("ausRaumDokument — beschädigte Eingaben", () => {
   });
 
   it("fällt bei unbekanntem Objekttyp auf den Einzeltisch zurück", () => {
-    const f = erster(ausRaumDokument({
-      objekte: [{ id: "x", typ: "beamer", x_cm: 0, y_cm: 0, rotation_deg: 0 }],
-      sitzplaetze: [],
-    }), "Möbel");
+    const f = erster(
+      ausRaumDokument({
+        objekte: [{ id: "x", typ: "beamer", x_cm: 0, y_cm: 0, rotation_deg: 0 }],
+        sitzplaetze: [],
+      }),
+      "Möbel",
+    );
     expect(f.kind).toBe("einzeltisch");
   });
 
   it("ersetzt eine unzulässige Drehung durch 0", () => {
-    const f = erster(ausRaumDokument({
-      objekte: [{ id: "x", typ: "table_single", x_cm: 0, y_cm: 0, rotation_deg: 45 }],
-      sitzplaetze: [],
-    }), "Möbel");
+    const f = erster(
+      ausRaumDokument({
+        objekte: [{ id: "x", typ: "table_single", x_cm: 0, y_cm: 0, rotation_deg: 45 }],
+        sitzplaetze: [],
+      }),
+      "Möbel",
+    );
     expect(f.rotation).toBe(0);
   });
 
   it("übernimmt gültige Drehungen", () => {
-    const f = erster(ausRaumDokument({
-      objekte: [{ id: "x", typ: "table_single", x_cm: 0, y_cm: 0, rotation_deg: 270 }],
-      sitzplaetze: [],
-    }), "Möbel");
+    const f = erster(
+      ausRaumDokument({
+        objekte: [{ id: "x", typ: "table_single", x_cm: 0, y_cm: 0, rotation_deg: 270 }],
+        sitzplaetze: [],
+      }),
+      "Möbel",
+    );
     expect(f.rotation).toBe(270);
   });
 
   it("macht aus fehlenden Koordinaten eine 0 statt NaN", () => {
-    const f = erster(ausRaumDokument({
-      objekte: [{ id: "x", typ: "table_single", rotation_deg: 0 }],
-      sitzplaetze: [],
-    }), "Möbel");
+    const f = erster(
+      ausRaumDokument({
+        objekte: [{ id: "x", typ: "table_single", rotation_deg: 0 }],
+        sitzplaetze: [],
+      }),
+      "Möbel",
+    );
     expect(f.x).toBe(0);
     expect(f.y).toBe(0);
   });
@@ -149,7 +161,7 @@ describe("Plandokument", () => {
     room: { name: "Raum 204", width: 800, height: 600, grid: 10, furniture: [tisch] },
     status: "entwurf",
     updated: "2026-08-01T10:00:00Z",
-    assignments: { [erster(tisch.seats, "Sitzplatz")]:"schueler-1" },
+    assignments: { [erster(tisch.seats, "Sitzplatz")]: "schueler-1" },
   };
 
   it("überträgt Geometrie und Zuordnungen ins Dokument", () => {
@@ -275,7 +287,7 @@ describe("planZuRow und rowZuPlan", () => {
     room: { name: "Raum 204", width: 800, height: 600, grid: 10, furniture: [tisch] },
     status: "aktiv",
     updated: "2026-08-01T10:00:00Z",
-    assignments: { [erster(tisch.seats, "Sitzplatz")]:"s1" },
+    assignments: { [erster(tisch.seats, "Sitzplatz")]: "s1" },
   };
 
   it("führt den Plan unverändert hin und zurück", () => {

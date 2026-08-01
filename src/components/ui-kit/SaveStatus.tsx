@@ -1,18 +1,18 @@
-import { Check, Clock, Loader2, CloudOff, TriangleAlert, CircleX, type LucideIcon } from "lucide-react";
+import {
+  Check,
+  Clock,
+  Loader2,
+  CloudOff,
+  TriangleAlert,
+  CircleX,
+  type LucideIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type SaveState =
-  | "gespeichert"
-  | "aenderungen"
-  | "speichert"
-  | "offline"
-  | "konflikt"
-  | "ungespeichert";
+  "gespeichert" | "aenderungen" | "speichert" | "offline" | "konflikt" | "ungespeichert";
 
-const MAP: Record<
-  SaveState,
-  { text: string; icon: LucideIcon; cls: string; spin?: boolean }
-> = {
+const MAP: Record<SaveState, { text: string; icon: LucideIcon; cls: string; spin?: boolean }> = {
   gespeichert: {
     text: "Gespeichert",
     icon: Check,

@@ -19,8 +19,7 @@ export function DatenschutzHinweis() {
         <ShieldAlert size={16} strokeWidth={1.5} className="mt-0.5 shrink-0 text-info" />
         <p className="flex-1 text-[13px] leading-[1.55] text-ink-2">
           Hier werden personenbezogene Daten von Schülerinnen und Schülern verarbeitet. Für
-          Rechtsgrundlage, Zweckbindung und Löschfristen ist die betreibende Stelle
-          verantwortlich.
+          Rechtsgrundlage, Zweckbindung und Löschfristen ist die betreibende Stelle verantwortlich.
         </p>
         <button
           type="button"

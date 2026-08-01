@@ -12,7 +12,9 @@ export const STUDENT_COLORS = [
 ] as const;
 
 export function studentColor(index: number) {
-  return STUDENT_COLORS[((index % STUDENT_COLORS.length) + STUDENT_COLORS.length) % STUDENT_COLORS.length];
+  return STUDENT_COLORS[
+    ((index % STUDENT_COLORS.length) + STUDENT_COLORS.length) % STUDENT_COLORS.length
+  ];
 }
 
 export function initials(name: string) {
@@ -49,13 +51,7 @@ export type SchoolClass = {
   createdAt: string;
 };
 
-export type FurnitureKind =
-  | "einzeltisch"
-  | "doppeltisch"
-  | "pult"
-  | "tafel"
-  | "tuer"
-  | "fenster";
+export type FurnitureKind = "einzeltisch" | "doppeltisch" | "pult" | "tafel" | "tuer" | "fenster";
 
 export type Furniture = {
   id: string;

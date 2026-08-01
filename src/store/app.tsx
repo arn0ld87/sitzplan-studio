@@ -122,7 +122,10 @@ export function reducer(state: AppData, action: Action): AppData {
       const betroffen = state.plans.filter((p) => p.classId === cls.id);
       let trash = trashPush(state, { kind: "klasse", name: cls.name, payload: cls });
       for (const p of betroffen) {
-        trash = [{ id: p.id, kind: "sitzplan", name: p.title, deletedAt: now(), payload: p }, ...trash];
+        trash = [
+          { id: p.id, kind: "sitzplan", name: p.title, deletedAt: now(), payload: p },
+          ...trash,
+        ];
       }
       return {
         ...state,
@@ -251,7 +254,9 @@ export function reducer(state: AppData, action: Action): AppData {
     case "plan/update":
       return {
         ...state,
-        plans: state.plans.map((p) => (p.id === action.id ? touchPlan({ ...p, ...action.patch }) : p)),
+        plans: state.plans.map((p) =>
+          p.id === action.id ? touchPlan({ ...p, ...action.patch }) : p,
+        ),
       };
     case "plan/assignments":
       return {
@@ -347,7 +352,8 @@ function buildRows(data: AppData, userId: string): Rows {
   for (const p of data.plans) rows.sitzplaene[p.id] = planZuRow(p, userId, null);
   for (const t of data.trash) {
     if (t.kind === "klasse") klasse(t.payload as SchoolClass, t.deletedAt);
-    else if (t.kind === "raum") rows.raeume[t.payload.id] = raumZuRow(t.payload as Room, userId, t.deletedAt);
+    else if (t.kind === "raum")
+      rows.raeume[t.payload.id] = raumZuRow(t.payload as Room, userId, t.deletedAt);
     else rows.sitzplaene[t.payload.id] = planZuRow(t.payload as SeatingPlan, userId, t.deletedAt);
   }
   return rows;
@@ -408,13 +414,31 @@ async function ladeDaten(): Promise<AppData> {
   const trash: TrashItem[] = [];
   for (const row of klassen)
     if (row.deleted_at)
-      trash.push({ id: row.id, kind: "klasse", name: row.name, deletedAt: row.deleted_at, payload: klasseObj.get(row.id)! });
+      trash.push({
+        id: row.id,
+        kind: "klasse",
+        name: row.name,
+        deletedAt: row.deleted_at,
+        payload: klasseObj.get(row.id)!,
+      });
   for (const row of raeume)
     if (row.deleted_at)
-      trash.push({ id: row.id, kind: "raum", name: row.name, deletedAt: row.deleted_at, payload: raumObj.get(row.id)! });
+      trash.push({
+        id: row.id,
+        kind: "raum",
+        name: row.name,
+        deletedAt: row.deleted_at,
+        payload: raumObj.get(row.id)!,
+      });
   for (const row of plaene)
     if (row.deleted_at)
-      trash.push({ id: row.id, kind: "sitzplan", name: row.name, deletedAt: row.deleted_at, payload: planObj.get(row.id)! });
+      trash.push({
+        id: row.id,
+        kind: "sitzplan",
+        name: row.name,
+        deletedAt: row.deleted_at,
+        payload: planObj.get(row.id)!,
+      });
   trash.sort((a, b) => b.deletedAt.localeCompare(a.deletedAt));
 
   return {
@@ -495,24 +519,21 @@ export function StoreProvider({ userId, children }: { userId: string; children: 
     };
   }, [userId]);
 
-  const dispatch = useCallback(
-    (a: Action) => {
-      if (a.type !== "hydrate") {
-        if (!navigator.onLine) {
-          setSaveState("offline");
-          toast.error("Offline — Änderungen werden nicht gespeichert.");
-          return;
-        }
-        past.current = [...past.current, current.current].slice(-HISTORY_LIMIT);
-        future.current = [];
-        setHistoryTick((t) => t + 1);
-        setSaveState("aenderungen");
-        setDirtyTick((t) => t + 1);
+  const dispatch = useCallback((a: Action) => {
+    if (a.type !== "hydrate") {
+      if (!navigator.onLine) {
+        setSaveState("offline");
+        toast.error("Offline — Änderungen werden nicht gespeichert.");
+        return;
       }
-      rawDispatch(a);
-    },
-    [],
-  );
+      past.current = [...past.current, current.current].slice(-HISTORY_LIMIT);
+      future.current = [];
+      setHistoryTick((t) => t + 1);
+      setSaveState("aenderungen");
+      setDirtyTick((t) => t + 1);
+    }
+    rawDispatch(a);
+  }, []);
 
   const undo = useCallback(() => {
     const prev = past.current[past.current.length - 1];
@@ -563,9 +584,12 @@ export function StoreProvider({ userId, children }: { userId: string; children: 
         past.current = [];
         future.current = [];
         setSaveState("ungespeichert");
-        toast.error("Speichern fehlgeschlagen — der letzte bestätigte Stand ist wiederhergestellt.", {
-          action: { label: "Erneut versuchen", onClick: () => setDirtyTick((x) => x + 1) },
-        });
+        toast.error(
+          "Speichern fehlgeschlagen — der letzte bestätigte Stand ist wiederhergestellt.",
+          {
+            action: { label: "Erneut versuchen", onClick: () => setDirtyTick((x) => x + 1) },
+          },
+        );
       } finally {
         laeuft.current = false;
         if (current.current !== ziel) setDirtyTick((x) => x + 1);

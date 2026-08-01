@@ -80,7 +80,12 @@ function Klassen() {
       )
     )
       return setFehler("Diesen Klassennamen gibt es bereits.");
-    dispatch({ type: "class/update", id: inBearbeitung.id, name: n, note: note.trim().slice(0, 120) });
+    dispatch({
+      type: "class/update",
+      id: inBearbeitung.id,
+      name: n,
+      note: note.trim().slice(0, 120),
+    });
     setBearbeiten(null);
     setName("");
     setNote("");
@@ -111,7 +116,9 @@ function Klassen() {
         subtitle="Jede Klasse hat eine eigene Farbe. Schüler werden innerhalb der Klasse gepflegt."
         actions={
           <>
-            {data.classes.length > 0 && <SearchField value={q} onChange={setQ} label="Klasse suchen" />}
+            {data.classes.length > 0 && (
+              <SearchField value={q} onChange={setQ} label="Klasse suchen" />
+            )}
             <Button
               variant="primary"
               onClick={() => {

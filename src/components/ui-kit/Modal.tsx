@@ -77,7 +77,9 @@ export function Modal({
         <h2 id={titleId} className="font-serif text-[20px] font-semibold leading-7">
           {title}
         </h2>
-        {description && <p className="prose-measure mt-1.5 text-[14px] text-ink-2">{description}</p>}
+        {description && (
+          <p className="prose-measure mt-1.5 text-[14px] text-ink-2">{description}</p>
+        )}
         <form
           className="mt-4 space-y-3.5"
           onSubmit={(e) => {

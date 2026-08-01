@@ -82,10 +82,17 @@ function KlassenDetail() {
     if (regelForm.a === regelForm.b) return setFehler("Bitte zwei verschiedene Schüler wählen.");
     const doppelt = regeln.some(
       (r) =>
-        (r.a === regelForm.a && r.b === regelForm.b) || (r.a === regelForm.b && r.b === regelForm.a),
+        (r.a === regelForm.a && r.b === regelForm.b) ||
+        (r.a === regelForm.b && r.b === regelForm.a),
     );
     if (doppelt) return setFehler("Für dieses Paar gibt es bereits eine Regel.");
-    dispatch({ type: "rule/add", classId: cls.id, a: regelForm.a, b: regelForm.b, kind: regelForm.kind });
+    dispatch({
+      type: "rule/add",
+      classId: cls.id,
+      a: regelForm.a,
+      b: regelForm.b,
+      kind: regelForm.kind,
+    });
     setRegelForm(null);
     setFehler("");
   }
@@ -97,7 +104,13 @@ function KlassenDetail() {
     const nach = form.lastName.trim();
     if (!vor) return setFehler("Bitte mindestens einen Vornamen angeben.");
     if (form.id) {
-      dispatch({ type: "student/update", classId: cls.id, id: form.id, firstName: vor, lastName: nach });
+      dispatch({
+        type: "student/update",
+        classId: cls.id,
+        id: form.id,
+        firstName: vor,
+        lastName: nach,
+      });
     } else {
       dispatch({ type: "student/add", classId: cls.id, firstName: vor, lastName: nach });
     }
@@ -162,7 +175,15 @@ function KlassenDetail() {
               onKeyDown={(e) => {
                 // Pfeiltasten wechseln den Reiter, Pos1/Ende springen an den Rand.
                 const richtung =
-                  e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : e.key === "Home" ? -99 : e.key === "End" ? 99 : 0;
+                  e.key === "ArrowRight"
+                    ? 1
+                    : e.key === "ArrowLeft"
+                      ? -1
+                      : e.key === "Home"
+                        ? -99
+                        : e.key === "End"
+                          ? 99
+                          : 0;
                 if (!richtung) return;
                 e.preventDefault();
                 const ziel =
@@ -194,7 +215,6 @@ function KlassenDetail() {
         id={`panel-${tab}`}
         aria-labelledby={`tab-${tab}`}
       >
-
         {tab === "schueler" && (
           <section aria-labelledby="schueler">
             <div className="flex flex-wrap items-center justify-between gap-3">

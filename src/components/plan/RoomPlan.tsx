@@ -15,12 +15,7 @@ export function PlanDefs({ grid }: { grid: number }) {
   return (
     <defs>
       <pattern id="sp-grid" width={grid} height={grid} patternUnits="userSpaceOnUse">
-        <path
-          d={`M${grid} 0 H0 V${grid}`}
-          fill="none"
-          stroke="var(--grid-line)"
-          strokeWidth="1"
-        />
+        <path d={`M${grid} 0 H0 V${grid}`} fill="none" stroke="var(--grid-line)" strokeWidth="1" />
       </pattern>
       <pattern
         id="sp-hatch"
@@ -314,7 +309,14 @@ export function RoomPlan({
 
       {/* Bemaßung */}
       <g fontFamily="var(--font-mono)" fontSize="12" fill="var(--ink-3)">
-        <line x1="0" y1={-24} x2={room.width} y2={-24} stroke="var(--line-strong)" strokeWidth="1" />
+        <line
+          x1="0"
+          y1={-24}
+          x2={room.width}
+          y2={-24}
+          stroke="var(--line-strong)"
+          strokeWidth="1"
+        />
         <line x1="0" y1={-30} x2="0" y2={-18} stroke="var(--line-strong)" />
         <line x1={room.width} y1={-30} x2={room.width} y2={-18} stroke="var(--line-strong)" />
         <text x={room.width / 2} y={-30} textAnchor="middle">

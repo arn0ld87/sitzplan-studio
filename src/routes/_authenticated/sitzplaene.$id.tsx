@@ -330,122 +330,122 @@ function SitzplanEditor() {
             </Button>
           </aside>
         ) : (
-        <aside
-          className="border-b border-line bg-panel p-4 lg:border-b-0 lg:border-r"
-          onPointerUp={zurueckInDieAblage}
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={zurueckInDieAblage}
-        >
-          <div className="flex items-center justify-between gap-2">
-            <h2 className="eyebrow">Noch ohne Platz</h2>
-            <span className="num text-[12px] text-ink-3">
-              {String(offen.length).padStart(2, "0")}
-            </span>
-            <Button
-              variant="quiet"
-              size="iconSm"
-              aria-label="Ablage ausblenden"
-              onClick={() => setAblageOffen(false)}
-            >
-              <PanelLeftClose size={16} strokeWidth={1.5} />
-            </Button>
-          </div>
+          <aside
+            className="border-b border-line bg-panel p-4 lg:border-b-0 lg:border-r"
+            onPointerUp={zurueckInDieAblage}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={zurueckInDieAblage}
+          >
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="eyebrow">Noch ohne Platz</h2>
+              <span className="num text-[12px] text-ink-3">
+                {String(offen.length).padStart(2, "0")}
+              </span>
+              <Button
+                variant="quiet"
+                size="iconSm"
+                aria-label="Ablage ausblenden"
+                onClick={() => setAblageOffen(false)}
+              >
+                <PanelLeftClose size={16} strokeWidth={1.5} />
+              </Button>
+            </div>
 
-          {!cls ? (
-            <p className="mt-2 text-[13px] text-ink-2">
-              Die zugehörige Klasse liegt im Papierkorb. Stellen Sie sie wieder her, um Schüler zu
-              verteilen.
-            </p>
-          ) : cls.students.length === 0 ? (
-            <p className="mt-2 text-[13px] text-ink-2">
-              Die Klasse {cls.name} hat noch keine Schüler.
-            </p>
-          ) : (
-            <>
-              {offen.length > 4 && (
-                <div className="mt-2">
-                  <SearchField value={q} onChange={setQ} label="Name suchen" width={228} />
-                </div>
-              )}
-              <div className="mt-2.5 flex flex-wrap gap-1.5">
-                {gefiltert.map((s) => (
-                  <StudentChip
-                    key={s.id}
-                    name={studentName(s)}
-                    colorIndex={s.colorIndex}
-                    selected={carry?.studentId === s.id}
-                    draggable
-                    onDragStart={() => setCarry({ studentId: s.id, from: null })}
-                    onPointerDown={() => setCarry({ studentId: s.id, from: null })}
-                    onClick={() => setCarry({ studentId: s.id, from: null })}
-                  />
-                ))}
-                {gefiltert.length === 0 && (
-                  <p className="text-[13px] text-ink-3">
-                    {offen.length === 0 ? "Alle Schüler sitzen." : `Kein Name passt zu „${q}“.`}
-                  </p>
+            {!cls ? (
+              <p className="mt-2 text-[13px] text-ink-2">
+                Die zugehörige Klasse liegt im Papierkorb. Stellen Sie sie wieder her, um Schüler zu
+                verteilen.
+              </p>
+            ) : cls.students.length === 0 ? (
+              <p className="mt-2 text-[13px] text-ink-2">
+                Die Klasse {cls.name} hat noch keine Schüler.
+              </p>
+            ) : (
+              <>
+                {offen.length > 4 && (
+                  <div className="mt-2">
+                    <SearchField value={q} onChange={setQ} label="Name suchen" width={228} />
+                  </div>
                 )}
-              </div>
-            </>
-          )}
+                <div className="mt-2.5 flex flex-wrap gap-1.5">
+                  {gefiltert.map((s) => (
+                    <StudentChip
+                      key={s.id}
+                      name={studentName(s)}
+                      colorIndex={s.colorIndex}
+                      selected={carry?.studentId === s.id}
+                      draggable
+                      onDragStart={() => setCarry({ studentId: s.id, from: null })}
+                      onPointerDown={() => setCarry({ studentId: s.id, from: null })}
+                      onClick={() => setCarry({ studentId: s.id, from: null })}
+                    />
+                  ))}
+                  {gefiltert.length === 0 && (
+                    <p className="text-[13px] text-ink-3">
+                      {offen.length === 0 ? "Alle Schüler sitzen." : `Kein Name passt zu „${q}“.`}
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
 
-          <p className="mt-3 text-[12px] leading-[1.5] text-ink-3">
-            Schüler auf einen Platz ziehen oder anklicken und dann den Platz wählen. Ein belegter
-            Platz tauscht die Personen. Escape hebt die Auswahl auf, ein Klick in diese Spalte setzt
-            jemanden zurück in die Ablage.
-          </p>
+            <p className="mt-3 text-[12px] leading-[1.5] text-ink-3">
+              Schüler auf einen Platz ziehen oder anklicken und dann den Platz wählen. Ein belegter
+              Platz tauscht die Personen. Escape hebt die Auswahl auf, ein Klick in diese Spalte
+              setzt jemanden zurück in die Ablage.
+            </p>
 
-          <hr className="my-4 border-t border-line" />
-          <div className="flex flex-wrap gap-1.5">
-            <Button variant="quiet" size="sm" onClick={undo} disabled={!canUndo}>
-              <Undo2 size={16} strokeWidth={1.5} />
-              Rückgängig
-            </Button>
-            <Button variant="quiet" size="sm" onClick={redo} disabled={!canRedo}>
-              <Redo2 size={16} strokeWidth={1.5} />
-              Wiederholen
-            </Button>
-          </div>
-          <div className="mt-2 flex flex-wrap gap-1.5">
+            <hr className="my-4 border-t border-line" />
+            <div className="flex flex-wrap gap-1.5">
+              <Button variant="quiet" size="sm" onClick={undo} disabled={!canUndo}>
+                <Undo2 size={16} strokeWidth={1.5} />
+                Rückgängig
+              </Button>
+              <Button variant="quiet" size="sm" onClick={redo} disabled={!canRedo}>
+                <Redo2 size={16} strokeWidth={1.5} />
+                Wiederholen
+              </Button>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={automatisch}
+                disabled={offen.length === 0 || plaetze === 0}
+              >
+                <Shuffle size={16} strokeWidth={1.5} />
+                Restliche verteilen
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setLeeren(true)}
+                disabled={Object.keys(plan.assignments).length === 0}
+              >
+                <Eraser size={16} strokeWidth={1.5} />
+                Plan leeren
+              </Button>
+            </div>
             <Button
+              className="mt-2 w-full"
               variant="secondary"
               size="sm"
-              onClick={automatisch}
-              disabled={offen.length === 0 || plaetze === 0}
+              disabled={!carry || !carry.from}
+              onClick={zurueckInDieAblage}
             >
-              <Shuffle size={16} strokeWidth={1.5} />
-              Restliche verteilen
+              <Undo size={16} strokeWidth={1.5} />
+              Zurück in die Ablage
             </Button>
             <Button
-              variant="secondary"
+              className="mt-4 w-full"
+              variant="danger"
               size="sm"
-              onClick={() => setLeeren(true)}
-              disabled={Object.keys(plan.assignments).length === 0}
+              onClick={() => setLoeschen(true)}
             >
-              <Eraser size={16} strokeWidth={1.5} />
-              Plan leeren
+              <Trash2 size={16} strokeWidth={1.5} />
+              Sitzplan löschen
             </Button>
-          </div>
-          <Button
-            className="mt-2 w-full"
-            variant="secondary"
-            size="sm"
-            disabled={!carry || !carry.from}
-            onClick={zurueckInDieAblage}
-          >
-            <Undo size={16} strokeWidth={1.5} />
-            Zurück in die Ablage
-          </Button>
-          <Button
-            className="mt-4 w-full"
-            variant="danger"
-            size="sm"
-            onClick={() => setLoeschen(true)}
-          >
-            <Trash2 size={16} strokeWidth={1.5} />
-            Sitzplan löschen
-          </Button>
-        </aside>
+          </aside>
         )}
 
         <div className="p-4 md:p-6">
@@ -531,7 +531,11 @@ function SitzplanEditor() {
           setVersionFehler("");
         }}
       >
-        <Field label="Name des Standes" hint="Optional — sonst Datum und Uhrzeit" error={versionFehler}>
+        <Field
+          label="Name des Standes"
+          hint="Optional — sonst Datum und Uhrzeit"
+          error={versionFehler}
+        >
           <input
             className={inputClass}
             value={versionName}

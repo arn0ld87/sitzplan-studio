@@ -135,12 +135,21 @@ export function zuPlanDokument(plan: SeatingPlan): PlanDokument {
   };
 }
 
-export function ausPlanDokument(doc: unknown, raumName: string): {
+export function ausPlanDokument(
+  doc: unknown,
+  raumName: string,
+): {
   room: RoomGeometry;
   assignments: Record<string, string>;
 } {
   const d = (doc ?? {}) as Partial<PlanDokument>;
-  const g = d.raumGeometrie ?? { breiteCm: 800, laengeCm: 600, rasterCm: 10, objekte: [], sitzplaetze: [] };
+  const g = d.raumGeometrie ?? {
+    breiteCm: 800,
+    laengeCm: 600,
+    rasterCm: 10,
+    objekte: [],
+    sitzplaetze: [],
+  };
   const assignments: Record<string, string> = {};
   for (const z of d.zuordnungen ?? []) assignments[z.sitzplatzId] = z.schuelerId;
   return {
@@ -263,7 +272,11 @@ export function planZuRow(p: SeatingPlan, userId: string, deletedAt: string | nu
   };
 }
 
-export function rowZuKlasse(row: KlasseRow, schueler: SchuelerRow[], colorIndex: number): SchoolClass {
+export function rowZuKlasse(
+  row: KlasseRow,
+  schueler: SchuelerRow[],
+  colorIndex: number,
+): SchoolClass {
   return {
     id: row.id,
     name: row.name,

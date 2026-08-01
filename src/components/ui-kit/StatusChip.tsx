@@ -13,7 +13,14 @@ export function StatusChip({ status, className }: { status: string; className?: 
   const { Icon } = s;
   return (
     <span
-      style={{ height: 24, borderRadius: 4, padding: "0 9px", gap: 6, color: s.color, background: s.bg }}
+      style={{
+        height: 24,
+        borderRadius: 4,
+        padding: "0 9px",
+        gap: 6,
+        color: s.color,
+        background: s.bg,
+      }}
       className={`inline-flex items-center text-[11.5px] font-medium leading-none ${className ?? ""}`}
     >
       <Icon size={12} strokeWidth={1.75} aria-hidden />

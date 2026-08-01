@@ -72,9 +72,7 @@ function SignIn() {
     <div className="flex min-h-screen items-center justify-center bg-canvas px-4 py-12">
       <div className="w-full max-w-[380px]">
         <Wortmarke />
-        <h1 className="page-title mt-6">
-          {modus === "anmelden" ? "Anmelden" : "Konto anlegen"}
-        </h1>
+        <h1 className="page-title mt-6">{modus === "anmelden" ? "Anmelden" : "Konto anlegen"}</h1>
         <p className="mt-1.5 text-[14px] leading-[1.55] text-ink-2">
           Ihre Klassen, Räume und Sitzpläne sind an Ihr Konto gebunden.
         </p>

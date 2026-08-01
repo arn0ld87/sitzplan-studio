@@ -67,9 +67,12 @@ function RaumEditor() {
   const [selected, setSelected] = useState<string | null>(null);
   const [showGrid, setShowGrid] = useState(true);
   const [zoom, setZoom] = useState(1);
-  const [form, setForm] = useState<{ name: string; width: string; height: string; grid: string } | null>(
-    null,
-  );
+  const [form, setForm] = useState<{
+    name: string;
+    width: string;
+    height: string;
+    grid: string;
+  } | null>(null);
   const [fehler, setFehler] = useState("");
   const [loeschen, setLoeschen] = useState(false);
 
@@ -107,7 +110,7 @@ function RaumEditor() {
 
   const drehen = useCallback(() => {
     if (!aktiv) return;
-    patch(aktiv.id, { rotation: (((aktiv.rotation + 90) % 360) as Furniture["rotation"]) });
+    patch(aktiv.id, { rotation: ((aktiv.rotation + 90) % 360) as Furniture["rotation"] });
   }, [aktiv, patch]);
 
   const duplizieren = useCallback(() => {
@@ -409,21 +412,21 @@ function RaumEditor() {
           </div>
           {furniture.length === 0 && (
             <p className="mb-3 rounded-[6px] border border-line bg-panel px-3 py-2 text-[13px] text-ink-2">
-              Der Raum ist leer. Fügen Sie links Tische und Einbauten ein — Doppeltische bringen zwei
-              Sitzplätze mit.
+              Der Raum ist leer. Fügen Sie links Tische und Einbauten ein — Doppeltische bringen
+              zwei Sitzplätze mit.
             </p>
           )}
           <div className="overflow-auto rounded-[8px] border border-line bg-plan">
             <div style={{ width: `${zoom * 100}%` }}>
-            <RoomPlan
-              room={room}
-              mode="room"
-              showGrid={showGrid}
-              selectedId={selected}
-              onSelect={setSelected}
-              onMoveFurniture={(fid, x, y) => patch(fid, { x, y })}
-              className="block h-auto w-full"
-            />
+              <RoomPlan
+                room={room}
+                mode="room"
+                showGrid={showGrid}
+                selectedId={selected}
+                onSelect={setSelected}
+                onMoveFurniture={(fid, x, y) => patch(fid, { x, y })}
+                className="block h-auto w-full"
+              />
             </div>
           </div>
         </div>

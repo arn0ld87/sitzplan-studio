@@ -9,7 +9,6 @@ import { useStore } from "@/store/app";
 import { supabase } from "@/integrations/supabase/client";
 import { kontoLoeschen } from "@/lib/konto.functions";
 
-
 export const Route = createFileRoute("/_authenticated/einstellungen")({
   component: Einstellungen,
   head: () => ({
@@ -48,7 +47,6 @@ function Einstellungen() {
     await supabase.auth.signOut();
     navigate({ to: "/signin", replace: true });
   }
-
 
   function exportieren() {
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
@@ -99,12 +97,7 @@ function Einstellungen() {
                 </div>
               ))}
             </dl>
-            <Button
-              variant="secondary"
-              className="mt-4"
-              onClick={abmelden}
-              disabled={abmeldend}
-            >
+            <Button variant="secondary" className="mt-4" onClick={abmelden} disabled={abmeldend}>
               <LogOut size={16} strokeWidth={1.5} />
               {abmeldend ? "Wird abgemeldet …" : "Abmelden"}
             </Button>
@@ -128,10 +121,15 @@ function Einstellungen() {
               Konto und alle Daten löschen
             </h2>
             <p className="mt-1.5 text-[13px] leading-[1.55] text-ink-2">
-              Entfernt das Konto sowie sämtliche Klassen, Räume und Sitzpläne unwiderruflich.
-              Ein Export sollte vorher erstellt werden.
+              Entfernt das Konto sowie sämtliche Klassen, Räume und Sitzpläne unwiderruflich. Ein
+              Export sollte vorher erstellt werden.
             </p>
-            <Button variant="danger" className="mt-4" onClick={() => setFrage(true)} disabled={busy}>
+            <Button
+              variant="danger"
+              className="mt-4"
+              onClick={() => setFrage(true)}
+              disabled={busy}
+            >
               Konto endgültig löschen
             </Button>
           </section>
