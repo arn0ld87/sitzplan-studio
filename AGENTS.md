@@ -1,19 +1,8 @@
 # AGENTS.md
 
 Arbeitsanweisungen für KI-Agenten in diesem Repository. Gilt für alle Agenten
-(Claude Code, Codex, Jules, Lovable). Claude-Code-Spezifisches steht zusätzlich
+(Claude Code, Codex, Jules). Claude-Code-Spezifisches steht zusätzlich
 in [`CLAUDE.md`](CLAUDE.md).
-
-<!-- LOVABLE:BEGIN -->
-> [!IMPORTANT]
-> This project is connected to [Lovable](https://lovable.dev). Avoid rewriting
-> published git history — force pushing, or rebasing/amending/squashing commits
-> that are already pushed — as it rewrites history on Lovable's side and the
-> user will likely lose their project history.
->
-> Commits you push to the connected branch sync back to Lovable and show up in
-> the editor, so keep the branch in a working state.
-<!-- LOVABLE:END -->
 
 ## Dokumentationsquellen
 
@@ -79,7 +68,7 @@ Sitzplänen.
 ## Verboten
 
 - `git push --force`, Rebase oder Amend auf bereits gepushten Commits
-  (zerstört die Lovable-Historie).
+  (offene Pull Requests und Review-Kommentare hängen an den SHAs).
 - `--no-verify` oder `--no-gpg-sign` ohne ausdrückliche Anweisung.
 - Service-Role-Key, echte Schülerdaten oder sonstige Geheimnisse im Repo,
   in Logs oder in Commit-Messages.
@@ -100,4 +89,3 @@ Sitzplänen.
 - Runbooks: [Gate](docs/runbooks/pre-push-gate.md) · [PR-Workflow](docs/runbooks/pr-workflow.md)
 - Gestaltung (SSoT): [`docs/designsystem.md`](docs/designsystem.md)
 - Claude Code: [`CLAUDE.md`](CLAUDE.md)
-- Lovable-Projekt: https://lovable.dev/projects/6f249ae9-eb8e-40db-8f19-9d697518a3df

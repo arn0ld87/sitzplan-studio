@@ -78,3 +78,15 @@ eigenem Issue und eigenem Pull Request.
 
 *Zweites Backend für den Mac-Client.* Zweite Wahrheit über Schülerdaten. Nicht
 verhandelbar.
+
+## Nachtrag (2026-08-01)
+
+Der Lovable-Sync auf `main` ist gekappt. Damit fällt das Argument weg, das oben
+unter „Warum ein eigenes Repository" als ausschlaggebend benannt ist, und die
+Bedingung aus „Verworfen" ist eingetreten: Ein Monorepo ist ab jetzt möglich.
+
+Die Entscheidung bleibt trotzdem bestehen. Die übrigen Gründe — getrennte
+Werkzeugketten, getrennte CI-Läufe, getrennter Freigabezyklus — tragen sie
+weiter, und die Fixtures in `contracts/` stehen bereits. Wer das Monorepo
+tatsächlich will, schreibt dafür einen eigenen ADR; dieser hier wird nicht
+nachträglich umgedeutet.

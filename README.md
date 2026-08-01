@@ -251,10 +251,10 @@ Papierkorb.
   sind historisch englisch — beim Anfassen angleichen, nicht großflächig umbauen.
 
 > [!IMPORTANT]
-> Dieses Repository ist mit [Lovable](https://lovable.dev) verbunden und
-> synchronisiert in beide Richtungen. Veröffentlichte Historie darf **nicht**
-> umgeschrieben werden — kein `--force`, kein Rebase, kein Amend auf bereits
-> gepushten Commits. Der Branch `main` muss jederzeit lauffähig sein.
+> Veröffentlichte Historie darf **nicht** umgeschrieben werden — kein `--force`,
+> kein Rebase, kein Amend auf bereits gepushten Commits. Offene Pull Requests
+> und die Kommentare der Review-Bots hängen an den Commit-SHAs. Der Branch
+> `main` muss jederzeit lauffähig sein.
 
 ## Lizenz & Herkunft
 
@@ -262,5 +262,7 @@ Für dieses Repository ist **keine Lizenz** hinterlegt. Damit gilt das
 gesetzliche Urheberrecht: alle Rechte vorbehalten, keine Nutzung oder
 Weitergabe ohne Zustimmung. Wer Open Source möchte, legt eine `LICENSE` an.
 
-Entstanden mit [Lovable](https://lovable.dev/projects/6f249ae9-eb8e-40db-8f19-9d697518a3df),
-gepflegt von [Alexander Schneider](https://github.com/arn0ld87).
+Der erste Aufschlag entstand mit [Lovable](https://lovable.dev); der
+Repository-Sync ist seit Juli 2026 gekappt, die Build-Konfiguration
+(`@lovable.dev/vite-tanstack-config`) blieb. Gepflegt von
+[Alexander Schneider](https://github.com/arn0ld87).
