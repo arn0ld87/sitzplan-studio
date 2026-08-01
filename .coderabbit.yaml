@@ -1,0 +1,155 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+#
+# CodeRabbit-Konfiguration für Sitzplan Studio.
+#
+# Anlass: Der Docstring-Lauf am 2026-08-01 hat in zehn Dateien englische
+# JSDoc-Blöcke eingefügt und dabei an einer Vertragsstelle Fachwissen
+# überschrieben. AGENTS.md verlangt deutsche Kommentare — das steht jetzt auch
+# hier, weil der Bot Guideline-Dateien zwar liest, die Sprache der von ihm
+# erzeugten Docstrings aber separat gesteuert wird.
+#
+# Nach Änderungen `@coderabbitai configuration` in einem PR posten. Nur die
+# Ausgabe des Bots zeigt, welche Konfiguration tatsächlich greift.
+
+language: "de-DE"
+
+tone_instructions: |
+  Antworte auf Deutsch. Fachbegriffe und Bezeichner bleiben im Original.
+  Knapp und sachlich, keine Höflichkeitsfloskeln.
+
+reviews:
+  profile: "chill"
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  sequence_diagrams: true
+  assess_linked_issues: true
+  abort_on_close: true
+  enable_prompt_for_ai_agents: true
+
+  auto_review:
+    enabled: true
+    auto_incremental_review: true
+    drafts: false
+
+  # Generiertes und Gesperrtes gar nicht erst reviewen — dort sind Befunde
+  # entweder gegenstandslos oder nicht umsetzbar.
+  path_filters:
+    - "!src/routeTree.gen.ts"
+    - "!src/integrations/supabase/types.ts"
+    - "!src/components/ui/**"
+    - "!bun.lock"
+    - "!coverage/**"
+    - "!.output/**"
+
+  path_instructions:
+    - path: "src/**"
+      instructions: |
+        Kommentare, Docstrings und Bezeichner sind auf Deutsch. Schlage keine
+        Übersetzung ins Englische vor und ersetze keinen bestehenden deutschen
+        Kommentar durch einen englischen.
+
+        Ein Kommentar erklärt hier das Warum, nicht das Was. JSDoc-Tags wie
+        @param und @returns, die nur die Signatur wiederholen, sind unerwünscht
+        — sie gehören nur dorthin, wo sie echte Zusatzinformation tragen, etwa
+        eine Einheit ("in Zentimetern") oder eine Vorbedingung.
+
+        Ersetze niemals einen vorhandenen Kommentar durch eine allgemeinere
+        Fassung. Steht dort eine fachliche Aussage, muss sie erhalten bleiben.
+
+    - path: "src/data/**"
+      instructions: |
+        Datenverträge. Diese Dateien werden seit ADR-0006 von zwei Clients
+        gelesen — der Web-App und dem nativen macOS-Client im Repository
+        sitzplan_macos. Eine Verhaltensänderung hier ändert stillschweigend
+        auch den anderen Client.
+
+        Unantastbar ohne ausdrückliche Entscheidung:
+        - die Sitzplatzkennung `<objektId>__sitz_<n>` aus seatId()
+        - die Dokumentformate RaumDokument und PlanDokument samt ihrer
+          Versionsnummern
+        - die Toleranzen der aus*-Funktionen: Lesen ist bewusst tolerant,
+          Schreiben bewusst streng. Schlage keine Verschärfung des Lesepfads
+          vor — alte Datensätze dürfen nie zum Absturz führen.
+        - die Rückfallwerte bei fehlenden Feldern
+
+        `deleted_at IS NULL` gehört in jede Leseabfrage auf Nutzdaten. Fehlt
+        der Filter, ist das ein echter Befund und kein Stilthema.
+
+    - path: "supabase/migrations/**"
+      instructions: |
+        Jede neue Tabelle braucht user_id, created_at, updated_at, deleted_at,
+        den Trigger set_updated_at und vier RLS-Policies (select/insert/update/
+        delete) gegen auth.uid(). Eine Tabelle ohne RLS ist ein
+        Sicherheitsvorfall, kein Schönheitsfehler.
+
+        Migrationen werden nie nachträglich geändert, nur ergänzt.
+
+    - path: "contracts/fixtures/**"
+      instructions: |
+        Gemeinsame Vertragsfälle für die Web- und die macOS-Testsuite. Die
+        Erwartungswerte beschreiben, was der Code tatsächlich tut — auch dort,
+        wo es überraschend wirkt.
+
+        Schlage keine Korrektur eines Erwartungswerts vor, der dir falsch
+        erscheint. Fehlerhaft wirkendes Verhalten gehört als Issue gemeldet,
+        nicht in der Fixture stillschweigend geglättet. Feste Kennungen und
+        Zeitstempel sind Absicht, keine Nachlässigkeit.
+
+    - path: "src/**/*.test.{ts,tsx}"
+      instructions: |
+        Tests sind die Spezifikation. Schlage niemals abgeschwächte Assertions,
+        Skips oder Retries vor, um einen roten Test grün zu bekommen.
+
+    - path: "src/components/**"
+      instructions: |
+        docs/designsystem.md ist verbindlich und fertig entworfen. Farben,
+        Radien, Schatten und Typografie sind exakt vorgegeben.
+
+        Verboten: Dark Mode, Farbverläufe, Glassmorphism, Violett und Indigo,
+        Rot für Fokus oder Auswahl (Auswahl und Fokus sind Petrol #2F5D73, Rot
+        ist ausschließlich Löschen und Fehler), mehr als eine Primäraktion je
+        Ansicht, Zustände allein über Farbe, Emojis als Icons, window.confirm.
+
+        Barrierefreiheit zählt als Befund: fehlendes aria-label an
+        Icon-only-Buttons, Tastaturbedienung, die schlechter ist als
+        Drag-and-drop, unsichtbarer Fokus. Ziel ist WCAG 2.2 AA.
+
+  finishing_touches:
+    docstrings:
+      enabled: true
+    unit_tests:
+      enabled: true
+    simplify:
+      enabled: false
+    # Aus, seit ein Autofix-Commit am Gate vorbei eine Prettier-Verletzung
+    # eingebracht hat. Jede Änderung soll durch typecheck, lint, test und build
+    # gehen; ein Bot-Commit umgeht das still.
+    autofix:
+      enabled: false
+
+  tools:
+    # Läuft bereits im Gate über `bun run lint` — sonst liest man jeden Befund
+    # zweimal.
+    eslint:
+      enabled: false
+    gitleaks:
+      enabled: true
+    yamllint:
+      enabled: true
+    markdownlint:
+      enabled: false
+
+chat:
+  auto_reply: true
+
+knowledge_base:
+  learnings:
+    scope: "auto"
+  issues:
+    scope: "auto"
+
+code_generation:
+  docstrings:
+    # Der eigentliche Grund für diese Datei.
+    language: "de-DE"
