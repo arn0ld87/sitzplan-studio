@@ -144,7 +144,41 @@ function Uebersicht() {
               </button>
             </div>
           </section>
+
+          <section aria-labelledby="ohne-plan" className="reveal" style={{ "--i": 2 } as never}>
+            <h2 id="ohne-plan" className="section-title">
+              Klassen ohne aktuellen Sitzplan
+            </h2>
+            <ul className="mt-3 divide-y divide-[color:var(--line)] overflow-hidden rounded-[8px] border border-line bg-panel shadow-[var(--shadow-panel)]">
+              {OHNE_PLAN.map((e) => {
+                const c = getClass(e.id);
+                if (!c) return null;
+                return (
+                  <li
+                    key={c.id}
+                    className="flex items-center gap-3.5 px-4 py-3 transition-colors hover:bg-elevated"
+                  >
+                    <ClassDot name={c.name} colorIndex={c.colorIndex} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[14px] font-medium">{c.name}</span>
+                      <span className="block truncate text-[13px] text-ink-2">
+                        {c.students.length} Schüler · {e.meta}
+                      </span>
+                    </span>
+                    <button
+                      type="button"
+                      style={{ height: 34, borderColor: "#D2C5AF", background: "#FCFAF6" }}
+                      className="shrink-0 rounded-[8px] border px-3 text-[13px] font-medium transition-colors hover:border-[color:var(--action)]"
+                    >
+                      Sitzplan erstellen
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
         </div>
+
 
         <aside className="space-y-6 reveal" style={{ "--i": 2 } as never}>
           <section aria-labelledby="klassen-kurz">
