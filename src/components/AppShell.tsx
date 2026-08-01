@@ -1,6 +1,18 @@
-import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutGrid, Users, DoorOpen, Grid2x2, Trash2, type LucideIcon } from "lucide-react";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import {
+  LayoutGrid,
+  Users,
+  DoorOpen,
+  Grid2x2,
+  Trash2,
+  Settings,
+  LogOut,
+  type LucideIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 import { useStore } from "@/store/app";
 
 type NavItem = { to: string; label: string; icon: LucideIcon; count?: number };
