@@ -5,10 +5,10 @@ import { Button } from "@/components/ui-kit/Button";
 import { SearchField } from "@/components/ui-kit/SearchField";
 import { PageHeader } from "@/components/PageHeader";
 import { ConfirmDialog } from "@/components/ui-kit/ConfirmDialog";
-import { ClassDot } from "@/routes/index";
+import { ClassDot } from "@/components/ui-kit/ClassDot";
 import { classes } from "@/data/demo";
 
-export const Route = createFileRoute("/klassen")({
+export const Route = createFileRoute("/klassen/")({
   head: () => ({
     meta: [
       { title: "Klassen verwalten — Sitzplan" },

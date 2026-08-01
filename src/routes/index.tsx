@@ -5,6 +5,7 @@ import { Button } from "@/components/ui-kit/Button";
 import { SearchField } from "@/components/ui-kit/SearchField";
 import { PlanThumb } from "@/components/plan/RoomPlan";
 import { classes, plans, rooms, getClass, getRoom, seatCount } from "@/data/demo";
+import { ClassDot } from "@/components/ui-kit/ClassDot";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -188,27 +189,3 @@ function Uebersicht() {
     </>
   );
 }
-
-export function ClassDot({ name, colorIndex }: { name: string; colorIndex: number }) {
-  const kuerzel = name.replace("Klasse ", "");
-  return (
-    <span
-      aria-hidden
-      style={{ background: `var(--sunken)`, borderColor: STUD[colorIndex % STUD.length] }}
-      className="grid h-6 w-6 shrink-0 place-items-center rounded-full border-2 text-[10px] font-semibold"
-    >
-      {kuerzel}
-    </span>
-  );
-}
-
-const STUD = [
-  "#E08A6B",
-  "#9DBFA8",
-  "#E3B56B",
-  "#A99CCB",
-  "#7CA9C2",
-  "#D88BA0",
-  "#B89970",
-  "#82B7A5",
-];
