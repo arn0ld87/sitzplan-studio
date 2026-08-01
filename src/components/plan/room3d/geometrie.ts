@@ -42,7 +42,12 @@ export function cmZuEinheit(cm: number): number {
   return cm / CM_PRO_EINHEIT;
 }
 
-/** Rechnet eine Länge in Welteinheiten zurück in Zentimeter. */
+/**
+ * Converts a length from world units to centimeters.
+ *
+ * @param einheiten - The length in world units
+ * @returns The length in centimeters
+ */
 export function einheitZuCm(einheiten: number): number {
   return einheiten * CM_PRO_EINHEIT;
 }
@@ -82,15 +87,22 @@ export type Platzierung = {
   masse: { breite: number; hoehe: number; tiefe: number };
 };
 
-/** Drehung des Grundrisses als Winkel der Szene, in Radiant. */
+/**
+ * Converts a floor-plan rotation to the corresponding scene rotation in radians.
+ *
+ * @param rotation - The furniture rotation in degrees.
+ * @returns The scene rotation in radians.
+ */
 export function drehungZuRadiant(rotation: Furniture["rotation"]): number {
   return (-rotation * Math.PI) / 180;
 }
 
 /**
- * Setzt ein Möbelstück in die Szene. Der Mittelpunkt der Grundfläche ist
- * zugleich der Drehursprung — genau wie im SVG, wo `rotate()` um
- * `(w/2, h/2)` dreht. Deshalb bleibt die Position von der Drehung unberührt.
+ * Calculates a furniture item's position, rotation, and dimensions in the 3D scene.
+ *
+ * @param f - The furniture item to place
+ * @param raum - The room dimensions used to center the furniture item
+ * @returns The furniture item's 3D placement data
  */
 export function moebelPlatzierung(
   f: Furniture,
@@ -127,11 +139,11 @@ export function gedrehteGrundflaeche(f: Furniture): { breite: number; tiefe: num
 }
 
 /**
- * Stuhlposition im **lokalen** Koordinatensystem des Möbelstücks, also vor der
- * Drehung. Der Stuhl steht hinter der Tischkante in lokaler +Z-Richtung; bei
- * ungedrehtem Tisch heißt das: unterhalb im Grundriss, mit Blick zur Tafel.
+ * Calculates a seat's position in the furniture's local coordinate system.
  *
- * `null`, wenn das Möbelstück an dieser Stelle keinen Sitzplatz hat.
+ * @param kind - The furniture type that determines the available seat positions
+ * @param index - The zero-based seat position index
+ * @returns The local seat position, or `null` when the furniture has no seat at the specified index
  */
 export function stuhlPlatzierung(
   kind: FurnitureKind,
@@ -149,7 +161,12 @@ export function stuhlPlatzierung(
   };
 }
 
-/** Kantenlängen des Raums in Welteinheiten. */
+/**
+ * Calculates the room dimensions in world units.
+ *
+ * @param raum - The room's width and depth in centimeters
+ * @returns The room's width, depth, and height in world units
+ */
 export function raumMasse(raum: Pick<RoomGeometry, "width" | "height">): {
   breite: number;
   tiefe: number;
@@ -167,16 +184,21 @@ export type Kamerastand = {
   ziel: [number, number, number];
 };
 
-/** Längere Raumkante in Welteinheiten — Bezugsgröße für alle Kameraabstände. */
+/** Determines the longer room dimension used as the reference for camera distances.
+
+ * @param raum - The room dimensions in centimeters
+ * @returns The longer room dimension in world units
+ */
 function spanne(raum: Pick<RoomGeometry, "width" | "height">): number {
   const { breite, tiefe } = raumMasse(raum);
   return Math.max(breite, tiefe);
 }
 
 /**
- * Startkamera für die Perspektivansicht: leicht erhöht, schräg von der der
- * Tafel gegenüberliegenden Seite. Der Blick geht auf einen Punkt knapp über
- * Tischhöhe, damit der Raum nicht am unteren Bildrand klebt.
+ * Positions the perspective camera at an elevated angle opposite the board.
+ *
+ * @param raum - The room dimensions used to determine the camera distance.
+ * @returns The camera position and target point above the floor.
  */
 export function startKamera(raum: Pick<RoomGeometry, "width" | "height">): Kamerastand {
   const s = spanne(raum);
@@ -186,7 +208,12 @@ export function startKamera(raum: Pick<RoomGeometry, "width" | "height">): Kamer
   };
 }
 
-/** Draufsicht: senkrecht von oben, Blickrichtung wie im Grundriss. */
+/**
+ * Creates a nearly vertical top-down camera view aligned with the floor plan.
+ *
+ * @param raum - The room dimensions used to determine the camera distance
+ * @returns The camera position and target point for the top-down view
+ */
 export function draufsichtKamera(raum: Pick<RoomGeometry, "width" | "height">): Kamerastand {
   const s = spanne(raum);
   return {
@@ -197,7 +224,12 @@ export function draufsichtKamera(raum: Pick<RoomGeometry, "width" | "height">): 
   };
 }
 
-/** Abstandsgrenzen der Kamera, damit der Raum nicht verloren geht. */
+/**
+ * Determines the minimum and maximum camera distances based on the room dimensions.
+ *
+ * @param raum - The room dimensions used to calculate the camera distance range
+ * @returns The minimum and maximum camera distances
+ */
 export function abstandsgrenzen(raum: Pick<RoomGeometry, "width" | "height">): {
   min: number;
   max: number;
@@ -211,11 +243,12 @@ export type Wandseite = "nord" | "sued" | "west" | "ost";
 export const WANDSEITEN: readonly Wandseite[] = ["nord", "sued", "west", "ost"] as const;
 
 /**
- * Steht diese Wand zwischen Kamera und Raum? Eine Wand verdeckt genau dann,
- * wenn die Kamera außerhalb von ihr steht. Verdeckende Wände blendet die Szene
- * fast vollständig aus, damit die Möbel aus jedem Winkel lesbar bleiben.
+ * Determines whether a wall lies between the camera and the room.
  *
- * `nord` ist die Kante bei 2D-y = 0 (negatives Z), üblicherweise die Tafelwand.
+ * @param seite - The wall side to evaluate
+ * @param kamera - The camera position in world coordinates
+ * @param raum - The room dimensions in centimeters
+ * @returns `true` if the camera is outside the selected wall, `false` otherwise
  */
 export function wandVerdeckt(
   seite: Wandseite,
@@ -235,7 +268,14 @@ export function wandVerdeckt(
   }
 }
 
-/** Deckkraft einer Wand: sichtbar oder nur noch als Andeutung. */
+/**
+ * Determines the opacity of a wall based on whether it obstructs the camera's view of the room.
+ *
+ * @param seite - The wall side to evaluate
+ * @param kamera - The camera position in the room
+ * @param raum - The room dimensions
+ * @returns `0.06` for an obstructing wall, `1` otherwise
+ */
 export function wandDeckkraft(
   seite: Wandseite,
   kamera: { x: number; z: number },
@@ -245,8 +285,11 @@ export function wandDeckkraft(
 }
 
 /**
- * Lage und Drehung einer Wandscheibe. Die Wand steht außen an der Raumkante,
- * ihre Dicke wächst nach außen. `position` bezeichnet den Mittelpunkt.
+ * Computes the position, rotation, and length of a room wall.
+ *
+ * @param seite - The room side where the wall is placed
+ * @param raum - The room dimensions used to determine the wall geometry
+ * @returns The wall's center position, rotation in radians, and length in world units
  */
 export function wandPlatzierung(
   seite: Wandseite,

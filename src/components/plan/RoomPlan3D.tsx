@@ -15,7 +15,11 @@ import type { Ansichtsmodus } from "./room3d/Kamerasteuerung";
 
 const Szene = lazy(() => import("./room3d/Szene"));
 
-/** Kommt in diesem Browser ein WebGL-Kontext zustande? */
+/**
+ * Determines whether the browser can create a WebGL rendering context.
+ *
+ * @returns `true` if a WebGL2 or WebGL context can be created, `false` otherwise.
+ */
 function webglVerfuegbar(): boolean {
   try {
     const probe = document.createElement("canvas");
@@ -25,7 +29,12 @@ function webglVerfuegbar(): boolean {
   }
 }
 
-/** Beschreibt den Rauminhalt in einem Satz — der Name der Zeichenfläche. */
+/**
+ * Creates an accessible description of the room, including its dimensions, furnishings, and seating capacity.
+ *
+ * @param raum - The room geometry to describe
+ * @returns A localized textual description of the room
+ */
 function raumBeschreiben(raum: RoomGeometry): string {
   const anzahl = new Map<string, number>();
   for (const f of raum.furniture) {
@@ -37,6 +46,13 @@ function raumBeschreiben(raum: RoomGeometry): string {
   return `Räumliche Ansicht von ${raum.name}, ${raum.width} × ${raum.height} cm: ${inhalt}. ${seatCount(raum)} Sitzplätze.`;
 }
 
+/**
+ * Renders a warning message with a title, description, and optional action.
+ *
+ * @param titel - The warning title
+ * @param text - The warning description
+ * @param aktion - An optional action element
+ */
 function Hinweiskasten({
   titel,
   text,
@@ -75,6 +91,9 @@ class SzeneGrenze extends Component<
   }
 }
 
+/**
+ * Displays a loading state while the 3D view is being loaded.
+ */
 function Ladeflaeche() {
   return (
     <div className="flex h-full items-center justify-center" role="status">
@@ -88,6 +107,16 @@ function Ladeflaeche() {
   );
 }
 
+/**
+ * Displays an interactive 3D view of a room with selection, grid, camera controls, and fallback content.
+ *
+ * @param room - The room geometry to display
+ * @param selectedId - The identifier of the currently selected furniture item
+ * @param onSelect - Handles changes to the selected furniture item
+ * @param showGrid - Whether to display the floor grid
+ * @param onZurueckZu2D - Handles returning to the 2D view when the 3D view is unavailable
+ * @returns The room view with loading and error fallbacks
+ */
 export function RoomPlan3D({
   room,
   selectedId,

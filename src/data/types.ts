@@ -75,11 +75,10 @@ export const FURNITURE_SPECS: Record<
 };
 
 /**
- * Lage der Sitzplätze auf einem Möbelstück, in Zentimetern relativ zu dessen
- * linker oberer Ecke — vor jeder Drehung.
+ * Calculates seat coordinates for a furniture type.
  *
- * Gemeinsame Quelle für die SVG-Zeichnung und die 3D-Ansicht: beide setzen ihre
- * Sitzplätze an dieselben Punkte, damit kein zweites Sitzplatzraster entsteht.
+ * @param kind - The furniture type whose seat positions should be calculated
+ * @returns Seat coordinates in centimeters relative to the furniture's upper-left corner
  */
 export function seatPositions(kind: FurnitureKind): { cx: number; cy: number }[] {
   const spec = FURNITURE_SPECS[kind];
@@ -92,7 +91,13 @@ export function seatPositions(kind: FurnitureKind): { cx: number; cy: number }[]
   return [];
 }
 
-/** Sitzplatzkennung nach dem festen Muster `<objektId>__sitz_<n>`. */
+/**
+ * Creates a canonical identifier for a seat belonging to an object.
+ *
+ * @param objektId - The identifier of the object containing the seat
+ * @param n - The seat number
+ * @returns A seat identifier in the format `<objektId>__sitz_<n>`
+ */
 export function seatId(objektId: string, n: number) {
   return `${objektId}__sitz_${n}`;
 }

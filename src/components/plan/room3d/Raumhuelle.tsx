@@ -18,7 +18,12 @@ import {
   type Wandseite,
 } from "./geometrie";
 
-/** Rasterlinien exakt auf der Grundfläche, nicht darüber hinaus. */
+/**
+ * Creates a floor-aligned grid geometry sized to the room.
+ *
+ * @param raum - The room dimensions and grid configuration.
+ * @returns The generated grid geometry.
+ */
 function useRastergeometrie(raum: Pick<RoomGeometry, "width" | "height" | "grid">) {
   const geometrie = useMemo(() => {
     const weite = rasterWeite(raum.grid);
@@ -42,6 +47,13 @@ function useRastergeometrie(raum: Pick<RoomGeometry, "width" | "height" | "grid"
   return geometrie;
 }
 
+/**
+ * Renders a room wall with the specified material and dimensions.
+ *
+ * @param seite - The wall side to render
+ * @param raum - The room dimensions used to position and size the wall
+ * @param material - The material applied to the wall
+ */
 function Wand({
   seite,
   raum,
@@ -60,6 +72,13 @@ function Wand({
   );
 }
 
+/**
+ * Renders the room floor, optional grid, and four walls with camera-dependent wall transparency.
+ *
+ * @param raum - Room dimensions and grid spacing used to construct the room shell
+ * @param farben - Scene colors for the floor, walls, and grid
+ * @param rasterZeigen - Whether to display the floor grid
+ */
 export function Raumhuelle({
   raum,
   farben,

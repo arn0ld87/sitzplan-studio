@@ -17,13 +17,24 @@ import {
 
 export type Ansichtsmodus = "perspektive" | "draufsicht";
 
-/** Läuft dieser Rechner mit reduzierter Bewegung? */
+/**
+ * Determines whether the user prefers reduced motion.
+ *
+ * @returns `true` if reduced motion is preferred, `false` otherwise.
+ */
 function bewegungReduziert(): boolean {
   return (
     typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
   );
 }
 
+/**
+ * Configures camera controls for navigating the room in perspective or top-down view.
+ *
+ * @param raum - The room dimensions used to position and constrain the camera.
+ * @param modus - The camera view mode.
+ * @param zuruecksetzen - Counter whose increments restore the initial camera view.
+ */
 export function Kamerasteuerung({
   raum,
   modus,
