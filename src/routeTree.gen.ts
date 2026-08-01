@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedPapierkorbRouteImport } from './routes/_authenticated/papierkorb'
 import { Route as AuthenticatedKlassenIndexRouteImport } from './routes/_authenticated/klassen.index'
@@ -18,54 +19,58 @@ import { Route as AuthenticatedRaeumeIdRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedSitzplaeneIndexRouteImport } from './routes/_authenticated/sitzplaene.index'
 import { Route as AuthenticatedSitzplaeneIdRouteImport } from './routes/_authenticated/sitzplaene.$id'
 
-const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
-  id: '/_authenticated/',
-  path: '/',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedPapierkorbRoute = AuthenticatedPapierkorbRouteImport.update({
-  id: '/_authenticated/papierkorb',
+  id: '/papierkorb',
   path: '/papierkorb',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedKlassenIndexRoute =
   AuthenticatedKlassenIndexRouteImport.update({
-    id: '/_authenticated/klassen/',
+    id: '/klassen/',
     path: '/klassen/',
-    getParentRoute: () => rootRouteImport,
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedKlassenIdRoute = AuthenticatedKlassenIdRouteImport.update({
-  id: '/_authenticated/klassen/$id',
+  id: '/klassen/$id',
   path: '/klassen/$id',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedRaeumeIndexRoute =
   AuthenticatedRaeumeIndexRouteImport.update({
-    id: '/_authenticated/raeume/',
+    id: '/raeume/',
     path: '/raeume/',
-    getParentRoute: () => rootRouteImport,
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedRaeumeIdRoute = AuthenticatedRaeumeIdRouteImport.update({
-  id: '/_authenticated/raeume/$id',
+  id: '/raeume/$id',
   path: '/raeume/$id',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedSitzplaeneIndexRoute =
   AuthenticatedSitzplaeneIndexRouteImport.update({
-    id: '/_authenticated/sitzplaene/',
+    id: '/sitzplaene/',
     path: '/sitzplaene/',
-    getParentRoute: () => rootRouteImport,
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedSitzplaeneIdRoute =
   AuthenticatedSitzplaeneIdRouteImport.update({
-    id: '/_authenticated/sitzplaene/$id',
+    id: '/sitzplaene/$id',
     path: '/sitzplaene/$id',
-    getParentRoute: () => rootRouteImport,
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/papierkorb': typeof AuthenticatedPapierkorbRoute
   '/': typeof AuthenticatedIndexRoute
+  '/papierkorb': typeof AuthenticatedPapierkorbRoute
   '/klassen/$id': typeof AuthenticatedKlassenIdRoute
   '/raeume/$id': typeof AuthenticatedRaeumeIdRoute
   '/sitzplaene/$id': typeof AuthenticatedSitzplaeneIdRoute
@@ -85,6 +90,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/_authenticated/papierkorb': typeof AuthenticatedPapierkorbRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/klassen/$id': typeof AuthenticatedKlassenIdRoute
@@ -97,8 +103,8 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/papierkorb'
     | '/'
+    | '/papierkorb'
     | '/klassen/$id'
     | '/raeume/$id'
     | '/sitzplaene/$id'
@@ -117,6 +123,7 @@ export interface FileRouteTypes {
     | '/sitzplaene'
   id:
     | '__root__'
+    | '/_authenticated'
     | '/_authenticated/papierkorb'
     | '/_authenticated/'
     | '/_authenticated/klassen/$id'
@@ -128,6 +135,78 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+}
+
+declare module '@tanstack/react-router' {
+  interface FileRoutesByPath {
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/': {
+      id: '/_authenticated/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/papierkorb': {
+      id: '/_authenticated/papierkorb'
+      path: '/papierkorb'
+      fullPath: '/papierkorb'
+      preLoaderRoute: typeof AuthenticatedPapierkorbRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/klassen/': {
+      id: '/_authenticated/klassen/'
+      path: '/klassen'
+      fullPath: '/klassen/'
+      preLoaderRoute: typeof AuthenticatedKlassenIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/klassen/$id': {
+      id: '/_authenticated/klassen/$id'
+      path: '/klassen/$id'
+      fullPath: '/klassen/$id'
+      preLoaderRoute: typeof AuthenticatedKlassenIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/raeume/': {
+      id: '/_authenticated/raeume/'
+      path: '/raeume'
+      fullPath: '/raeume/'
+      preLoaderRoute: typeof AuthenticatedRaeumeIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/raeume/$id': {
+      id: '/_authenticated/raeume/$id'
+      path: '/raeume/$id'
+      fullPath: '/raeume/$id'
+      preLoaderRoute: typeof AuthenticatedRaeumeIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/sitzplaene/': {
+      id: '/_authenticated/sitzplaene/'
+      path: '/sitzplaene'
+      fullPath: '/sitzplaene/'
+      preLoaderRoute: typeof AuthenticatedSitzplaeneIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/sitzplaene/$id': {
+      id: '/_authenticated/sitzplaene/$id'
+      path: '/sitzplaene/$id'
+      fullPath: '/sitzplaene/$id'
+      preLoaderRoute: typeof AuthenticatedSitzplaeneIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+  }
+}
+
+interface AuthenticatedRouteRouteChildren {
   AuthenticatedPapierkorbRoute: typeof AuthenticatedPapierkorbRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedKlassenIdRoute: typeof AuthenticatedKlassenIdRoute
@@ -138,68 +217,7 @@ export interface RootRouteChildren {
   AuthenticatedSitzplaeneIndexRoute: typeof AuthenticatedSitzplaeneIndexRoute
 }
 
-declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {
-    '/_authenticated/': {
-      id: '/_authenticated/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/papierkorb': {
-      id: '/_authenticated/papierkorb'
-      path: '/papierkorb'
-      fullPath: '/papierkorb'
-      preLoaderRoute: typeof AuthenticatedPapierkorbRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/klassen/': {
-      id: '/_authenticated/klassen/'
-      path: '/klassen'
-      fullPath: '/klassen/'
-      preLoaderRoute: typeof AuthenticatedKlassenIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/klassen/$id': {
-      id: '/_authenticated/klassen/$id'
-      path: '/klassen/$id'
-      fullPath: '/klassen/$id'
-      preLoaderRoute: typeof AuthenticatedKlassenIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/raeume/': {
-      id: '/_authenticated/raeume/'
-      path: '/raeume'
-      fullPath: '/raeume/'
-      preLoaderRoute: typeof AuthenticatedRaeumeIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/raeume/$id': {
-      id: '/_authenticated/raeume/$id'
-      path: '/raeume/$id'
-      fullPath: '/raeume/$id'
-      preLoaderRoute: typeof AuthenticatedRaeumeIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/sitzplaene/': {
-      id: '/_authenticated/sitzplaene/'
-      path: '/sitzplaene'
-      fullPath: '/sitzplaene/'
-      preLoaderRoute: typeof AuthenticatedSitzplaeneIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/sitzplaene/$id': {
-      id: '/_authenticated/sitzplaene/$id'
-      path: '/sitzplaene/$id'
-      fullPath: '/sitzplaene/$id'
-      preLoaderRoute: typeof AuthenticatedSitzplaeneIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-  }
-}
-
-const rootRouteChildren: RootRouteChildren = {
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPapierkorbRoute: AuthenticatedPapierkorbRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedKlassenIdRoute: AuthenticatedKlassenIdRoute,
@@ -208,6 +226,13 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedKlassenIndexRoute: AuthenticatedKlassenIndexRoute,
   AuthenticatedRaeumeIndexRoute: AuthenticatedRaeumeIndexRoute,
   AuthenticatedSitzplaeneIndexRoute: AuthenticatedSitzplaeneIndexRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
+const rootRouteChildren: RootRouteChildren = {
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
