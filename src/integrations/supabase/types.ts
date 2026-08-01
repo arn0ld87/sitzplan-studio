@@ -193,6 +193,47 @@ export type Database = {
           },
         ]
       }
+      sitzplan_versionen: {
+        Row: {
+          canvas_document: Json
+          created_at: string
+          deleted_at: string | null
+          id: string
+          name: string
+          sitzplan_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          canvas_document: Json
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          name: string
+          sitzplan_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          canvas_document?: Json
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          name?: string
+          sitzplan_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sitzplan_versionen_sitzplan_id_fkey"
+            columns: ["sitzplan_id"]
+            isOneToOne: false
+            referencedRelation: "sitzplaene"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sitzregeln: {
         Row: {
           art: string
