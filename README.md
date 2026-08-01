@@ -142,6 +142,21 @@ SUPABASE_SERVICE_ROLE_KEY=<service-role-key>
 Fehlt er, läuft die App vollständig; allein „Konto löschen" bricht mit
 `Fehlende Supabase-Umgebungsvariablen: SUPABASE_SERVICE_ROLE_KEY` ab.
 
+### Der Gemini-Schlüssel gehört nirgends in dieses Repo
+
+„Plan mit KI erzeugen" läuft über die Edge Function `ki-sitzplan`. Ihr Schlüssel
+ist ein **Supabase-Secret** und wird nie ausgeliefert — genau deshalb gibt es die
+Funktion ([ADR-0007](docs/decisions/0007-ki-vorschlaege-ueber-edge-function.md)):
+
+```bash
+supabase secrets set GEMINI_API_KEY=<schlüssel>
+supabase functions deploy ki-sitzplan
+```
+
+Ohne gesetztes Secret antwortet die Funktion mit `kein_schluessel`; die übrige
+App bleibt davon unberührt. Ein `VITE_GEMINI_API_KEY` wäre nach dem ersten Build
+öffentlich und ist ausdrücklich kein Ersatz.
+
 Schema einspielen und starten:
 
 ```bash

@@ -126,8 +126,16 @@ Aufrufparameter, alle gemessen und belegt:
 Der Antworttext liegt in `steps[].content[].text`, **nicht** in `output_text` —
 das kostet sonst eine Stunde Suche.
 
-Nach der Antwort prüft die Funktion deterministisch nach, statt dem Modell zu
-glauben: unbekannte Sitzplatzkennungen und Doppelbelegungen werden verworfen und
+Nachgetragen aus der Umsetzung: Das Feld `input` erwartet die **`step_list`**-Form,
+also eine flache Liste `[{ type: "text", text }]`. Die naheliegende
+`[{ role: "user", content: [...] }]`-Form ist `turn_list` und wird mit HTTP 400
+abgelehnt („use step_list input format instead of turn_list"). Die Token stehen
+in `usage.total_input_tokens` und `usage.total_output_tokens`.
+
+Nach der Antwort wird deterministisch nachgeprüft, statt dem Modell zu glauben.
+(Umgesetzt nicht in der Funktion, sondern in `src/data/ki-vorschlag.ts` — nur
+dort läuft die Prüfung im Gate mit. Begründung im Nachtrag zu
+[ADR-0007](../decisions/0007-ki-vorschlaege-ueber-edge-function.md).) Es gilt: unbekannte Sitzplatzkennungen und Doppelbelegungen werden verworfen und
 der Platz bleibt leer, vergessene Schüler erscheinen sichtbar als „nicht
 zugeordnet", Regelverstöße werden gemeldet und **nicht heimlich korrigiert**.
 Kein automatischer zweiter Versuch. Die Oberfläche zeigt immer den wahren Stand.
@@ -186,8 +194,14 @@ LANGUAGE sql SECURITY DEFINER SET search_path = public AS $$
   SELECT count(*) FROM public.ki_aufrufe WHERE created_at > now() - interval '1 day';
 $$;
 REVOKE ALL ON FUNCTION public.ki_aufrufe_heute_global() FROM public;
-GRANT EXECUTE ON FUNCTION public.ki_aufrufe_heute_global() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.ki_aufrufe_heute_global() TO service_role;
 ```
+
+Das Ausführungsrecht ging in einer früheren Fassung dieses Plans an
+`authenticated`. Das war falsch: Der Supabase-Linter beanstandet eine
+`SECURITY DEFINER`-Funktion, die angemeldete Nutzer über `/rest/v1/rpc/`
+aufrufen können, und niemand außer der Edge Function braucht die Auslastung
+aller Konten. Die Funktion ruft den Zähler mit dem Dienstschlüssel auf.
 
 `SECURITY DEFINER` umgeht RLS gezielt und gibt **nur eine Zahl** zurück — keine
 Zeile, keine Kennung, kein fremder Sitzplan. Die nutzerbezogenen Deckel bleiben
@@ -263,6 +277,12 @@ aber die offene Registrierung stellt das nicht sicher. Entweder die
 Registrierung wird geschlossen, oder die KI-Funktion bleibt einem freigegebenen
 Personenkreis vorbehalten — die Freigabeliste, die beim Rate-Limit verworfen
 wurde, kommt hier als Zugangsfrage zurück.
+
+**Entschieden am 2026-08-01:** Der Betreiber nimmt das Risiko bewusst an. Die
+App bleibt ein Werkzeug für eine Handvoll namentlich bekannter Lehrkräfte; eine
+technische Altersprüfung wird nicht gebaut. Der Punkt wurde zweimal vorgelegt
+und zweimal so entschieden. Er ist damit erledigt, nicht übersehen — wer die
+App später breiter öffnet, holt ihn zurück.
 
 ## Was außerhalb des Codes zu erledigen ist
 
