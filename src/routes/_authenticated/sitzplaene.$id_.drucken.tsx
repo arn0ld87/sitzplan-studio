@@ -1,8 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui-kit/Button";
 import { RoomPlan } from "@/components/plan/RoomPlan";
-import { seatCount, studentName, type Student } from "@/data/types";
+import { merkmalLabel, seatCount, studentName, type Student } from "@/data/types";
 import { useStore } from "@/store/app";
 
 export const Route = createFileRoute("/_authenticated/sitzplaene/$id_/drucken")({
@@ -26,6 +26,13 @@ function Drucken() {
   const { data } = useStore();
   const plan = data.plans.find((p) => p.id === id);
   const cls = plan ? data.classes.find((c) => c.id === plan.classId) : undefined;
+
+  // Beide bewusst aus. Ein ausgedruckter Sitzplan liegt im Klassenraum, wandert
+  // in die Vertretungsmappe und bleibt am Kopierer liegen — Merkmale und
+  // Notizen stehen nur darauf, wenn jemand es ausdrücklich will. Der
+  // automatische Erstdruck weiter unten erzeugt damit immer das sparsame Blatt.
+  const [mitMerkmalen, setMitMerkmalen] = useState(false);
+  const [mitNotizen, setMitNotizen] = useState(false);
 
   useEffect(() => {
     if (!plan) return;
@@ -57,10 +64,35 @@ function Drucken() {
             Zurück zum Editor
           </Link>
         </Button>
-        <Button variant="primary" onClick={() => window.print()}>
-          Drucken
-        </Button>
+        <div className="flex flex-wrap items-center gap-4">
+          <label className="flex items-center gap-2 text-[13px]">
+            <input
+              type="checkbox"
+              checked={mitMerkmalen}
+              onChange={(e) => setMitMerkmalen(e.target.checked)}
+            />
+            Besonderheiten mitdrucken
+          </label>
+          <label className="flex items-center gap-2 text-[13px]">
+            <input
+              type="checkbox"
+              checked={mitNotizen}
+              onChange={(e) => setMitNotizen(e.target.checked)}
+            />
+            Notizen mitdrucken
+          </label>
+          <Button variant="primary" onClick={() => window.print()}>
+            Drucken
+          </Button>
+        </div>
       </div>
+
+      {(mitMerkmalen || mitNotizen) && (
+        <p className="mt-3 rounded-[6px] border border-line bg-[color:var(--warning-bg)] px-3 py-2 text-[12.5px] text-[color:var(--warning)] print:hidden">
+          Dieses Blatt enthält dann personenbezogene Angaben zu Minderjährigen. Nicht im Klassenraum
+          liegen lassen.
+        </p>
+      )}
 
       <header className="mt-6">
         <h1 className="page-title">{plan.title}</h1>
@@ -88,11 +120,19 @@ function Drucken() {
             .map(([seatId, sid]) => ({ seatId, s: studentsById[sid] }))
             .filter((e) => e.s)
             .sort((a, b) => studentName(a.s!).localeCompare(studentName(b.s!), "de"))
-            .map((e) => (
-              <li key={e.seatId} className="break-inside-avoid">
-                {studentName(e.s!)}
-              </li>
-            ))}
+            .map((e) => {
+              const merkmale = mitMerkmalen ? e.s!.merkmale.map(merkmalLabel) : [];
+              const notiz = mitNotizen ? e.s!.notiz.trim() : "";
+              return (
+                <li key={e.seatId} className="break-inside-avoid">
+                  {studentName(e.s!)}
+                  {merkmale.length > 0 && (
+                    <span className="text-ink-2"> — {merkmale.join(", ")}</span>
+                  )}
+                  {notiz && <span className="text-ink-2"> — {notiz}</span>}
+                </li>
+              );
+            })}
         </ol>
       </section>
     </div>

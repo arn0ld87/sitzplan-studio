@@ -23,6 +23,11 @@ coverage/
 .wrangler/
 .dev.vars
 
+# Umgebung. Die Datei war versioniert, solange Lovable sie verwaltet hat;
+# seit der Trennung gehoert sie nicht mehr ins Repo. Vorlage: .env.example
+.env
+.env.local
+
 # Claude Code: Konfiguration und Commands werden versioniert,
 # Arbeitskopien und persoenliche Einstellungen nicht
 .claude/worktrees/

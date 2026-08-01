@@ -49,8 +49,23 @@ export type Action =
   | { type: "class/add"; name: string; note: string }
   | { type: "class/update"; id: string; name: string; note: string }
   | { type: "class/delete"; id: string }
-  | { type: "student/add"; classId: string; firstName: string; lastName: string }
-  | { type: "student/update"; classId: string; id: string; firstName: string; lastName: string }
+  | {
+      type: "student/add";
+      classId: string;
+      firstName: string;
+      lastName: string;
+      merkmale: string[];
+      notiz: string;
+    }
+  | {
+      type: "student/update";
+      classId: string;
+      id: string;
+      firstName: string;
+      lastName: string;
+      merkmale: string[];
+      notiz: string;
+    }
   | { type: "student/remove"; classId: string; id: string }
   | { type: "room/add"; name: string; width: number; height: number; grid: number }
   | { type: "room/update"; id: string; name: string; width: number; height: number; grid: number }
@@ -128,6 +143,8 @@ export function reducer(state: AppData, action: Action): AppData {
             firstName: action.firstName,
             lastName: action.lastName,
             colorIndex: c.students.length % 8,
+            merkmale: action.merkmale,
+            notiz: action.notiz,
           };
           return { ...c, students: [...c.students, s] };
         }),
@@ -142,7 +159,13 @@ export function reducer(state: AppData, action: Action): AppData {
                 ...c,
                 students: c.students.map((s) =>
                   s.id === action.id
-                    ? { ...s, firstName: action.firstName, lastName: action.lastName }
+                    ? {
+                        ...s,
+                        firstName: action.firstName,
+                        lastName: action.lastName,
+                        merkmale: action.merkmale,
+                        notiz: action.notiz,
+                      }
                     : s,
                 ),
               }

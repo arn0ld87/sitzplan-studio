@@ -14,8 +14,24 @@ const GELOESCHT = "2026-07-01T09:00:00Z";
 /** Vor der Klasse gegangen — der Unterschied entscheidet über das Zurückholen. */
 const FRUEHER = "2026-06-01T09:00:00Z";
 
-const ada = { id: "s1", firstName: "Ada", lastName: "Lovelace", colorIndex: 0 };
-const cem = { id: "s2", firstName: "Cem", lastName: "Yildiz", colorIndex: 5 };
+// Ada trägt Merkmale und eine Notiz, Cem nicht — so deckt jede Rundreise durch
+// diese Datei beide Fälle ab.
+const ada = {
+  id: "s1",
+  firstName: "Ada",
+  lastName: "Lovelace",
+  colorIndex: 0,
+  merkmale: ["schwerhoerig", "eigenes Merkmal"],
+  notiz: "braucht Blickkontakt zur Tafel",
+};
+const cem = {
+  id: "s2",
+  firstName: "Cem",
+  lastName: "Yildiz",
+  colorIndex: 5,
+  merkmale: [],
+  notiz: "",
+};
 
 const klasse: SchoolClass = {
   id: "k1",
@@ -99,6 +115,33 @@ describe("zeilenZuAppData", () => {
     );
     const eintrag = data.trash.find((t) => t.kind === "klasse");
     expect((eintrag?.payload as SchoolClass).students.map((s) => s.id)).toEqual(["s1", "s2"]);
+  });
+
+  it("trägt Merkmale und Notiz durch den Papierkorb hindurch", () => {
+    // Die Nutzlast ist das einzige, was beim Wiederherstellen zurückkommt.
+    // Fehlten hier die Merkmale, käme die Klasse still ohne sie zurück, und
+    // niemand würde es merken — Zusicherungen auf die reinen Kennungen
+    // übersehen genau das.
+    const data = zeilenZuAppData(
+      zeilen({
+        klassen: [klasseZuRow(klasse, NUTZER, GELOESCHT)],
+        schueler: klasse.students.map((s) => schuelerZuRow(s, klasse.id, NUTZER, GELOESCHT)),
+      }),
+    );
+    const zurueck = (data.trash.find((t) => t.kind === "klasse")?.payload as SchoolClass).students;
+    expect(zurueck[0]).toEqual(ada);
+    expect(zurueck[1]).toEqual(cem);
+  });
+
+  it("lädt Merkmale und Notiz einer aktiven Klasse vollständig", () => {
+    const data = zeilenZuAppData(
+      zeilen({
+        klassen: [klasseZuRow(klasse, NUTZER, null)],
+        schueler: klasse.students.map((s) => schuelerZuRow(s, klasse.id, NUTZER, null)),
+      }),
+    );
+    expect(data.classes[0]?.students[0]).toEqual(ada);
+    expect(data.classes[0]?.students[1]).toEqual(cem);
   });
 
   it("lässt vorher einzeln gelöschte Schüler auch beim Wiederherstellen gelöscht", () => {

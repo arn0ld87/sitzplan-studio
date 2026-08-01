@@ -94,7 +94,9 @@ export type Database = {
           id: string
           initialen: string
           klasse_id: string
+          merkmale: string[]
           nachname: string
+          notiz: string
           updated_at: string
           user_id: string
           vorname: string
@@ -106,7 +108,9 @@ export type Database = {
           id?: string
           initialen: string
           klasse_id: string
+          merkmale?: string[]
           nachname: string
+          notiz?: string
           updated_at?: string
           user_id: string
           vorname: string
@@ -118,7 +122,9 @@ export type Database = {
           id?: string
           initialen?: string
           klasse_id?: string
+          merkmale?: string[]
           nachname?: string
+          notiz?: string
           updated_at?: string
           user_id?: string
           vorname?: string
