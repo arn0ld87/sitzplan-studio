@@ -45,12 +45,7 @@ function KontextWaechter({ onFehler }: { onFehler?: () => void }) {
   return null;
 }
 
-/**
- * Renders ambient and directional lighting for the room scene.
- *
- * @param raum - The room geometry used to size the lighting and shadow bounds.
- * @param farben - The scene colors used for the ambient light.
- */
+/** Beleuchtet die Szene mit Umgebungs- und Richtungslicht, angepasst an Raumgröße und Schattengrenzen. */
 function Beleuchtung({ raum, farben }: { raum: RoomGeometry; farben: Szenenfarben }) {
   const { breite, tiefe, hoehe } = raumMasse(raum);
   const spanne = Math.max(breite, tiefe);
@@ -79,17 +74,7 @@ function Beleuchtung({ raum, farben }: { raum: RoomGeometry; farben: Szenenfarbe
   );
 }
 
-/**
- * Renders an interactive 3D scene for a room and its furniture.
- *
- * @param raum - The room geometry and furniture to display
- * @param selectedId - The identifier of the selected furniture item
- * @param onSelect - Callback invoked when furniture selection changes
- * @param rasterZeigen - Whether to display the room grid
- * @param modus - The active camera view mode
- * @param zuruecksetzen - Trigger for resetting the camera
- * @param beschriftung - Accessible label for the scene
- */
+/** Interaktive 3D-Szene für einen Raum mit seinem Mobiliar. */
 export default function Szene({
   raum,
   selectedId,

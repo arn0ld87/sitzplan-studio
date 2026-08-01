@@ -28,11 +28,7 @@ export type Szenenfarben = Record<Farbtoken, string>;
  */
 const ERSATZ = "#9c9c9c";
 
-/**
- * Reads the scene color tokens from the document root.
- *
- * @returns A mapping of each color token to its resolved color value, using `#9c9c9c` when a value is unavailable.
- */
+/** Liest die Szenenfarben-Tokens vom Dokumentwurzelelement; fehlende Werte fallen auf `ERSATZ` zurück. */
 export function leseSzenenfarben(): Szenenfarben {
   const stil = getComputedStyle(document.documentElement);
   const farben = {} as Szenenfarben;

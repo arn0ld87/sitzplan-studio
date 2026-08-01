@@ -14,9 +14,9 @@ import { aufRasterPunkt, rasterWeite } from "@/lib/raster";
 export type PlanMode = "room" | "seating";
 
 /**
- * Defines reusable SVG patterns for the room plan grid and hatched fills.
+ * Wiederverwendbare SVG-Patterns für Rasterlinien und Schraffur im Grundriss.
  *
- * @param grid - The width and height of each grid cell.
+ * @param grid - Breite und Höhe einer Rasterzelle.
  */
 export function PlanDefs({ grid }: { grid: number }) {
   return (
@@ -37,12 +37,7 @@ export function PlanDefs({ grid }: { grid: number }) {
   );
 }
 
-/**
- * Renders the SVG representation of a furniture item.
- *
- * @param kind - The furniture type to render
- * @returns SVG elements representing the specified furniture
- */
+/** Zeichnet ein Möbelstück als SVG anhand seiner Art (`kind`). */
 export function FurnitureShape({ kind }: { kind: Furniture["kind"] }) {
   const { w, h } = FURNITURE_SPECS[kind];
   switch (kind) {
@@ -212,16 +207,10 @@ function Seat({
 }
 
 /**
- * Renders an SVG room plan with optional grid, furniture selection, dragging, and seat assignments.
+ * SVG-Grundriss mit optionalem Raster, Möbelauswahl, Ziehen und Sitzplatzbelegung.
  *
- * @param room - The room geometry and furniture to display
- * @param mode - Whether to display the plan in room or seating mode
- * @param showGrid - Whether to display the room grid
- * @param assignments - Maps seat identifiers to student identifiers
- * @param studentsById - Maps student identifiers to student records
- * @param selectedId - Identifier of the currently selected furniture item
- * @param carriedStudentId - Identifier of the student currently being moved
- * @returns The rendered room plan
+ * @param assignments - Sitzplatz-ID → Schüler-ID.
+ * @param studentsById - Schüler-ID → Schülerdatensatz.
  */
 export function RoomPlan({
   room,

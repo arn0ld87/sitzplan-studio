@@ -42,12 +42,7 @@ export function cmZuEinheit(cm: number): number {
   return cm / CM_PRO_EINHEIT;
 }
 
-/**
- * Converts a length from world units to centimeters.
- *
- * @param einheiten - The length in world units
- * @returns The length in centimeters
- */
+/** Rechnet eine Länge in Welteinheiten in Zentimeter um. */
 export function einheitZuCm(einheiten: number): number {
   return einheiten * CM_PRO_EINHEIT;
 }
@@ -88,21 +83,16 @@ export type Platzierung = {
 };
 
 /**
- * Converts a floor-plan rotation to the corresponding scene rotation in radians.
- *
- * @param rotation - The furniture rotation in degrees.
- * @returns The scene rotation in radians.
+ * Wandelt eine Grundriss-Drehung in Grad in die Szenendrehung in Radiant um —
+ * mit dem oben erläuterten negativen Vorzeichen.
  */
 export function drehungZuRadiant(rotation: Furniture["rotation"]): number {
   return (-rotation * Math.PI) / 180;
 }
 
 /**
- * Calculates a furniture item's position, rotation, and dimensions in the 3D scene.
- *
- * @param f - The furniture item to place
- * @param raum - The room dimensions used to center the furniture item
- * @returns The furniture item's 3D placement data
+ * Position, Drehung und Maße eines Möbelstücks in der 3D-Szene.
+ * `raum` dient dazu, das Stück relativ zur Raummitte zu zentrieren.
  */
 export function moebelPlatzierung(
   f: Furniture,
@@ -139,11 +129,8 @@ export function gedrehteGrundflaeche(f: Furniture): { breite: number; tiefe: num
 }
 
 /**
- * Calculates a seat's position in the furniture's local coordinate system.
- *
- * @param kind - The furniture type that determines the available seat positions
- * @param index - The zero-based seat position index
- * @returns The local seat position, or `null` when the furniture has no seat at the specified index
+ * Position eines Sitzplatzes im lokalen Koordinatensystem des Möbelstücks.
+ * Liefert `null`, wenn das Möbelstück an diesem Index keinen Sitzplatz hat.
  */
 export function stuhlPlatzierung(
   kind: FurnitureKind,
@@ -161,12 +148,7 @@ export function stuhlPlatzierung(
   };
 }
 
-/**
- * Calculates the room dimensions in world units.
- *
- * @param raum - The room's width and depth in centimeters
- * @returns The room's width, depth, and height in world units
- */
+/** Raummaße (Breite, Tiefe, Höhe) in Welteinheiten. */
 export function raumMasse(raum: Pick<RoomGeometry, "width" | "height">): {
   breite: number;
   tiefe: number;
@@ -184,22 +166,13 @@ export type Kamerastand = {
   ziel: [number, number, number];
 };
 
-/** Determines the longer room dimension used as the reference for camera distances.
-
- * @param raum - The room dimensions in centimeters
- * @returns The longer room dimension in world units
- */
+/** Längere Raumkante, dient als Bezugsgröße für Kameraabstände. */
 function spanne(raum: Pick<RoomGeometry, "width" | "height">): number {
   const { breite, tiefe } = raumMasse(raum);
   return Math.max(breite, tiefe);
 }
 
-/**
- * Positions the perspective camera at an elevated angle opposite the board.
- *
- * @param raum - The room dimensions used to determine the camera distance.
- * @returns The camera position and target point above the floor.
- */
+/** Perspektivkamera erhöht und der Tafel gegenüber positioniert. */
 export function startKamera(raum: Pick<RoomGeometry, "width" | "height">): Kamerastand {
   const s = spanne(raum);
   return {
@@ -208,12 +181,7 @@ export function startKamera(raum: Pick<RoomGeometry, "width" | "height">): Kamer
   };
 }
 
-/**
- * Creates a nearly vertical top-down camera view aligned with the floor plan.
- *
- * @param raum - The room dimensions used to determine the camera distance
- * @returns The camera position and target point for the top-down view
- */
+/** Nahezu senkrechte Draufsicht-Kamera, ausgerichtet wie der Grundriss. */
 export function draufsichtKamera(raum: Pick<RoomGeometry, "width" | "height">): Kamerastand {
   const s = spanne(raum);
   return {
@@ -224,12 +192,7 @@ export function draufsichtKamera(raum: Pick<RoomGeometry, "width" | "height">): 
   };
 }
 
-/**
- * Determines the minimum and maximum camera distances based on the room dimensions.
- *
- * @param raum - The room dimensions used to calculate the camera distance range
- * @returns The minimum and maximum camera distances
- */
+/** Minimaler und maximaler Kameraabstand, abhängig von der Raumgröße. */
 export function abstandsgrenzen(raum: Pick<RoomGeometry, "width" | "height">): {
   min: number;
   max: number;
@@ -242,14 +205,7 @@ export type Wandseite = "nord" | "sued" | "west" | "ost";
 
 export const WANDSEITEN: readonly Wandseite[] = ["nord", "sued", "west", "ost"] as const;
 
-/**
- * Determines whether a wall lies between the camera and the room.
- *
- * @param seite - The wall side to evaluate
- * @param kamera - The camera position in world coordinates
- * @param raum - The room dimensions in centimeters
- * @returns `true` if the camera is outside the selected wall, `false` otherwise
- */
+/** Prüft, ob eine Wand zwischen Kamera und Raum liegt — `true`, wenn die Kamera außerhalb dieser Wand steht. */
 export function wandVerdeckt(
   seite: Wandseite,
   kamera: { x: number; z: number },
@@ -268,14 +224,7 @@ export function wandVerdeckt(
   }
 }
 
-/**
- * Determines the opacity of a wall based on whether it obstructs the camera's view of the room.
- *
- * @param seite - The wall side to evaluate
- * @param kamera - The camera position in the room
- * @param raum - The room dimensions
- * @returns `0.06` for an obstructing wall, `1` otherwise
- */
+/** Deckkraft einer Wand: `0.06`, wenn sie den Blick auf den Raum verstellt, sonst `1`. */
 export function wandDeckkraft(
   seite: Wandseite,
   kamera: { x: number; z: number },
@@ -284,13 +233,7 @@ export function wandDeckkraft(
   return wandVerdeckt(seite, kamera, raum) ? 0.06 : 1;
 }
 
-/**
- * Computes the position, rotation, and length of a room wall.
- *
- * @param seite - The room side where the wall is placed
- * @param raum - The room dimensions used to determine the wall geometry
- * @returns The wall's center position, rotation in radians, and length in world units
- */
+/** Mittelposition, Drehung in Radiant und Länge einer Raumwand. */
 export function wandPlatzierung(
   seite: Wandseite,
   raum: Pick<RoomGeometry, "width" | "height">,

@@ -11,11 +11,7 @@ import type { Bausatz, Bauteil } from "./bausatz";
 import type { Szenenfarben } from "./farben";
 import { cmZuEinheit, moebelPlatzierung, stuhlPlatzierung } from "./geometrie";
 
-/**
- * Renders furniture parts as Three.js meshes with their configured geometry, material, and position.
- *
- * @param teile - The furniture parts to render
- */
+/** Rendert die Bauteile eines Möbelstücks als Three.js-Meshes mit ihrer vorgegebenen Geometrie, ihrem Material und ihrer Position. */
 function Bauteile({ teile }: { teile: Bauteil[] }) {
   return (
     <>
@@ -33,14 +29,7 @@ function Bauteile({ teile }: { teile: Bauteil[] }) {
   );
 }
 
-/**
- * Renders a wireframe selection frame around a furniture item.
- *
- * @param breite - The furniture width.
- * @param hoehe - The furniture height.
- * @param tiefe - The furniture depth.
- * @param farbe - The selection frame color.
- */
+/** Zeichnet den Drahtgitter-Auswahlrahmen um ein Möbelstück. */
 function Auswahlrahmen({
   breite,
   hoehe,
@@ -70,17 +59,7 @@ function Auswahlrahmen({
   );
 }
 
-/**
- * Renders a positioned furniture item with its components, chairs, and optional selection frame.
- *
- * @param moebel - The furniture item to render
- * @param raum - The room dimensions used to calculate the furniture placement
- * @param bausatz - The furniture and chair component definitions
- * @param farben - The scene colors used for the selection frame
- * @param ausgewaehlt - Whether to display the selection frame
- * @param onSelect - Optional callback invoked with the furniture ID when the item is clicked
- * @returns The rendered furniture group
- */
+/** Platziert ein Möbelstück samt seiner Stühle und, wenn ausgewählt, dem Auswahlrahmen. */
 export function Moebel3D({
   moebel,
   raum,

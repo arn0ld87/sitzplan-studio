@@ -35,23 +35,12 @@ export type Bausatz = {
   werkstoffe: Werkstoffe;
 };
 
-/**
- * Creates a non-metallic standard material with the specified color and roughness.
- *
- * @param farbe - The material color
- * @param rauheit - The material roughness
- * @returns The configured standard material
- */
+/** Nichtmetallisches Standardmaterial in der angegebenen Farbe und Rauheit. */
 function flaeche(farbe: string, rauheit: number): THREE.Material {
   return new THREE.MeshStandardMaterial({ color: farbe, roughness: rauheit, metalness: 0 });
 }
 
-/**
- * Creates the materials used by the furniture components from the scene colors.
- *
- * @param farben - Scene colors used to configure each material
- * @returns The furniture material set
- */
+/** Baut die Werkstoffe der Möbelbauteile aus den Szenenfarben. */
 function werkstoffeBauen(farben: Szenenfarben): Werkstoffe {
   return {
     platte: flaeche(farben["--elevated"], 0.62),
@@ -70,14 +59,7 @@ function werkstoffeBauen(farben: Szenenfarben): Werkstoffe {
   };
 }
 
-/**
- * Creates a box-shaped furniture component with the specified dimensions and position.
- *
- * @param material - The material applied to the component
- * @param masse - The component dimensions along the x, y, and z axes
- * @param position - The component position in world coordinates
- * @returns The box geometry, material, and position
- */
+/** Quaderförmiges Bauteil mit den angegebenen Maßen und der angegebenen Position. */
 function kasten(
   material: THREE.Material,
   masse: [number, number, number],
@@ -87,14 +69,8 @@ function kasten(
 }
 
 /**
- * Creates four cylindrical legs positioned at the corners of a rectangular component.
- *
- * @param material - Material shared by all legs
- * @param breite - Component width
- * @param tiefe - Component depth
- * @param hoehe - Leg height
- * @param staerke - Leg diameter
- * @returns Four leg components sharing one cylinder geometry
+ * Vier zylindrische Beine an den Ecken eines rechteckigen Bauteils — alle vier
+ * teilen sich eine einzige Zylinder-Geometrie.
  */
 function beine(
   material: THREE.Material,
@@ -119,13 +95,7 @@ function beine(
   }));
 }
 
-/**
- * Builds the components for a single or double desk.
- *
- * @param kind - The desk variant to build
- * @param w - Materials used for the desk components
- * @returns The desk components, including a central divider for a double desk
- */
+/** Bauteile für Einzel- oder Doppeltisch, beim Doppeltisch inklusive Trennfuge in der Mitte. */
 function tischBauen(kind: "einzeltisch" | "doppeltisch", w: Werkstoffe): Bauteil[] {
   const spec = FURNITURE_SPECS[kind];
   const breite = cmZuEinheit(spec.w);
@@ -145,12 +115,7 @@ function tischBauen(kind: "einzeltisch" | "doppeltisch", w: Werkstoffe): Bauteil
   return teile;
 }
 
-/**
- * Builds the components of a desk podium.
- *
- * @param w - Materials used for the podium tabletop and body
- * @returns The podium tabletop and recessed body components
- */
+/** Bauteile des Lehrerpults: Tischplatte und zurückgesetzter Korpus. */
 function pultBauen(w: Werkstoffe): Bauteil[] {
   const spec = FURNITURE_SPECS.pult;
   const breite = cmZuEinheit(spec.w);
@@ -168,12 +133,7 @@ function pultBauen(w: Werkstoffe): Bauteil[] {
   ];
 }
 
-/**
- * Builds the framed writing surface and projecting chalk shelf for a blackboard.
- *
- * @param w - Materials used for the blackboard components
- * @returns The blackboard's frame, writing surface, and chalk shelf
- */
+/** Rahmen, Schreibfläche und vorkragende Kreideablage der Tafel. */
 function tafelBauen(w: Werkstoffe): Bauteil[] {
   const spec = FURNITURE_SPECS.tafel;
   const breite = cmZuEinheit(spec.w);
@@ -194,12 +154,7 @@ function tafelBauen(w: Werkstoffe): Bauteil[] {
   ];
 }
 
-/**
- * Builds a door frame with a recessed door leaf and handle.
- *
- * @param w - Materials used for the door frame, leaf, and handle
- * @returns The door's frame, leaf, and handle components
- */
+/** Türzarge mit zurückgesetztem Türblatt und Griff. */
 function tuerBauen(w: Werkstoffe): Bauteil[] {
   const spec = FURNITURE_SPECS.tuer;
   const breite = cmZuEinheit(spec.w);
@@ -225,12 +180,7 @@ function tuerBauen(w: Werkstoffe): Bauteil[] {
   ];
 }
 
-/**
- * Builds a window with a framed pane, central divider, and inward-facing sill.
- *
- * @param w - Materials used for the window frame, glass, and sill
- * @returns The window components
- */
+/** Fenster mit gerahmter Scheibe, Kämpfer in der Mitte und nach innen ragender Fensterbank. */
 function fensterBauen(w: Werkstoffe): Bauteil[] {
   const spec = FURNITURE_SPECS.fenster;
   const breite = cmZuEinheit(spec.w);
@@ -253,12 +203,7 @@ function fensterBauen(w: Werkstoffe): Bauteil[] {
   ];
 }
 
-/**
- * Builds the seat, backrest, and legs of a chair.
- *
- * @param w - Materials used for the chair seat, backrest, and frame
- * @returns The chair components
- */
+/** Sitzfläche, Lehne und Beine eines Stuhls. */
 function stuhlBauen(w: Werkstoffe): Bauteil[] {
   const breite = cmZuEinheit(STUHL.breite);
   const tiefe = cmZuEinheit(STUHL.tiefe);
@@ -273,12 +218,7 @@ function stuhlBauen(w: Werkstoffe): Bauteil[] {
   ];
 }
 
-/**
- * Builds and memoizes the furniture components and materials for the scene.
- *
- * @param farben - Scene colors used to create the furniture materials
- * @returns The furniture components and materials
- */
+/** Baut Möbelbauteile und Materialien für die Szene und memoisiert sie. */
 export function useBausatz(farben: Szenenfarben): Bausatz {
   const bausatz = useMemo<Bausatz>(() => {
     const werkstoffe = werkstoffeBauen(farben);

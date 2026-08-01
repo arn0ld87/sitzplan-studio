@@ -12,12 +12,7 @@ const SEGMENTE: { wert: Ansicht; label: string; beschreibung: string }[] = [
   { wert: "3d", label: "3D", beschreibung: "Raum räumlich ansehen" },
 ];
 
-/**
- * Provides a segmented control for selecting the room's 2D or 3D view.
- *
- * @param wert - The currently selected view.
- * @param onChange - Called with the selected view when the user changes it.
- */
+/** Segmentleiste zum Umschalten zwischen 2D-Grundriss und 3D-Ansicht des Raums. */
 export function AnsichtUmschalter({
   wert,
   onChange,
