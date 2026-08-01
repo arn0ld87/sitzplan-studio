@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Plus, DoorOpen, Trash2, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui-kit/Button";
 import { PageHeader } from "@/components/PageHeader";
@@ -31,7 +31,6 @@ const MASSE = { minW: 200, maxW: 2000, minH: 200, maxH: 2000 };
 
 function Raeume() {
   const { data, dispatch } = useStore();
-  const navigate = useNavigate();
   const [q, setQ] = useState("");
   const [neu, setNeu] = useState(false);
   const [form, setForm] = useState({ name: "", width: "800", height: "600", grid: "25" });
