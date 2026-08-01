@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui-kit/Button";
-import { Wordmark } from "@/components/AppShell";
+import { Wortmarke } from "@/components/Marke";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/signin")({
@@ -71,7 +71,7 @@ function SignIn() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-canvas px-4 py-12">
       <div className="w-full max-w-[380px]">
-        <Wordmark />
+        <Wortmarke />
         <h1 className="page-title mt-6">
           {modus === "anmelden" ? "Anmelden" : "Konto anlegen"}
         </h1>

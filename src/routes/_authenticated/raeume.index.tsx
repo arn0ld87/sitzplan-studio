@@ -13,9 +13,11 @@ import { seatCount } from "@/data/types";
 import { useStore } from "@/store/app";
 
 export const Route = createFileRoute("/_authenticated/raeume/")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    neu: search["neu"] === "1" ? ("1" as const) : undefined,
-  }),
+  // Den Schlüssel weglassen statt auf undefined setzen: sonst hält der
+  // Router "neu" für einen Pflichtparameter und jeder Link hierher müsste
+  // ein search-Objekt mitgeben.
+  validateSearch: (search: Record<string, unknown>): { neu?: "1" } =>
+    search["neu"] === "1" ? { neu: "1" } : {},
   head: () => ({
     meta: [
       { title: "Räume und Grundrisse — Sitzplan" },

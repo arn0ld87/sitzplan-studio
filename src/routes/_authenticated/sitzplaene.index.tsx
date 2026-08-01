@@ -16,9 +16,11 @@ import { seatCount } from "@/data/types";
 import { useStore } from "@/store/app";
 
 export const Route = createFileRoute("/_authenticated/sitzplaene/")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    neu: typeof search["neu"] === "string" ? (search["neu"] as string) : undefined,
-  }),
+  // Den Schlüssel weglassen statt auf undefined setzen: sonst hält der
+  // Router "neu" für einen Pflichtparameter und jeder Link hierher müsste
+  // ein search-Objekt mitgeben.
+  validateSearch: (search: Record<string, unknown>): { neu?: string } =>
+    typeof search["neu"] === "string" ? { neu: search["neu"] } : {},
   head: () => ({
     meta: [
       { title: "Sitzpläne — Sitzplan" },

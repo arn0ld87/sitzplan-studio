@@ -107,7 +107,7 @@ function Uebersicht() {
         actions={
           !leer && (
             <Button variant="primary" asChild>
-              <Link to="/sitzplaene" search={{ neu: kannPlan ? "1" : undefined }}>
+              <Link to="/sitzplaene" search={kannPlan ? { neu: "1" } : {}}>
                 <Plus size={16} strokeWidth={1.5} />
                 Neuer Sitzplan
               </Link>

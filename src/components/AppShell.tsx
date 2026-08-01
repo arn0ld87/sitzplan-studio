@@ -16,23 +16,13 @@ import {
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { DatenschutzHinweis } from "@/components/DatenschutzHinweis";
+// Die Marke lebt in einer eigenen Datei, damit die Anmeldeseite sie nicht
+// über die AppShell beziehen muss.
+import { Wortmarke } from "@/components/Marke";
 import { useStore } from "@/store/app";
 
 type NavItem = { to: string; label: string; icon: LucideIcon; count?: number };
 
-export function Wordmark({ compact }: { compact?: boolean }) {
-  return (
-    <span className="flex items-center gap-2.5">
-      <span
-        aria-hidden
-        className="grid h-7 w-7 shrink-0 place-items-center rounded-[6px] bg-action font-serif text-[16px] font-semibold text-white"
-      >
-        S
-      </span>
-      {!compact && <span className="text-[15px] font-semibold tracking-[-0.01em]">Sitzplan</span>}
-    </span>
-  );
-}
 
 function useActive() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -194,7 +184,7 @@ export function AppShell({ children, email }: { children: React.ReactNode; email
 
       <aside className="fixed inset-y-0 left-0 hidden w-[236px] flex-col border-r border-line bg-panel md:flex">
         <div className="flex h-[56px] items-center px-4">
-          <Wordmark />
+          <Wortmarke />
         </div>
         <nav aria-label="Hauptbereiche" className="flex flex-1 flex-col gap-0.5 px-2.5 pt-2">
           {MAIN.map((i) => (

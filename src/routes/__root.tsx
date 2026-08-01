@@ -76,11 +76,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Sitzplan — Klassen, Räume und Sitzpläne" },
+      { title: "Sitzplan Studio — Klassen, Räume und Sitzpläne" },
       {
         name: "description",
         content:
-          "Sitzplan ist das Werkzeug für Lehrkräfte: Klassen verwalten, Räume zeichnen und Sitzpläne erstellen.",
+          "Sitzplan Studio ist das Werkzeug für Lehrkräfte: Klassen verwalten, Räume zeichnen und Sitzpläne erstellen.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -93,7 +93,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,600&display=swap",
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      // Moderne Browser bevorzugen die scharfe SVG-Marke, ältere fallen
+      // auf die .ico zurück.
+      { rel: "icon", href: "/logo.svg", type: "image/svg+xml" },
+      { rel: "alternate icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "apple-touch-icon", href: "/logo.svg" },
     ],
   }),
   shellComponent: RootShell,

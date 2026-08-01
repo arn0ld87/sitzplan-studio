@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="public/logo.svg" alt="" width="88" height="88">
+
 # Sitzplan Studio
 
 **Klassen verwalten, Räume maßstabsgetreu zeichnen, Sitzpläne stellen — ein Werkzeug für Lehrkräfte, kein Dashboard.**
