@@ -149,9 +149,19 @@ ist ein **Supabase-Secret** und wird nie ausgeliefert — genau deshalb gibt es 
 Funktion ([ADR-0007](docs/decisions/0007-ki-vorschlaege-ueber-edge-function.md)):
 
 ```bash
-supabase secrets set GEMINI_API_KEY=<schlüssel>
-supabase functions deploy ki-sitzplan
+# Schlüssel nicht auf die Kommandozeile — dort landet er in der Prozessliste
+# und in der Shell-Historie. Datei anlegen, setzen, löschen:
+printf 'GEMINI_API_KEY=%s\n' '<schlüssel>' > .gemini.env
+supabase secrets set --env-file .gemini.env
+rm .gemini.env
+
+supabase functions deploy ki-sitzplan --use-api
 ```
+
+`--use-api` lässt Supabase serverseitig bündeln. Ohne das Flag baut das CLI die
+Funktion lokal in Docker und lädt dafür das `edge-runtime`-Image — was hinter
+einem Proxy in einen Timeout laufen kann (`failed to bundle function: exit 125`).
+Das Flag umgeht Docker vollständig; das Ergebnis ist dasselbe.
 
 Ohne gesetztes Secret antwortet die Funktion mit `kein_schluessel`; die übrige
 App bleibt davon unberührt. Ein `VITE_GEMINI_API_KEY` wäre nach dem ersten Build
