@@ -2,7 +2,7 @@
 // nicht aus dem Bild fällt. Die Steuerung stammt aus `three/addons`; ein
 // zusätzliches Steuerungspaket wäre dafür nicht nötig.
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import * as THREE from "three";
@@ -17,11 +17,7 @@ import {
 
 export type Ansichtsmodus = "perspektive" | "draufsicht";
 
-/**
- * Determines whether the user prefers reduced motion.
- *
- * @returns `true` if reduced motion is preferred, `false` otherwise.
- */
+/** Ob das System weniger Bewegung wünscht — dann läuft die Kamera ohne Nachlauf. */
 function bewegungReduziert(): boolean {
   return (
     typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -29,11 +25,12 @@ function bewegungReduziert(): boolean {
 }
 
 /**
- * Configures camera controls for navigating the room in perspective or top-down view.
+ * Orbit-Kamera für den Raum, in Perspektive oder Draufsicht.
  *
- * @param raum - The room dimensions used to position and constrain the camera.
- * @param modus - The camera view mode.
- * @param zuruecksetzen - Counter whose increments restore the initial camera view.
+ * Die Steuerung wird einmal aufgebaut und nur dann neu erzeugt, wenn sich die
+ * Raummaße ändern — nicht bei jedem Rendern. Deshalb hängen beide Effekte an
+ * {@link masse} und nicht am `raum`-Objekt, das der Aufrufer bei jedem Rendern
+ * neu bilden darf.
  */
 export function Kamerasteuerung({
   raum,
@@ -50,6 +47,13 @@ export function Kamerasteuerung({
   const invalidate = useThree((s) => s.invalidate);
   const steuerung = useRef<OrbitControls | null>(null);
 
+  // Nur die beiden Zahlen zählen. Ein neues `raum`-Objekt mit gleichen Maßen
+  // darf die Steuerung nicht neu aufbauen — sonst springt die Kamera.
+  const masse = useMemo(
+    () => ({ width: raum.width, height: raum.height }),
+    [raum.width, raum.height],
+  );
+
   useEffect(() => {
     const c = new OrbitControls(kamera, gl.domElement);
     c.enableDamping = !bewegungReduziert();
@@ -58,7 +62,7 @@ export function Kamerasteuerung({
     // Unter den Fußboden zu tauchen hilft niemandem.
     c.maxPolarAngle = Math.PI / 2 - 0.04;
     c.minPolarAngle = 0;
-    const grenzen = abstandsgrenzen(raum);
+    const grenzen = abstandsgrenzen(masse);
     c.minDistance = grenzen.min;
     c.maxDistance = grenzen.max;
     // Bedarfsmodus: jede Kamerabewegung fordert genau ein weiteres Bild an.
@@ -70,18 +74,19 @@ export function Kamerasteuerung({
       c.dispose();
       steuerung.current = null;
     };
-  }, [kamera, gl, raum.width, raum.height, invalidate]);
+  }, [kamera, gl, masse, invalidate]);
 
   // Kamerastand setzen: beim Aufbau, bei Moduswechsel und bei jedem Zurücksetzen.
   useEffect(() => {
     const c = steuerung.current;
     if (!c) return;
-    const stand: Kamerastand = modus === "draufsicht" ? draufsichtKamera(raum) : startKamera(raum);
+    const stand: Kamerastand =
+      modus === "draufsicht" ? draufsichtKamera(masse) : startKamera(masse);
     kamera.position.set(...stand.position);
     c.target.set(...stand.ziel);
     c.update();
     invalidate();
-  }, [kamera, raum.width, raum.height, modus, zuruecksetzen, invalidate]);
+  }, [kamera, masse, modus, zuruecksetzen, invalidate]);
 
   // Das Verschieben (Pan) darf den Blickpunkt nicht beliebig weit forttragen.
   const grenze = useRef<THREE.Vector3 | null>(null);
