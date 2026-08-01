@@ -115,7 +115,7 @@ function SignIn() {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="h-10 rounded-[6px] border border-line-control bg-elevated px-3 text-[14px] outline-none focus-visible:border-focus focus-visible:ring-2 focus-visible:ring-[color:var(--focus-ring)]"
+              className="h-10 rounded-[6px] border border-line-control bg-elevated px-3 text-[14px] focus-visible:border-[color:var(--select)]"
             />
           </label>
           <label className="flex flex-col gap-1.5">
@@ -127,7 +127,7 @@ function SignIn() {
               autoComplete={modus === "anmelden" ? "current-password" : "new-password"}
               value={passwort}
               onChange={(e) => setPasswort(e.target.value)}
-              className="h-10 rounded-[6px] border border-line-control bg-elevated px-3 text-[14px] outline-none focus-visible:border-focus focus-visible:ring-2 focus-visible:ring-[color:var(--focus-ring)]"
+              className="h-10 rounded-[6px] border border-line-control bg-elevated px-3 text-[14px] focus-visible:border-[color:var(--select)]"
             />
             {modus === "registrieren" && (
               <span className="text-[12px] text-ink-3">Mindestens 8 Zeichen.</span>
