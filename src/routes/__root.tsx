@@ -120,12 +120,14 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const bare = pathname.startsWith("/signin");
 
   return (
     <QueryClientProvider client={queryClient}>
-      {bare ? <Outlet /> : <AppShell>{<Outlet />}</AppShell>}
+      <StoreProvider>
+        <AppShell>
+          <Outlet />
+        </AppShell>
+      </StoreProvider>
     </QueryClientProvider>
   );
 }
