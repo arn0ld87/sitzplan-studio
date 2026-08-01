@@ -164,9 +164,11 @@ function Seat({
 }) {
   return (
     <g
+      className={interactive ? "plan-focus" : undefined}
       role={interactive ? "button" : undefined}
       tabIndex={interactive ? 0 : undefined}
-      aria-label={label}
+      aria-label={interactive ? label : undefined}
+
       onPointerDown={onDown}
       onPointerUp={onUp}
       onDragOver={onDropStudent ? (e) => e.preventDefault() : undefined}
@@ -282,7 +284,7 @@ export function RoomPlan({
       ref={svgRef}
       viewBox={`${-pad} ${-pad} ${room.width + pad * 2} ${room.height + pad * 2}`}
       className={className}
-      role="img"
+      role={onSelect || onSeatDown ? "group" : "img"}
       aria-label={`Grundriss ${room.name}`}
       onClick={() => onSelect?.(null)}
       onPointerMove={moveDrag}
@@ -347,9 +349,12 @@ export function RoomPlan({
             transform={`translate(${f.x} ${f.y}) rotate(${f.rotation} ${spec.w / 2} ${spec.h / 2})`}
           >
             <g
+              className={onSelect ? "plan-focus" : undefined}
               role={onSelect ? "button" : undefined}
               tabIndex={onSelect ? 0 : undefined}
-              aria-label={`${spec.label} auswählen`}
+              {...(onSelect
+                ? { "aria-label": `${spec.label} auswählen`, "aria-pressed": selected }
+                : {})}
               onClick={(e) => {
                 if (!onSelect) return;
                 e.stopPropagation();

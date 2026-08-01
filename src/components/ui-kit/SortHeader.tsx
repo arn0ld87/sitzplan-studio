@@ -24,7 +24,9 @@ export function SortHeader<T extends string>({
     <button
       type="button"
       onClick={() => onSort(spalte)}
-      aria-sort={ist ? (richtung === "auf" ? "ascending" : "descending") : "none"}
+      aria-label={`Nach ${label} sortieren${
+        ist ? (richtung === "auf" ? " (aktuell aufsteigend)" : " (aktuell absteigend)") : ""
+      }`}
       className={`inline-flex items-center gap-1 text-[12px] uppercase tracking-[0.06em] transition-colors duration-[160ms] ease-out ${
         ist ? "text-ink" : "text-ink-3 hover:text-ink"
       } ${className ?? ""}`}
