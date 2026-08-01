@@ -46,7 +46,7 @@ const NAMES = [
 function makeStudents(prefix: string, count: number, offset = 0): Student[] {
   return Array.from({ length: count }, (_, i) => ({
     id: `${prefix}-s${i + 1}`,
-    name: NAMES[(i + offset) % NAMES.length],
+    name: NAMES[(i + offset) % NAMES.length]!,
     colorIndex: i,
   }));
 }
