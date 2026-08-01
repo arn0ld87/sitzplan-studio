@@ -1,180 +1,296 @@
-import { useState } from "react";
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { Pencil, Plus, Users, ArrowUpRight } from "lucide-react";
+import { useMemo, useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { Plus, Pencil, Trash2, UserPlus, Grid2x2 } from "lucide-react";
 import { Button } from "@/components/ui-kit/Button";
+import { PageHeader } from "@/components/PageHeader";
+import { SearchField } from "@/components/ui-kit/SearchField";
 import { ClassDot } from "@/components/ui-kit/ClassDot";
-import { StudentChip } from "@/components/ui-kit/StudentChip";
-import { PlanThumb } from "@/components/plan/RoomPlan";
-import { getClass, getRoom, plans, seatCount } from "@/data/demo";
+import { ConfirmDialog } from "@/components/ui-kit/ConfirmDialog";
+import { Field, Modal, inputClass } from "@/components/ui-kit/Modal";
+import { SaveStatus } from "@/components/ui-kit/SaveStatus";
+import { studentColor, initials, studentName } from "@/data/types";
+import { useStore } from "@/store/app";
 
 export const Route = createFileRoute("/klassen/$id")({
-  loader: ({ params }) => {
-    const cls = getClass(params.id);
-    if (!cls) throw notFound();
-    return { name: cls.name, note: cls.note };
-  },
-  head: ({ loaderData }) => {
-    if (!loaderData)
-      return {
-        meta: [{ title: "Klasse nicht gefunden — Sitzplan" }, { name: "robots", content: "noindex" }],
-      };
-    return {
-      meta: [
-        { title: `${loaderData.name} — Sitzplan` },
-        {
-          name: "description",
-          content: `Schülerliste, Sitzregeln und Sitzpläne der ${loaderData.name} (${loaderData.note}).`,
-        },
-        { property: "og:title", content: `${loaderData.name} — Sitzplan` },
-        {
-          property: "og:description",
-          content: `Schülerliste, Sitzregeln und Sitzpläne der ${loaderData.name}.`,
-        },
-      ],
-    };
-  },
-  component: Klasse,
+  head: () => ({
+    meta: [
+      { title: "Klasse bearbeiten — Sitzplan" },
+      {
+        name: "description",
+        content: "Schülerliste einer Klasse pflegen: Namen hinzufügen, ändern und entfernen.",
+      },
+      { property: "og:title", content: "Klasse bearbeiten — Sitzplan" },
+      { property: "og:description", content: "Schülerliste einer Klasse pflegen." },
+    ],
+  }),
+  component: KlassenDetail,
 });
 
-const TABS = ["Schüler", "Sitzregeln", "Sitzpläne"] as const;
+type StudentForm = { id?: string; firstName: string; lastName: string };
 
-function Klasse() {
+function KlassenDetail() {
   const { id } = Route.useParams();
-  const cls = getClass(id)!;
-  const [tab, setTab] = useState<(typeof TABS)[number]>("Schüler");
-  const clsPlans = plans.filter((p) => p.classId === cls.id);
+  const { data, dispatch, saveState } = useStore();
+  const navigate = useNavigate();
+  const cls = data.classes.find((c) => c.id === id);
+
+  const [q, setQ] = useState("");
+  const [form, setForm] = useState<StudentForm | null>(null);
+  const [fehler, setFehler] = useState("");
+  const [klasseForm, setKlasseForm] = useState<{ name: string; note: string } | null>(null);
+  const [entfernen, setEntfernen] = useState<string | null>(null);
+
+  const gefiltert = useMemo(() => {
+    if (!cls) return [];
+    const t = q.trim().toLowerCase();
+    if (!t) return cls.students;
+    return cls.students.filter((s) => studentName(s).toLowerCase().includes(t));
+  }, [cls, q]);
+
+  if (!cls) {
+    return (
+      <div className="px-5 py-10 md:px-8">
+        <h1 className="page-title">Klasse nicht gefunden</h1>
+        <p className="mt-2 text-[14px] text-ink-2">
+          Diese Klasse wurde gelöscht oder es liegen keine Daten in diesem Browser.
+        </p>
+        <Button className="mt-5" variant="secondary" asChild>
+          <Link to="/klassen">Zurück zu den Klassen</Link>
+        </Button>
+      </div>
+    );
+  }
+
+  const plaene = data.plans.filter((p) => p.classId === cls.id);
+  const zuEntfernen = cls.students.find((s) => s.id === entfernen);
+
+  function speichereSchueler() {
+    if (!form || !cls) return;
+    const vor = form.firstName.trim();
+    const nach = form.lastName.trim();
+    if (!vor) return setFehler("Bitte mindestens einen Vornamen angeben.");
+    if (form.id) {
+      dispatch({ type: "student/update", classId: cls.id, id: form.id, firstName: vor, lastName: nach });
+    } else {
+      dispatch({ type: "student/add", classId: cls.id, firstName: vor, lastName: nach });
+    }
+    setForm(null);
+    setFehler("");
+  }
+
+  function speichereKlasse() {
+    if (!klasseForm || !cls) return;
+    const n = klasseForm.name.trim();
+    if (!n) return setFehler("Bitte einen Namen angeben.");
+    dispatch({ type: "class/update", id: cls.id, name: n, note: klasseForm.note.trim() });
+    setKlasseForm(null);
+    setFehler("");
+  }
 
   return (
     <>
-      <header className="border-b border-line bg-panel px-5 py-5 md:px-8">
-        <nav aria-label="Brotkrumen" className="mb-2 text-[12px]">
-          <Link to="/klassen" className="text-ink-2 underline-offset-2 hover:underline">
-            Klassen
-          </Link>
-          <span className="px-1 text-ink-3">/</span>
-          <span className="text-ink-3">{cls.name}</span>
-        </nav>
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 sm:flex sm:flex-wrap sm:justify-between">
-          <div className="flex min-w-0 items-center gap-3">
-            <ClassDot name={cls.name} colorIndex={cls.colorIndex} size={38} />
-            <div className="min-w-0">
-              <h1 className="page-title truncate">{cls.name}</h1>
-              <p className="text-[13px] text-ink-2">
-                {cls.note} · <span className="num">{cls.students.length}</span> Schüler ·{" "}
-                <span className="num">{cls.rules.length}</span> Sitzregeln
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="secondary">
-              <Pencil size={16} strokeWidth={1.5} />
-              Bearbeiten
-            </Button>
-            <Button variant="primary">
-              <Plus size={16} strokeWidth={1.5} />
-              Sitzplan erstellen
-            </Button>
-          </div>
-        </div>
-
-        <div role="tablist" aria-label="Klassenbereiche" className="-mb-5 mt-5 flex gap-1">
-          {TABS.map((t) => (
-            <button
-              key={t}
-              role="tab"
-              aria-selected={tab === t}
-              onClick={() => setTab(t)}
-              className={`h-10 border-b-2 px-3 text-[13px] transition-colors ${
-                tab === t
-                  ? "border-[color:var(--action)] font-semibold text-ink"
-                  : "border-transparent text-ink-2 hover:text-ink"
-              }`}
+      <PageHeader
+        crumbs={[
+          { label: "Sitzplan", to: "/" },
+          { label: "Klassen", to: "/klassen" },
+          { label: cls.name },
+        ]}
+        title={cls.name}
+        subtitle={cls.note || "Ohne Notiz"}
+        actions={
+          <>
+            <SaveStatus state={saveState} />
+            <Button
+              variant="secondary"
+              onClick={() => setKlasseForm({ name: cls.name, note: cls.note })}
             >
-              {t}
-            </button>
-          ))}
-        </div>
-      </header>
+              <Pencil size={16} strokeWidth={1.5} />
+              Klasse bearbeiten
+            </Button>
+            <Button variant="primary" onClick={() => setForm({ firstName: "", lastName: "" })}>
+              <UserPlus size={16} strokeWidth={1.5} />
+              Schüler hinzufügen
+            </Button>
+          </>
+        }
+      />
 
-      <div className="px-5 py-7 md:px-8">
-        {tab === "Schüler" && (
-          <section aria-label="Schülerliste">
-            <p className="eyebrow">{cls.students.length} Personen</p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {cls.students.map((s, i) => (
-                <span key={s.id} className="reveal" style={{ "--i": i % 8 } as never}>
-                  <StudentChip name={s.name} colorIndex={s.colorIndex} />
-                </span>
-              ))}
-            </div>
-          </section>
-        )}
+      <div className="grid gap-8 px-5 py-7 md:px-8 lg:grid-cols-[minmax(0,1fr)_260px]">
+        <section aria-labelledby="schueler">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 id="schueler" className="section-title">
+              Schülerliste
+              <span className="num ml-2 text-ink-3">
+                {String(cls.students.length).padStart(2, "0")}
+              </span>
+            </h2>
+            {cls.students.length > 0 && (
+              <SearchField value={q} onChange={setQ} label="Name suchen" width={180} />
+            )}
+          </div>
 
-        {tab === "Sitzregeln" && (
-          <section aria-label="Sitzregeln" className="max-w-[620px]">
-            {cls.rules.length === 0 ? (
-              <p className="prose-measure text-[14px] text-ink-2">
-                Für diese Klasse sind keine Sitzregeln hinterlegt. Regeln prüfen einen Sitzplan
-                automatisch und melden Konflikte, ändern aber nie selbstständig eine Zuordnung.
+          {cls.students.length === 0 ? (
+            <div className="mt-3 rounded-[8px] border border-dashed border-line-control bg-panel px-5 py-10 text-center">
+              <p className="text-[14px] font-medium">Diese Klasse hat noch keine Schüler</p>
+              <p className="prose-measure mx-auto mt-1 text-[13px] text-ink-2">
+                Initialen und Farbe werden beim Hinzufügen automatisch vergeben.
               </p>
+              <Button
+                className="mt-4"
+                variant="primary"
+                onClick={() => setForm({ firstName: "", lastName: "" })}
+              >
+                <Plus size={16} strokeWidth={1.5} />
+                Ersten Schüler hinzufügen
+              </Button>
+            </div>
+          ) : gefiltert.length === 0 ? (
+            <p className="mt-3 text-[14px] text-ink-2">Kein Name passt zu „{q}“.</p>
+          ) : (
+            <ul className="mt-3 overflow-hidden rounded-[8px] border border-line bg-panel">
+              {gefiltert.map((s, i) => (
+                <li
+                  key={s.id}
+                  className={`flex items-center gap-3 px-4 py-2.5 ${i > 0 ? "border-t border-line" : ""}`}
+                >
+                  <span
+                    aria-hidden
+                    style={{ background: studentColor(s.colorIndex), color: "#15110D" }}
+                    className="grid h-[26px] w-[26px] shrink-0 place-items-center rounded-full text-[11px] font-semibold"
+                  >
+                    {initials(studentName(s))}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-[14px]">{studentName(s)}</span>
+                  <Button
+                    variant="quiet"
+                    size="iconSm"
+                    aria-label={`${studentName(s)} bearbeiten`}
+                    onClick={() => setForm({ id: s.id, firstName: s.firstName, lastName: s.lastName })}
+                  >
+                    <Pencil size={16} strokeWidth={1.5} />
+                  </Button>
+                  <Button
+                    variant="quiet"
+                    size="iconSm"
+                    aria-label={`${studentName(s)} entfernen`}
+                    onClick={() => setEntfernen(s.id)}
+                  >
+                    <Trash2 size={16} strokeWidth={1.5} />
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <aside className="space-y-5">
+          <div className="rounded-[8px] border border-line bg-panel p-4">
+            <h2 className="section-title">Sitzpläne dieser Klasse</h2>
+            {plaene.length === 0 ? (
+              <>
+                <p className="mt-1.5 text-[13px] text-ink-2">
+                  {data.rooms.length === 0
+                    ? "Zeichnen Sie zuerst einen Raum, dann lässt sich ein Sitzplan erstellen."
+                    : "Noch kein Sitzplan für diese Klasse."}
+                </p>
+                <Button
+                  className="mt-3 w-full"
+                  variant="secondary"
+                  disabled={data.rooms.length === 0 || cls.students.length === 0}
+                  onClick={() => navigate({ to: "/sitzplaene", search: { neu: cls.id } })}
+                >
+                  <Grid2x2 size={16} strokeWidth={1.5} />
+                  Sitzplan erstellen
+                </Button>
+              </>
             ) : (
-              <ul className="divide-y divide-[color:var(--line)] overflow-hidden rounded-[8px] border border-line bg-panel">
-                {cls.rules.map((r) => (
-                  <li key={r.id} className="flex items-center gap-3 px-4 py-3">
-                    <span className="rounded-[3px] bg-sunken px-2 py-0.5 text-[12px] text-ink-2">
-                      {r.kind}
-                    </span>
-                    <span className="min-w-0 flex-1 text-[14px]">{r.text}</span>
+              <ul className="mt-2 space-y-1.5">
+                {plaene.map((p) => (
+                  <li key={p.id}>
+                    <Link
+                      to="/sitzplaene/$id"
+                      params={{ id: p.id }}
+                      className="block truncate rounded-[6px] px-2 py-1.5 text-[13px] hover:bg-sunken"
+                    >
+                      {p.title}
+                    </Link>
                   </li>
                 ))}
               </ul>
             )}
-          </section>
-        )}
-
-        {tab === "Sitzpläne" && (
-          <section aria-label="Sitzpläne der Klasse">
-            {clsPlans.length === 0 ? (
-              <p className="prose-measure text-[14px] text-ink-2">
-                Noch kein Sitzplan für diese Klasse. Wählen Sie einen Raum und verteilen Sie die
-                Schüler.
-              </p>
-            ) : (
-              <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                {clsPlans.map((p) => {
-                  const room = getRoom(p.roomId)!;
-                  return (
-                    <li key={p.id}>
-                      <Link
-                        to="/sitzplaene/$id"
-                        params={{ id: p.id }}
-                        className="flex items-center gap-3 rounded-[8px] border border-line bg-panel p-3 hover:border-[color:var(--line-control)]"
-                      >
-                        <PlanThumb room={room} width={56} height={40} />
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate text-[14px] font-medium">{p.title}</span>
-                          <span className="num block text-ink-3">
-                            {room.name} · {seatCount(room)} Plätze
-                          </span>
-                        </span>
-                        <ArrowUpRight size={16} strokeWidth={1.5} className="text-ink-3" />
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </section>
-        )}
+          </div>
+        </aside>
       </div>
-    </>
-  );
-}
 
-export function KlasseNichtGefunden() {
-  return (
-    <div className="p-8">
-      <Users size={16} strokeWidth={1.5} />
-    </div>
+      <Modal
+        open={Boolean(form)}
+        title={form?.id ? "Schüler bearbeiten" : "Schüler hinzufügen"}
+        description="Farbe und Initialen ergeben sich automatisch aus der Position in der Liste."
+        submitLabel={form?.id ? "Änderungen speichern" : "Hinzufügen"}
+        onSubmit={speichereSchueler}
+        onClose={() => {
+          setForm(null);
+          setFehler("");
+        }}
+      >
+        <Field label="Vorname" error={fehler}>
+          <input
+            className={inputClass}
+            value={form?.firstName ?? ""}
+            maxLength={40}
+            onChange={(e) => setForm((f) => (f ? { ...f, firstName: e.target.value } : f))}
+          />
+        </Field>
+        <Field label="Nachname" hint="Optional">
+          <input
+            className={inputClass}
+            value={form?.lastName ?? ""}
+            maxLength={40}
+            onChange={(e) => setForm((f) => (f ? { ...f, lastName: e.target.value } : f))}
+          />
+        </Field>
+      </Modal>
+
+      <Modal
+        open={Boolean(klasseForm)}
+        title="Klasse bearbeiten"
+        submitLabel="Änderungen speichern"
+        onSubmit={speichereKlasse}
+        onClose={() => {
+          setKlasseForm(null);
+          setFehler("");
+        }}
+      >
+        <Field label="Name" error={fehler}>
+          <input
+            className={inputClass}
+            value={klasseForm?.name ?? ""}
+            maxLength={40}
+            onChange={(e) => setKlasseForm((f) => (f ? { ...f, name: e.target.value } : f))}
+          />
+        </Field>
+        <Field label="Notiz" hint="Optional">
+          <input
+            className={inputClass}
+            value={klasseForm?.note ?? ""}
+            maxLength={120}
+            onChange={(e) => setKlasseForm((f) => (f ? { ...f, note: e.target.value } : f))}
+          />
+        </Field>
+      </Modal>
+
+      <ConfirmDialog
+        open={Boolean(zuEntfernen)}
+        title={`${zuEntfernen ? studentName(zuEntfernen) : ""} entfernen?`}
+        description="Der Name wird endgültig aus der Klassenliste gestrichen."
+        consequence="Belegte Sitzplätze dieser Person werden in allen Sitzplänen der Klasse frei."
+        confirmLabel="Entfernen"
+        onConfirm={() => {
+          if (entfernen) dispatch({ type: "student/remove", classId: cls.id, id: entfernen });
+          setEntfernen(null);
+        }}
+        onCancel={() => setEntfernen(null)}
+      />
+    </>
   );
 }
