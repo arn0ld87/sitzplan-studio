@@ -75,7 +75,6 @@ function Uebersicht() {
                 const room = getRoom(p.roomId)!;
                 const cls = getClass(p.classId)!;
                 const belegt = Object.keys(p.assignments).length;
-                const st = STATUS[p.status]!;
                 return (
                   <li key={p.id}>
                     <Link
@@ -91,12 +90,11 @@ function Uebersicht() {
                         </span>
                       </span>
                       <span className="flex items-center gap-3">
-                        <span
-                          className={`hidden rounded-[3px] px-2 py-0.5 text-[12px] font-medium sm:inline ${st.cls}`}
-                        >
-                          {st.label}
+                        <StatusChip status={p.status} className="hidden sm:inline-flex" />
+                        <span className="num hidden text-right text-ink-3 md:inline">
+                          {relativeZeit(p.updated)}
                         </span>
-                        <span className="num hidden text-ink-3 md:inline">{p.updated}</span>
+
                         <ArrowUpRight
                           size={16}
                           strokeWidth={1.5}
