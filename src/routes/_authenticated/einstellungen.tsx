@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
-import { Download, TriangleAlert } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Download, LogOut, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui-kit/Button";
@@ -8,6 +8,7 @@ import { ConfirmDialog } from "@/components/ui-kit/ConfirmDialog";
 import { useStore } from "@/store/app";
 import { supabase } from "@/integrations/supabase/client";
 import { kontoLoeschen } from "@/lib/konto.functions";
+
 
 export const Route = createFileRoute("/_authenticated/einstellungen")({
   component: Einstellungen,
