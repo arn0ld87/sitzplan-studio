@@ -196,7 +196,6 @@ function Raeume() {
         }}
         onCancel={() => setLoeschen(null)}
       />
-      <span hidden onClick={() => navigate({ to: "/raeume" })} />
     </>
   );
 }
