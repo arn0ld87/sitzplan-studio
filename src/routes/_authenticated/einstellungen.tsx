@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
-import { Download, TriangleAlert } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Download, LogOut, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui-kit/Button";
@@ -8,6 +8,7 @@ import { ConfirmDialog } from "@/components/ui-kit/ConfirmDialog";
 import { useStore } from "@/store/app";
 import { supabase } from "@/integrations/supabase/client";
 import { kontoLoeschen } from "@/lib/konto.functions";
+
 
 export const Route = createFileRoute("/_authenticated/einstellungen")({
   component: Einstellungen,
@@ -29,6 +30,25 @@ function Einstellungen() {
   const navigate = useNavigate();
   const [frage, setFrage] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [email, setEmail] = useState("");
+  const [abmeldend, setAbmeldend] = useState(false);
+
+  useEffect(() => {
+    let aktiv = true;
+    void supabase.auth.getUser().then(({ data: u }) => {
+      if (aktiv) setEmail(u.user?.email ?? "");
+    });
+    return () => {
+      aktiv = false;
+    };
+  }, []);
+
+  async function abmelden() {
+    setAbmeldend(true);
+    await supabase.auth.signOut();
+    navigate({ to: "/signin", replace: true });
+  }
+
 
   function exportieren() {
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
@@ -59,6 +79,37 @@ function Einstellungen() {
       <PageHeader crumbs={[{ label: "Konto" }]} title="Einstellungen" />
       <div className="px-5 py-6 md:px-8">
         <div className="max-w-[620px] space-y-4">
+          <section className="rounded-[8px] border border-line bg-elevated p-5">
+            <h2 className="text-[15px] font-semibold">Konto</h2>
+            <dl className="mt-3 divide-y divide-[color:var(--line)] border-y border-line">
+              <div className="flex items-baseline justify-between gap-4 py-2.5">
+                <dt className="text-[13px] text-ink-2">E-Mail-Adresse</dt>
+                <dd className="truncate text-[13px] font-medium">{email || "—"}</dd>
+              </div>
+              {(
+                [
+                  ["Klassen", data.classes.length],
+                  ["Räume", data.rooms.length],
+                  ["Sitzpläne", data.plans.length],
+                ] as const
+              ).map(([label, wert]) => (
+                <div key={label} className="flex items-baseline justify-between gap-4 py-2.5">
+                  <dt className="text-[13px] text-ink-2">{label}</dt>
+                  <dd className="num text-[13px]">{wert}</dd>
+                </div>
+              ))}
+            </dl>
+            <Button
+              variant="secondary"
+              className="mt-4"
+              onClick={abmelden}
+              disabled={abmeldend}
+            >
+              <LogOut size={16} strokeWidth={1.5} />
+              {abmeldend ? "Wird abgemeldet …" : "Abmelden"}
+            </Button>
+          </section>
+
           <section className="rounded-[8px] border border-line bg-elevated p-5">
             <h2 className="text-[15px] font-semibold">Alle meine Daten exportieren</h2>
             <p className="mt-1.5 text-[13px] leading-[1.55] text-ink-2">
