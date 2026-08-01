@@ -8,6 +8,9 @@ import {
   Trash2,
   Grid3x3,
   Pencil,
+  ArrowLeft,
+  ZoomIn,
+  ZoomOut,
   Square,
   Rows2,
   Presentation,
@@ -63,6 +66,7 @@ function RaumEditor() {
 
   const [selected, setSelected] = useState<string | null>(null);
   const [showGrid, setShowGrid] = useState(true);
+  const [zoom, setZoom] = useState(1);
   const [form, setForm] = useState<{ name: string; width: string; height: string; grid: string } | null>(
     null,
   );
@@ -212,6 +216,12 @@ function RaumEditor() {
         actions={
           <>
             <SaveStatus state={saveState} onRetry={retry} />
+            <Button variant="secondary" asChild>
+              <Link to="/raeume">
+                <ArrowLeft size={16} strokeWidth={1.5} />
+                Zurück
+              </Link>
+            </Button>
             <Button
               variant="secondary"
               onClick={() =>
@@ -224,7 +234,7 @@ function RaumEditor() {
               }
             >
               <Pencil size={16} strokeWidth={1.5} />
-              Maße ändern
+              Raumdaten
             </Button>
           </>
         }
@@ -274,6 +284,57 @@ function RaumEditor() {
                   <Trash2 size={16} strokeWidth={1.5} />
                 </Button>
               </div>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                {(
+                  [
+                    ["x", "X (cm)", aktiv.x],
+                    ["y", "Y (cm)", aktiv.y],
+                  ] as const
+                ).map(([key, label, wert]) => (
+                  <label key={key} className="block">
+                    <span className="block text-[11px] text-ink-3">{label}</span>
+                    <input
+                      type="number"
+                      step={room.grid}
+                      value={wert}
+                      onChange={(e) => {
+                        const v = Number(e.target.value);
+                        if (!Number.isFinite(v)) return;
+                        if (key === "x") patch(aktiv.id, { x: Math.max(0, v) });
+                        else patch(aktiv.id, { y: Math.max(0, v) });
+                      }}
+                      className="num mt-0.5 h-8 w-full rounded-[6px] border border-line-control bg-elevated px-2 text-[13px]"
+                    />
+                  </label>
+                ))}
+              </div>
+
+              <p className="num mt-2 text-[12px] text-ink-3">
+                Maß {FURNITURE_SPECS[aktiv.kind].w} × {FURNITURE_SPECS[aktiv.kind].h} cm ·{" "}
+                {FURNITURE_SPECS[aktiv.kind].seats} Sitzplätze
+              </p>
+
+              <div className="mt-3">
+                <span className="block text-[11px] text-ink-3">Drehung</span>
+                <div className="mt-1 flex overflow-hidden rounded-[6px] border border-line-control">
+                  {([0, 90, 180, 270] as const).map((deg) => (
+                    <button
+                      key={deg}
+                      type="button"
+                      aria-pressed={aktiv.rotation === deg}
+                      onClick={() => patch(aktiv.id, { rotation: deg })}
+                      className={`num flex-1 border-r border-line-control py-1.5 text-[12px] last:border-r-0 transition-colors duration-[160ms] ease-out ${
+                        aktiv.rotation === deg
+                          ? "bg-action-soft text-action-soft-ink"
+                          : "bg-elevated text-ink-2 hover:bg-sunken"
+                      }`}
+                    >
+                      {deg}°
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <p className="mt-2 text-[12px] leading-[1.5] text-ink-3">
                 Pfeiltasten verschieben im Raster, mit Umschalt zentimeterweise. R dreht, D
                 dupliziert, Entf löscht.
@@ -318,13 +379,42 @@ function RaumEditor() {
         </aside>
 
         <div className="p-4 md:p-6">
+          <div className="mb-3 flex items-center gap-1.5">
+            <Button
+              variant="quiet"
+              size="iconSm"
+              aria-label="Verkleinern"
+              disabled={zoom <= 0.5}
+              onClick={() => setZoom((z) => Math.max(0.5, Math.round((z - 0.25) * 100) / 100))}
+            >
+              <ZoomOut size={16} strokeWidth={1.5} />
+            </Button>
+            <button
+              type="button"
+              onClick={() => setZoom(1)}
+              title="Zoom zurücksetzen"
+              className="num min-w-[52px] rounded-[6px] px-1.5 py-1 text-[12px] text-ink-2 transition-colors duration-[160ms] ease-out hover:bg-sunken hover:text-ink"
+            >
+              {Math.round(zoom * 100)} %
+            </button>
+            <Button
+              variant="quiet"
+              size="iconSm"
+              aria-label="Vergrößern"
+              disabled={zoom >= 2.5}
+              onClick={() => setZoom((z) => Math.min(2.5, Math.round((z + 0.25) * 100) / 100))}
+            >
+              <ZoomIn size={16} strokeWidth={1.5} />
+            </Button>
+          </div>
           {furniture.length === 0 && (
             <p className="mb-3 rounded-[6px] border border-line bg-panel px-3 py-2 text-[13px] text-ink-2">
               Der Raum ist leer. Fügen Sie links Tische und Einbauten ein — Doppeltische bringen zwei
               Sitzplätze mit.
             </p>
           )}
-          <div className="overflow-hidden rounded-[8px] border border-line bg-plan">
+          <div className="overflow-auto rounded-[8px] border border-line bg-plan">
+            <div style={{ width: `${zoom * 100}%` }}>
             <RoomPlan
               room={room}
               mode="room"
@@ -334,6 +424,7 @@ function RaumEditor() {
               onMoveFurniture={(fid, x, y) => patch(fid, { x, y })}
               className="block h-auto w-full"
             />
+            </div>
           </div>
         </div>
       </div>

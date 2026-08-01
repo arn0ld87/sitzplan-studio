@@ -4,6 +4,7 @@ import { Button } from "@/components/ui-kit/Button";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusChip } from "@/components/ui-kit/StatusChip";
 import { ClassDot } from "@/components/ui-kit/ClassDot";
+import { PlanThumb } from "@/components/plan/RoomPlan";
 import { relativeZeit } from "@/lib/zeit";
 import { seatCount } from "@/data/types";
 import { useStore } from "@/store/app";
@@ -95,9 +96,7 @@ function Uebersicht() {
   const kannPlan = bereiteKlassen.length > 0 && bereiteRaeume.length > 0;
 
   const ohnePlan = data.classes.filter((c) => !data.plans.some((p) => p.classId === c.id));
-  const letzte = [...data.plans]
-    .sort((a, b) => b.updated.localeCompare(a.updated))
-    .slice(0, 6);
+  const letzte = [...data.plans].sort((a, b) => b.updated.localeCompare(a.updated)).slice(0, 6);
 
   return (
     <>
@@ -108,9 +107,9 @@ function Uebersicht() {
         actions={
           !leer && (
             <Button variant="primary" asChild>
-              <Link to="/sitzplaene">
+              <Link to="/sitzplaene" search={{ neu: kannPlan ? "1" : undefined }}>
                 <Plus size={16} strokeWidth={1.5} />
-                Sitzplan erstellen
+                Neuer Sitzplan
               </Link>
             </Button>
           )
@@ -169,25 +168,70 @@ function Uebersicht() {
                 {letzte.map((p, i) => {
                   const cls = data.classes.find((c) => c.id === p.classId);
                   return (
-                    <li
-                      key={p.id}
-                      className={`flex flex-wrap items-center gap-3 px-4 py-3 ${i > 0 ? "border-t border-line" : ""}`}
-                    >
-                      {cls && <ClassDot name={cls.name} colorIndex={cls.colorIndex} size={28} />}
-                      <Link to="/sitzplaene/$id" params={{ id: p.id }} className="min-w-0 flex-1">
-                        <span className="block truncate text-[14px] font-medium">{p.title}</span>
-                        <span className="block truncate text-[13px] text-ink-3">
-                          {p.room.name} · {relativeZeit(p.updated)}
+                    <li key={p.id} className={i > 0 ? "border-t border-line" : ""}>
+                      <Link
+                        to="/sitzplaene/$id"
+                        params={{ id: p.id }}
+                        className="flex flex-wrap items-center gap-3 px-4 py-3 transition-colors duration-[160ms] ease-out hover:bg-sunken"
+                      >
+                        {cls && <ClassDot name={cls.name} colorIndex={cls.colorIndex} size={28} />}
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-[14px] font-medium">{p.title}</span>
+                          <span className="block truncate text-[13px] text-ink-3">
+                            {p.room.name} · {relativeZeit(p.updated)}
+                          </span>
                         </span>
+                        <span className="num shrink-0 text-[13px] text-ink-2">
+                          {Object.keys(p.assignments).length}/{seatCount(p.room)}
+                        </span>
+                        <StatusChip status={p.status} />
                       </Link>
-                      <span className="num shrink-0 text-[13px] text-ink-2">
-                        {Object.keys(p.assignments).length}/{seatCount(p.room)}
-                      </span>
-                      <StatusChip status={p.status} />
                     </li>
                   );
                 })}
               </ul>
+            </section>
+          )}
+
+          {hatKlassen && (
+            <section aria-labelledby="raumvorlagen">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h2 id="raumvorlagen" className="section-title">
+                  Raumvorlagen
+                </h2>
+                <Button variant="secondary" size="sm" asChild>
+                  <Link to="/raeume" search={{ neu: "1" }}>
+                    <Plus size={16} strokeWidth={1.5} />
+                    Raumvorlage anlegen
+                  </Link>
+                </Button>
+              </div>
+              {hatRaeume ? (
+                <ul className="mt-3 grid gap-3 sm:grid-cols-2">
+                  {data.rooms.slice(0, 4).map((r) => (
+                    <li key={r.id}>
+                      <Link
+                        to="/raeume/$id"
+                        params={{ id: r.id }}
+                        className="flex items-center gap-3 rounded-[8px] border border-line bg-panel p-4 transition-colors duration-[160ms] ease-out hover:border-[color:var(--line-plan)]"
+                      >
+                        <PlanThumb room={r} width={52} height={38} />
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-[14px] font-medium">{r.name}</span>
+                          <span className="num block text-[12px] text-ink-3">
+                            {r.width} × {r.height} cm · {seatCount(r)} Plätze
+                          </span>
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-3 rounded-[8px] border border-dashed border-line-control bg-panel px-4 py-6 text-[13px] text-ink-2">
+                  Noch keine Raumvorlage. Ein Raum wird einmal gezeichnet und lässt sich für
+                  beliebig viele Sitzpläne verwenden.
+                </p>
+              )}
             </section>
           )}
 
@@ -203,14 +247,18 @@ function Uebersicht() {
                     className={`flex flex-wrap items-center gap-3 px-4 py-3 ${i > 0 ? "border-t border-line" : ""}`}
                   >
                     <ClassDot name={c.name} colorIndex={c.colorIndex} size={28} />
-                    <span className="min-w-0 flex-1">
+                    <Link
+                      to="/klassen/$id"
+                      params={{ id: c.id }}
+                      className="min-w-0 flex-1 rounded-[6px] hover:underline"
+                    >
                       <span className="block truncate text-[14px] font-medium">{c.name}</span>
                       <span className="block truncate text-[13px] text-ink-3">
                         {c.students.length === 0
                           ? "Noch keine Schüler eingetragen"
                           : `${c.students.length} Schüler`}
                       </span>
-                    </span>
+                    </Link>
                     {c.students.length === 0 || bereiteRaeume.length === 0 ? (
                       <Button variant="secondary" size="sm" asChild>
                         <Link
@@ -255,6 +303,29 @@ function Uebersicht() {
               ))}
             </dl>
           </div>
+
+          {hatKlassen && (
+            <div className="rounded-[8px] border border-line bg-panel p-4">
+              <h2 className="eyebrow">Klassen</h2>
+              <ul className="mt-2 space-y-0.5">
+                {data.classes.map((c) => (
+                  <li key={c.id}>
+                    <Link
+                      to="/klassen/$id"
+                      params={{ id: c.id }}
+                      className="flex items-center gap-2.5 rounded-[6px] px-1.5 py-1.5 transition-colors duration-[160ms] ease-out hover:bg-sunken"
+                    >
+                      <ClassDot name={c.name} colorIndex={c.colorIndex} size={24} />
+                      <span className="min-w-0 flex-1 truncate text-[13px]">{c.name}</span>
+                      <span className="num text-[12px] text-ink-3">
+                        {String(c.students.length).padStart(2, "0")}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <div className="rounded-[8px] border border-line bg-info-bg p-4">
             <h2 className="flex items-center gap-2 text-[13px] font-semibold text-info">

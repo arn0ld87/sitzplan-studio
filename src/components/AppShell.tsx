@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   LayoutGrid,
   Users,
@@ -9,6 +9,8 @@ import {
   Trash2,
   Settings,
   LogOut,
+  UserRound,
+  ChevronsUpDown,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -73,6 +75,88 @@ function LadeSkelett() {
   );
 }
 
+/** Nutzerblock mit Menü: Konto öffnen oder abmelden. */
+function NutzerBlock({
+  email,
+  abmeldend,
+  onAbmelden,
+}: {
+  email: string;
+  abmeldend: boolean;
+  onAbmelden: () => void;
+}) {
+  const [offen, setOffen] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!offen) return;
+    function ausserhalb(e: MouseEvent) {
+      if (!box.current?.contains(e.target as Node)) setOffen(false);
+    }
+    function taste(e: KeyboardEvent) {
+      if (e.key === "Escape") setOffen(false);
+    }
+    document.addEventListener("mousedown", ausserhalb);
+    document.addEventListener("keydown", taste);
+    return () => {
+      document.removeEventListener("mousedown", ausserhalb);
+      document.removeEventListener("keydown", taste);
+    };
+  }, [offen]);
+
+  return (
+    <div ref={box} className="relative border-t border-line px-2.5 py-2.5">
+      {offen && (
+        <div
+          role="menu"
+          aria-label="Konto"
+          className="absolute bottom-[calc(100%-4px)] left-2.5 right-2.5 z-50 overflow-hidden rounded-[8px] border border-line bg-elevated py-1 shadow-[var(--shadow-overlay)]"
+        >
+          <Link
+            to="/einstellungen"
+            role="menuitem"
+            onClick={() => setOffen(false)}
+            className="flex items-center gap-2 px-3 py-2 text-[13px] text-ink-2 transition-colors duration-[160ms] ease-out hover:bg-sunken hover:text-ink"
+          >
+            <UserRound size={14} strokeWidth={1.5} />
+            Konto und Einstellungen
+          </Link>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={onAbmelden}
+            disabled={abmeldend}
+            className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] text-ink-2 transition-colors duration-[160ms] ease-out hover:bg-sunken hover:text-ink disabled:opacity-60"
+          >
+            <LogOut size={14} strokeWidth={1.5} />
+            {abmeldend ? "Wird abgemeldet …" : "Abmelden"}
+          </button>
+        </div>
+      )}
+      <button
+        type="button"
+        onClick={() => setOffen((v) => !v)}
+        aria-haspopup="menu"
+        aria-expanded={offen}
+        title={email}
+        className="flex w-full items-center gap-2.5 rounded-[6px] px-2 py-1.5 text-left transition-colors duration-[160ms] ease-out hover:bg-sunken"
+      >
+        <span
+          aria-hidden
+          className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-action-soft text-[12px] font-semibold uppercase text-action-soft-ink"
+        >
+          {email.slice(0, 2)}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[12px] font-medium">{email}</span>
+          <span className="block text-[11px] text-ink-3">Konto</span>
+        </span>
+        <ChevronsUpDown size={14} strokeWidth={1.5} className="shrink-0 text-ink-3" />
+      </button>
+    </div>
+  );
+}
+
 export function AppShell({ children, email }: { children: React.ReactNode; email: string }) {
   const isActive = useActive();
   const { data, hydrated } = useStore();
@@ -121,20 +205,7 @@ export function AppShell({ children, email }: { children: React.ReactNode; email
             <NavRow key={i.to} item={i} active={isActive(i.to)} />
           ))}
         </nav>
-        <div className="border-t border-line px-3.5 py-3">
-          <p className="truncate text-[12px] font-medium" title={email}>
-            {email}
-          </p>
-          <button
-            type="button"
-            onClick={abmelden}
-            disabled={abmeldend}
-            className="mt-1.5 inline-flex items-center gap-1.5 text-[12px] text-ink-2 transition-colors duration-[160ms] ease-out hover:text-ink disabled:opacity-60"
-          >
-            <LogOut size={12} strokeWidth={1.5} />
-            {abmeldend ? "Wird abgemeldet …" : "Abmelden"}
-          </button>
-        </div>
+        <NutzerBlock email={email} abmeldend={abmeldend} onAbmelden={abmelden} />
       </aside>
 
 

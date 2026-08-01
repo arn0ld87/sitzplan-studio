@@ -1,6 +1,20 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Undo2, Redo2, Trash2, Shuffle, Eraser, Pencil } from "lucide-react";
+import {
+  Undo2,
+  Redo2,
+  Trash2,
+  Shuffle,
+  Eraser,
+  Pencil,
+  ArrowLeft,
+  Printer,
+  History,
+  PanelLeftClose,
+  PanelLeftOpen,
+  AlertTriangle,
+  Undo,
+} from "lucide-react";
 import { Button } from "@/components/ui-kit/Button";
 import { PageHeader } from "@/components/PageHeader";
 import { SaveStatus } from "@/components/ui-kit/SaveStatus";
@@ -11,6 +25,8 @@ import { SearchField } from "@/components/ui-kit/SearchField";
 import { RoomPlan } from "@/components/plan/RoomPlan";
 import { allSeats, seatCount, studentName, type PlanStatus, type Student } from "@/data/types";
 import { useStore } from "@/store/app";
+import { supabase } from "@/integrations/supabase/client";
+import { ladeVersionen, speichereVersion, type PlanVersion } from "@/lib/versionen";
 
 export const Route = createFileRoute("/_authenticated/sitzplaene/$id")({
   head: () => ({
@@ -45,6 +61,13 @@ function SitzplanEditor() {
   const [loeschen, setLoeschen] = useState(false);
   const [leeren, setLeeren] = useState(false);
   const [form, setForm] = useState<{ title: string } | null>(null);
+  const [ablageOffen, setAblageOffen] = useState(true);
+  const [versionenOffen, setVersionenOffen] = useState(false);
+  const [versionen, setVersionen] = useState<PlanVersion[]>([]);
+  const [versionenLaden, setVersionenLaden] = useState(false);
+  const [versionName, setVersionName] = useState("");
+  const [versionFehler, setVersionFehler] = useState("");
+  const [verworfen, setVerworfen] = useState<string[]>([]);
 
   const studentsById = useMemo<Record<string, Student>>(
     () => Object.fromEntries((cls?.students ?? []).map((s) => [s.id, s])),
@@ -106,6 +129,87 @@ function SitzplanEditor() {
     );
   }
 
+  const regeln = data.rules.filter((r) => r.classId === plan.classId);
+  const platzVonSchueler: Record<string, string> = {};
+  for (const [seat, sid] of Object.entries(plan.assignments)) platzVonSchueler[sid] = seat;
+  const nachbarn = (seatId: string) => {
+    const moebel = plan!.room.furniture.find((f) => f.seats.includes(seatId));
+    return moebel ? moebel.seats.filter((x) => x !== seatId) : [];
+  };
+  const freiePlaetze = allSeats(plan.room).filter((s) => !plan!.assignments[s]);
+
+  type Vorschlag = { id: string; text: string; anwenden: () => void };
+  const vorschlaege: Vorschlag[] = [];
+  for (const r of regeln) {
+    const sa = platzVonSchueler[r.a];
+    const sb = platzVonSchueler[r.b];
+    if (!sa || !sb) continue;
+    const benachbart = nachbarn(sa).includes(sb);
+    const nameA = studentsById[r.a] ? studentName(studentsById[r.a]!) : "?";
+    const nameB = studentsById[r.b] ? studentName(studentsById[r.b]!) : "?";
+    if (r.kind === "nicht_neben" && benachbart) {
+      const ziel = freiePlaetze.find((f) => !nachbarn(sa).includes(f) && f !== sa);
+      vorschlaege.push({
+        id: r.id,
+        text: ziel
+          ? `${nameA} und ${nameB} sitzen nebeneinander. Vorschlag: ${nameB} auf einen freien Platz weiter weg setzen.`
+          : `${nameA} und ${nameB} sitzen nebeneinander. Es ist kein passender freier Platz vorhanden.`,
+        anwenden: () => {
+          if (!ziel) return;
+          const next = { ...plan!.assignments };
+          delete next[sb];
+          next[ziel] = r.b;
+          setAssignments(next);
+        },
+      });
+    }
+    if (r.kind === "muss_neben" && !benachbart) {
+      const ziel = nachbarn(sa).find((n) => !plan!.assignments[n]);
+      vorschlaege.push({
+        id: r.id,
+        text: ziel
+          ? `${nameA} und ${nameB} sollen nebeneinander sitzen. Vorschlag: ${nameB} auf den freien Nachbarplatz setzen.`
+          : `${nameA} und ${nameB} sitzen nicht nebeneinander. Neben ${nameA} ist kein Platz frei.`,
+        anwenden: () => {
+          if (!ziel) return;
+          const next = { ...plan!.assignments };
+          delete next[sb];
+          next[ziel] = r.b;
+          setAssignments(next);
+        },
+      });
+    }
+  }
+  const offeneVorschlaege = vorschlaege.filter((v) => !verworfen.includes(v.id));
+
+  async function versionenLaenden() {
+    setVersionenLaden(true);
+    setVersionFehler("");
+    const { data: rows, error } = await ladeVersionen(plan!.id);
+    if (error) setVersionFehler("Die Stände konnten nicht geladen werden.");
+    else setVersionen(rows ?? []);
+    setVersionenLaden(false);
+  }
+
+  async function standSpeichern() {
+    const name = versionName.trim() || new Date().toLocaleString("de-DE");
+    setVersionFehler("");
+    const { data: sess } = await supabase.auth.getUser();
+    const uid = sess.user?.id;
+    if (!uid) return setVersionFehler("Keine gültige Sitzung.");
+    const { error } = await speichereVersion(plan!.id, uid, name, plan!.assignments);
+    if (error) return setVersionFehler("Der Stand konnte nicht gespeichert werden.");
+    setVersionName("");
+    void versionenLaenden();
+  }
+
+  function standWiederherstellen(doc: PlanVersion["canvas_document"]) {
+    const z = doc?.zuordnungen;
+    if (!z) return setVersionFehler("Dieser Stand enthält keine Zuordnungen.");
+    setAssignments({ ...z });
+    setVersionenOffen(false);
+  }
+
   const belegteIds = new Set(Object.values(plan.assignments));
   const offen = (cls?.students ?? []).filter((s) => !belegteIds.has(s.id));
   const gefiltert = q.trim()
@@ -163,6 +267,12 @@ function SitzplanEditor() {
         actions={
           <>
             <SaveStatus state={saveState} onRetry={retry} />
+            <Button variant="secondary" asChild>
+              <Link to="/sitzplaene">
+                <ArrowLeft size={16} strokeWidth={1.5} />
+                Zurück
+              </Link>
+            </Button>
             <select
               aria-label="Status des Sitzplans"
               className="h-10 rounded-[6px] border border-line-control bg-elevated px-2.5 text-[13px]"
@@ -185,11 +295,41 @@ function SitzplanEditor() {
               <Pencil size={16} strokeWidth={1.5} />
               Umbenennen
             </Button>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setVersionenOffen(true);
+                void versionenLaenden();
+              }}
+            >
+              <History size={16} strokeWidth={1.5} />
+              Versionen
+            </Button>
+            <Button variant="secondary" asChild>
+              <Link to="/sitzplaene/$id/drucken" params={{ id: plan.id }}>
+                <Printer size={16} strokeWidth={1.5} />
+                Drucken
+              </Link>
+            </Button>
           </>
         }
       />
 
-      <div className="grid gap-0 lg:grid-cols-[260px_minmax(0,1fr)]">
+      <div
+        className={`grid gap-0 ${ablageOffen ? "lg:grid-cols-[260px_minmax(0,1fr)]" : "lg:grid-cols-[52px_minmax(0,1fr)]"}`}
+      >
+        {!ablageOffen ? (
+          <aside className="border-b border-line bg-panel p-2 lg:border-b-0 lg:border-r">
+            <Button
+              variant="quiet"
+              size="iconSm"
+              aria-label="Ablage einblenden"
+              onClick={() => setAblageOffen(true)}
+            >
+              <PanelLeftOpen size={16} strokeWidth={1.5} />
+            </Button>
+          </aside>
+        ) : (
         <aside
           className="border-b border-line bg-panel p-4 lg:border-b-0 lg:border-r"
           onPointerUp={zurueckInDieAblage}
@@ -201,6 +341,14 @@ function SitzplanEditor() {
             <span className="num text-[12px] text-ink-3">
               {String(offen.length).padStart(2, "0")}
             </span>
+            <Button
+              variant="quiet"
+              size="iconSm"
+              aria-label="Ablage ausblenden"
+              onClick={() => setAblageOffen(false)}
+            >
+              <PanelLeftClose size={16} strokeWidth={1.5} />
+            </Button>
           </div>
 
           {!cls ? (
@@ -279,6 +427,16 @@ function SitzplanEditor() {
             </Button>
           </div>
           <Button
+            className="mt-2 w-full"
+            variant="secondary"
+            size="sm"
+            disabled={!carry || !carry.from}
+            onClick={zurueckInDieAblage}
+          >
+            <Undo size={16} strokeWidth={1.5} />
+            Zurück in die Ablage
+          </Button>
+          <Button
             className="mt-4 w-full"
             variant="danger"
             size="sm"
@@ -288,8 +446,32 @@ function SitzplanEditor() {
             Sitzplan löschen
           </Button>
         </aside>
+        )}
 
         <div className="p-4 md:p-6">
+          {offeneVorschlaege.length > 0 && (
+            <ul className="mb-3 space-y-2">
+              {offeneVorschlaege.map((v) => (
+                <li
+                  key={v.id}
+                  className="flex flex-wrap items-center gap-3 rounded-[8px] border border-line bg-warn-bg px-3 py-2.5"
+                >
+                  <AlertTriangle size={16} strokeWidth={1.5} className="shrink-0 text-warn" />
+                  <span className="min-w-0 flex-1 text-[13px]">{v.text}</span>
+                  <Button variant="secondary" size="sm" onClick={v.anwenden}>
+                    Vorschlag übernehmen
+                  </Button>
+                  <Button
+                    variant="quiet"
+                    size="sm"
+                    onClick={() => setVerworfen((x) => [...x, v.id])}
+                  >
+                    Verwerfen
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )}
           {plaetze === 0 && (
             <p className="mb-3 rounded-[6px] border border-line bg-panel px-3 py-2 text-[13px] text-ink-2">
               Dieser Grundriss enthält keine Sitzplätze.
@@ -336,6 +518,63 @@ function SitzplanEditor() {
             onChange={(e) => setForm((f) => (f ? { title: e.target.value } : f))}
           />
         </Field>
+      </Modal>
+
+      <Modal
+        open={versionenOffen}
+        title="Versionen"
+        description="Benannte Stände dieses Sitzplans. Ein Stand hält die Belegung fest und lässt sich jederzeit wiederherstellen."
+        submitLabel="Stand speichern"
+        onSubmit={() => void standSpeichern()}
+        onClose={() => {
+          setVersionenOffen(false);
+          setVersionFehler("");
+        }}
+      >
+        <Field label="Name des Standes" hint="Optional — sonst Datum und Uhrzeit" error={versionFehler}>
+          <input
+            className={inputClass}
+            value={versionName}
+            maxLength={60}
+            placeholder="Vor der Umsetzung"
+            onChange={(e) => setVersionName(e.target.value)}
+          />
+        </Field>
+        <div>
+          <p className="eyebrow">Gespeicherte Stände</p>
+          {versionenLaden ? (
+            <div className="mt-2 space-y-1.5">
+              {[0, 1].map((i) => (
+                <div key={i} className="h-9 animate-pulse rounded-[6px] bg-sunken" />
+              ))}
+            </div>
+          ) : versionen.length === 0 ? (
+            <p className="mt-1.5 text-[13px] text-ink-3">Noch kein Stand gespeichert.</p>
+          ) : (
+            <ul className="mt-1.5 overflow-hidden rounded-[6px] border border-line">
+              {versionen.map((v, i) => (
+                <li
+                  key={v.id}
+                  className={`flex items-center gap-2 px-3 py-2 ${i > 0 ? "border-t border-line" : ""}`}
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[13px]">{v.name}</span>
+                    <span className="num block text-[12px] text-ink-3">
+                      {new Date(v.created_at).toLocaleString("de-DE")}
+                    </span>
+                  </span>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => standWiederherstellen(v.canvas_document)}
+                  >
+                    Wiederherstellen
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </Modal>
 
       <ConfirmDialog

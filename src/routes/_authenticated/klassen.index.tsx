@@ -1,12 +1,14 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Plus, Users, ChevronRight, Trash2 } from "lucide-react";
+import { Plus, Users, ChevronRight, Trash2, Pencil } from "lucide-react";
 import { Button } from "@/components/ui-kit/Button";
 import { PageHeader } from "@/components/PageHeader";
 import { SearchField } from "@/components/ui-kit/SearchField";
 import { ClassDot } from "@/components/ui-kit/ClassDot";
 import { ConfirmDialog } from "@/components/ui-kit/ConfirmDialog";
 import { EmptyState } from "@/components/ui-kit/EmptyState";
+import { KeineTreffer } from "@/components/ui-kit/KeineTreffer";
+import { SortHeader, type SortRichtung } from "@/components/ui-kit/SortHeader";
 import { Field, Modal, inputClass } from "@/components/ui-kit/Modal";
 import { useStore } from "@/store/app";
 
@@ -30,6 +32,9 @@ function Klassen() {
   const { data, dispatch } = useStore();
   const [q, setQ] = useState("");
   const [neu, setNeu] = useState(false);
+  const [bearbeiten, setBearbeiten] = useState<string | null>(null);
+  const [sortSpalte, setSortSpalte] = useState<"name" | "students">("name");
+  const [sortRichtung, setSortRichtung] = useState<SortRichtung>("auf");
   const [name, setName] = useState("");
   const [note, setNote] = useState("");
   const [fehler, setFehler] = useState("");
@@ -45,6 +50,42 @@ function Klassen() {
         c.students.some((s) => `${s.firstName} ${s.lastName}`.toLowerCase().includes(t)),
     );
   }, [data.classes, q]);
+
+  const sortiert = useMemo(() => {
+    const vz = sortRichtung === "auf" ? 1 : -1;
+    return [...gefiltert].sort((a, b) =>
+      sortSpalte === "name"
+        ? a.name.localeCompare(b.name, "de", { numeric: true }) * vz
+        : (a.students.length - b.students.length) * vz,
+    );
+  }, [gefiltert, sortSpalte, sortRichtung]);
+
+  function sortieren(spalte: "name" | "students") {
+    if (spalte === sortSpalte) setSortRichtung((r) => (r === "auf" ? "ab" : "auf"));
+    else {
+      setSortSpalte(spalte);
+      setSortRichtung("auf");
+    }
+  }
+
+  const inBearbeitung = data.classes.find((c) => c.id === bearbeiten);
+
+  function speichern() {
+    if (!inBearbeitung) return;
+    const n = name.trim();
+    if (!n) return setFehler("Bitte einen Namen angeben.");
+    if (
+      data.classes.some(
+        (c) => c.id !== inBearbeitung.id && c.name.toLowerCase() === n.toLowerCase(),
+      )
+    )
+      return setFehler("Diesen Klassennamen gibt es bereits.");
+    dispatch({ type: "class/update", id: inBearbeitung.id, name: n, note: note.trim().slice(0, 120) });
+    setBearbeiten(null);
+    setName("");
+    setNote("");
+    setFehler("");
+  }
 
   const zuLoeschen = data.classes.find((c) => c.id === loeschen);
   const planZahl = zuLoeschen ? data.plans.filter((p) => p.classId === zuLoeschen.id).length : 0;
@@ -71,7 +112,15 @@ function Klassen() {
         actions={
           <>
             {data.classes.length > 0 && <SearchField value={q} onChange={setQ} label="Klasse suchen" />}
-            <Button variant="primary" onClick={() => setNeu(true)}>
+            <Button
+              variant="primary"
+              onClick={() => {
+                setName("");
+                setNote("");
+                setFehler("");
+                setNeu(true);
+              }}
+            >
               <Plus size={16} strokeWidth={1.5} />
               Klasse anlegen
             </Button>
@@ -92,17 +141,41 @@ function Klassen() {
               </Button>
             }
           />
-        ) : gefiltert.length === 0 ? (
-          <p className="text-[14px] text-ink-2">Keine Klasse passt zu „{q}“.</p>
+        ) : sortiert.length === 0 ? (
+          <KeineTreffer suche={q} onReset={() => setQ("")} />
         ) : (
           <ul className="overflow-hidden rounded-[8px] border border-line bg-panel">
-            {gefiltert.map((c, i) => (
+            <li className="flex items-center gap-3 border-b border-line bg-sunken px-4 py-2">
+              <span className="w-8 shrink-0" />
+              <span className="min-w-0 flex-1">
+                <SortHeader
+                  spalte="name"
+                  label="Klasse"
+                  aktiv={sortSpalte}
+                  richtung={sortRichtung}
+                  onSort={sortieren}
+                />
+              </span>
+              <SortHeader
+                spalte="students"
+                label="Schüler"
+                aktiv={sortSpalte}
+                richtung={sortRichtung}
+                onSort={sortieren}
+              />
+              <span className="w-[104px] shrink-0" />
+            </li>
+            {sortiert.map((c, i) => (
               <li
                 key={c.id}
-                className={`flex items-center gap-3 px-4 py-3 ${i > 0 ? "border-t border-line" : ""}`}
+                className={`relative flex items-center gap-3 px-4 py-3 transition-colors duration-[160ms] ease-out hover:bg-sunken ${i > 0 ? "border-t border-line" : ""}`}
               >
                 <ClassDot name={c.name} colorIndex={c.colorIndex} />
-                <Link to="/klassen/$id" params={{ id: c.id }} className="min-w-0 flex-1">
+                <Link
+                  to="/klassen/$id"
+                  params={{ id: c.id }}
+                  className="min-w-0 flex-1 before:absolute before:inset-0 before:content-['']"
+                >
                   <span className="block truncate text-[14px] font-medium">{c.name}</span>
                   <span className="block truncate text-[13px] text-ink-3">
                     {c.note || "Ohne Notiz"}
@@ -114,6 +187,21 @@ function Klassen() {
                 <Button
                   variant="quiet"
                   size="iconSm"
+                  className="relative"
+                  aria-label={`${c.name} bearbeiten`}
+                  onClick={() => {
+                    setBearbeiten(c.id);
+                    setName(c.name);
+                    setNote(c.note);
+                    setFehler("");
+                  }}
+                >
+                  <Pencil size={16} strokeWidth={1.5} />
+                </Button>
+                <Button
+                  variant="quiet"
+                  size="iconSm"
+                  className="relative"
                   aria-label={`${c.name} löschen`}
                   onClick={() => setLoeschen(c.id)}
                 >
@@ -123,7 +211,7 @@ function Klassen() {
                   to="/klassen/$id"
                   params={{ id: c.id }}
                   aria-label={`${c.name} öffnen`}
-                  className="text-ink-3 hover:text-ink"
+                  className="relative text-ink-3 hover:text-ink"
                 >
                   <ChevronRight size={16} strokeWidth={1.5} />
                 </Link>
@@ -160,6 +248,35 @@ function Klassen() {
             maxLength={120}
             onChange={(e) => setNote(e.target.value)}
             placeholder="Klassenleitung, Fach, Halbjahr"
+          />
+        </Field>
+      </Modal>
+
+      <Modal
+        open={Boolean(inBearbeitung)}
+        title={`${inBearbeitung?.name ?? ""} bearbeiten`}
+        description="Name und Notiz der Klasse ändern."
+        submitLabel="Änderungen speichern"
+        onSubmit={speichern}
+        onClose={() => {
+          setBearbeiten(null);
+          setFehler("");
+        }}
+      >
+        <Field label="Name" error={fehler}>
+          <input
+            className={inputClass}
+            value={name}
+            maxLength={40}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </Field>
+        <Field label="Notiz" hint="Optional, höchstens 120 Zeichen">
+          <input
+            className={inputClass}
+            value={note}
+            maxLength={120}
+            onChange={(e) => setNote(e.target.value)}
           />
         </Field>
       </Modal>

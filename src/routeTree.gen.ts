@@ -20,6 +20,7 @@ import { Route as AuthenticatedRaeumeIndexRouteImport } from './routes/_authenti
 import { Route as AuthenticatedRaeumeIdRouteImport } from './routes/_authenticated/raeume.$id'
 import { Route as AuthenticatedSitzplaeneIndexRouteImport } from './routes/_authenticated/sitzplaene.index'
 import { Route as AuthenticatedSitzplaeneIdRouteImport } from './routes/_authenticated/sitzplaene.$id'
+import { Route as AuthenticatedSitzplaeneIdDruckenRouteImport } from './routes/_authenticated/sitzplaene.$id_.drucken'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -80,6 +81,12 @@ const AuthenticatedSitzplaeneIdRoute =
     path: '/sitzplaene/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSitzplaeneIdDruckenRoute =
+  AuthenticatedSitzplaeneIdDruckenRouteImport.update({
+    id: '/sitzplaene/$id_/drucken',
+    path: '/sitzplaene/$id/drucken',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -92,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/klassen/': typeof AuthenticatedKlassenIndexRoute
   '/raeume/': typeof AuthenticatedRaeumeIndexRoute
   '/sitzplaene/': typeof AuthenticatedSitzplaeneIndexRoute
+  '/sitzplaene/$id/drucken': typeof AuthenticatedSitzplaeneIdDruckenRoute
 }
 export interface FileRoutesByTo {
   '/signin': typeof SigninRoute
@@ -104,6 +112,7 @@ export interface FileRoutesByTo {
   '/klassen': typeof AuthenticatedKlassenIndexRoute
   '/raeume': typeof AuthenticatedRaeumeIndexRoute
   '/sitzplaene': typeof AuthenticatedSitzplaeneIndexRoute
+  '/sitzplaene/$id/drucken': typeof AuthenticatedSitzplaeneIdDruckenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -118,6 +127,7 @@ export interface FileRoutesById {
   '/_authenticated/klassen/': typeof AuthenticatedKlassenIndexRoute
   '/_authenticated/raeume/': typeof AuthenticatedRaeumeIndexRoute
   '/_authenticated/sitzplaene/': typeof AuthenticatedSitzplaeneIndexRoute
+  '/_authenticated/sitzplaene/$id_/drucken': typeof AuthenticatedSitzplaeneIdDruckenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -132,6 +142,7 @@ export interface FileRouteTypes {
     | '/klassen/'
     | '/raeume/'
     | '/sitzplaene/'
+    | '/sitzplaene/$id/drucken'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/signin'
@@ -144,6 +155,7 @@ export interface FileRouteTypes {
     | '/klassen'
     | '/raeume'
     | '/sitzplaene'
+    | '/sitzplaene/$id/drucken'
   id:
     | '__root__'
     | '/_authenticated'
@@ -157,6 +169,7 @@ export interface FileRouteTypes {
     | '/_authenticated/klassen/'
     | '/_authenticated/raeume/'
     | '/_authenticated/sitzplaene/'
+    | '/_authenticated/sitzplaene/$id_/drucken'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -243,6 +256,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSitzplaeneIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/sitzplaene/$id_/drucken': {
+      id: '/_authenticated/sitzplaene/$id_/drucken'
+      path: '/sitzplaene/$id/drucken'
+      fullPath: '/sitzplaene/$id/drucken'
+      preLoaderRoute: typeof AuthenticatedSitzplaeneIdDruckenRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -256,6 +276,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedKlassenIndexRoute: typeof AuthenticatedKlassenIndexRoute
   AuthenticatedRaeumeIndexRoute: typeof AuthenticatedRaeumeIndexRoute
   AuthenticatedSitzplaeneIndexRoute: typeof AuthenticatedSitzplaeneIndexRoute
+  AuthenticatedSitzplaeneIdDruckenRoute: typeof AuthenticatedSitzplaeneIdDruckenRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -268,6 +289,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedKlassenIndexRoute: AuthenticatedKlassenIndexRoute,
   AuthenticatedRaeumeIndexRoute: AuthenticatedRaeumeIndexRoute,
   AuthenticatedSitzplaeneIndexRoute: AuthenticatedSitzplaeneIndexRoute,
+  AuthenticatedSitzplaeneIdDruckenRoute: AuthenticatedSitzplaeneIdDruckenRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
