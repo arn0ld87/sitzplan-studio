@@ -150,12 +150,31 @@ function KlassenDetail() {
               ["regeln", `Sitzregeln (${regeln.length})`],
               ["plaene", `Sitzpläne (${plaene.length})`],
             ] as const
-          ).map(([key, label]) => (
+          ).map(([key, label], i, alle) => (
             <button
               key={key}
               type="button"
               role="tab"
+              id={`tab-${key}`}
               aria-selected={tab === key}
+              aria-controls={`panel-${key}`}
+              tabIndex={tab === key ? 0 : -1}
+              onKeyDown={(e) => {
+                // Pfeiltasten wechseln den Reiter, Pos1/Ende springen an den Rand.
+                const richtung =
+                  e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : e.key === "Home" ? -99 : e.key === "End" ? 99 : 0;
+                if (!richtung) return;
+                e.preventDefault();
+                const ziel =
+                  richtung === -99
+                    ? 0
+                    : richtung === 99
+                      ? alle.length - 1
+                      : (i + richtung + alle.length) % alle.length;
+                const naechster = alle[ziel]![0];
+                setTab(naechster);
+                document.getElementById(`tab-${naechster}`)?.focus();
+              }}
               onClick={() => setTab(key)}
               className={`-mb-px border-b-2 px-3 py-2.5 text-[13px] transition-colors duration-[160ms] ease-out ${
                 tab === key
@@ -169,7 +188,13 @@ function KlassenDetail() {
         </div>
       </div>
 
-      <div className="px-5 py-7 md:px-8">
+      <div
+        className="px-5 py-7 md:px-8"
+        role="tabpanel"
+        id={`panel-${tab}`}
+        aria-labelledby={`tab-${tab}`}
+      >
+
         {tab === "schueler" && (
           <section aria-labelledby="schueler">
             <div className="flex flex-wrap items-center justify-between gap-3">
