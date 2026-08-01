@@ -6,6 +6,8 @@ import { SearchField } from "@/components/ui-kit/SearchField";
 import { PlanThumb } from "@/components/plan/RoomPlan";
 import { classes, plans, rooms, getClass, getRoom, seatCount } from "@/data/demo";
 import { ClassDot } from "@/components/ui-kit/ClassDot";
+import { StatusChip } from "@/components/ui-kit/StatusChip";
+import { relativeZeit } from "@/lib/zeit";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -26,11 +28,12 @@ export const Route = createFileRoute("/")({
   component: Uebersicht,
 });
 
-const STATUS: Record<string, { label: string; cls: string }> = {
-  aktiv: { label: "Aktiv", cls: "text-success bg-success-bg" },
-  entwurf: { label: "Entwurf", cls: "text-warning bg-warning-bg" },
-  archiv: { label: "Archiviert", cls: "text-ink-2 bg-sunken" },
-};
+const OHNE_PLAN = [
+  { id: "6d", meta: "zuletzt geplant im Juni" },
+  { id: "8a", meta: "zuletzt geplant im Juni" },
+  { id: "10b", meta: "noch nie geplant" },
+];
+
 
 function Uebersicht() {
   const [q, setQ] = useState("");
@@ -72,7 +75,6 @@ function Uebersicht() {
                 const room = getRoom(p.roomId)!;
                 const cls = getClass(p.classId)!;
                 const belegt = Object.keys(p.assignments).length;
-                const st = STATUS[p.status]!;
                 return (
                   <li key={p.id}>
                     <Link
@@ -88,12 +90,11 @@ function Uebersicht() {
                         </span>
                       </span>
                       <span className="flex items-center gap-3">
-                        <span
-                          className={`hidden rounded-[3px] px-2 py-0.5 text-[12px] font-medium sm:inline ${st.cls}`}
-                        >
-                          {st.label}
+                        <StatusChip status={p.status} className="hidden sm:inline-flex" />
+                        <span className="num hidden text-right text-ink-3 md:inline">
+                          {relativeZeit(p.updated)}
                         </span>
-                        <span className="num hidden text-ink-3 md:inline">{p.updated}</span>
+
                         <ArrowUpRight
                           size={16}
                           strokeWidth={1.5}
@@ -143,9 +144,43 @@ function Uebersicht() {
               </button>
             </div>
           </section>
+
+          <section aria-labelledby="ohne-plan" className="reveal" style={{ "--i": 2 } as never}>
+            <h2 id="ohne-plan" className="section-title">
+              Klassen ohne aktuellen Sitzplan
+            </h2>
+            <ul className="mt-3 divide-y divide-[color:var(--line)] overflow-hidden rounded-[8px] border border-line bg-panel shadow-[var(--shadow-panel)]">
+              {OHNE_PLAN.map((e) => {
+                const c = getClass(e.id);
+                if (!c) return null;
+                return (
+                  <li
+                    key={c.id}
+                    className="flex items-center gap-3.5 px-4 py-3 transition-colors hover:bg-elevated"
+                  >
+                    <ClassDot name={c.name} colorIndex={c.colorIndex} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[14px] font-medium">{c.name}</span>
+                      <span className="block truncate text-[13px] text-ink-2">
+                        {c.students.length} Schüler · {e.meta}
+                      </span>
+                    </span>
+                    <button
+                      type="button"
+                      style={{ height: 34, borderColor: "#D2C5AF", background: "#FCFAF6" }}
+                      className="shrink-0 rounded-[8px] border px-3 text-[13px] font-medium transition-colors hover:border-[color:var(--action)]"
+                    >
+                      Sitzplan erstellen
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
         </div>
 
-        <aside className="space-y-6 reveal" style={{ "--i": 2 } as never}>
+
+        <aside className="space-y-6 reveal" style={{ "--i": 3 } as never}>
           <section aria-labelledby="klassen-kurz">
             <h2 id="klassen-kurz" className="eyebrow">
               Klassen

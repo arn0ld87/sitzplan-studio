@@ -1,18 +1,9 @@
-const STUD = [
-  "#E08A6B",
-  "#9DBFA8",
-  "#E3B56B",
-  "#A99CCB",
-  "#7CA9C2",
-  "#D88BA0",
-  "#B89970",
-  "#82B7A5",
-];
+import { studentColor } from "@/data/demo";
 
 export function ClassDot({
   name,
   colorIndex,
-  size = 24,
+  size = 30,
 }: {
   name: string;
   colorIndex: number;
@@ -25,10 +16,11 @@ export function ClassDot({
       style={{
         width: size,
         height: size,
-        borderColor: STUD[colorIndex % STUD.length],
-        fontSize: size > 30 ? 13 : 10,
+        background: studentColor(colorIndex),
+        color: "#15110D",
+        fontSize: size >= 34 ? 13 : size >= 28 ? 11.5 : 10.5,
       }}
-      className="grid shrink-0 place-items-center rounded-full border-2 bg-sunken font-semibold"
+      className="grid shrink-0 place-items-center rounded-full font-semibold"
     >
       {kuerzel}
     </span>
