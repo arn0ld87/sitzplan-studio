@@ -8,7 +8,7 @@ import { relativeZeit } from "@/lib/zeit";
 import { seatCount } from "@/data/types";
 import { useStore } from "@/store/app";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
     meta: [
       { title: "Sitzplan — Klassen, Räume und Sitzpläne für Lehrkräfte" },

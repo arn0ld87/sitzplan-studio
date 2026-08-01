@@ -31,7 +31,7 @@ import {
 } from "@/data/types";
 import { useStore } from "@/store/app";
 
-export const Route = createFileRoute("/raeume/$id")({
+export const Route = createFileRoute("/_authenticated/raeume/$id")({
   head: () => ({
     meta: [
       { title: "Raum zeichnen — Sitzplan" },

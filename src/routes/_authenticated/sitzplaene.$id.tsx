@@ -12,7 +12,7 @@ import { RoomPlan } from "@/components/plan/RoomPlan";
 import { allSeats, seatCount, studentName, type PlanStatus, type Student } from "@/data/types";
 import { useStore } from "@/store/app";
 
-export const Route = createFileRoute("/sitzplaene/$id")({
+export const Route = createFileRoute("/_authenticated/sitzplaene/$id")({
   head: () => ({
     meta: [
       { title: "Sitzplan bearbeiten — Sitzplan" },

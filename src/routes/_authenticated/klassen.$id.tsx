@@ -11,7 +11,7 @@ import { SaveStatus } from "@/components/ui-kit/SaveStatus";
 import { studentColor, initials, studentName } from "@/data/types";
 import { useStore } from "@/store/app";
 
-export const Route = createFileRoute("/klassen/$id")({
+export const Route = createFileRoute("/_authenticated/klassen/$id")({
   head: () => ({
     meta: [
       { title: "Klasse bearbeiten — Sitzplan" },
