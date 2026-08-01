@@ -242,9 +242,11 @@ function autoAssign(roomId: string, classId: string, skip = 0): Record<string, s
   const cls = classes.find((c) => c.id === classId)!;
   const seats = room.furniture.flatMap((f) => f.seats);
   const out: Record<string, string> = {};
-  cls.students.slice(0, Math.max(0, seats.length - skip)).forEach((s, i) => {
-    if (seats[i]) out[seats[i]] = s.id;
-  });
+  cls.students
+    .slice(0, Math.max(0, Math.min(cls.students.length, seats.length) - skip))
+    .forEach((s, i) => {
+      if (seats[i]) out[seats[i]!] = s.id;
+    });
   return out;
 }
 
