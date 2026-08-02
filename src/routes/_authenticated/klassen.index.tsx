@@ -170,7 +170,9 @@ function Klassen() {
                 richtung={sortRichtung}
                 onSort={sortieren}
               />
-              <span className="w-[104px] shrink-0" />
+              {/* Platzhalter für Bearbeiten, Löschen und den Pfeil — letzterer
+                  fehlt unter `sm`, darum dort schmaler. */}
+              <span className="w-[76px] shrink-0 sm:w-[104px]" />
             </li>
             {sortiert.map((c, i) => (
               <li
@@ -188,8 +190,11 @@ function Klassen() {
                     {c.note || "Ohne Notiz"}
                   </span>
                 </Link>
+                {/* Auf schmalen Schirmen nur die Zahl: das Wort kostete 50 px,
+                    die dem Klassennamen fehlten. */}
                 <span className="num shrink-0 text-[13px] text-ink-2">
-                  {String(c.students.length).padStart(2, "0")} Schüler
+                  {String(c.students.length).padStart(2, "0")}
+                  <span className="hidden sm:inline"> Schüler</span>
                 </span>
                 <Button
                   variant="quiet"
@@ -218,7 +223,10 @@ function Klassen() {
                   to="/klassen/$id"
                   params={{ id: c.id }}
                   aria-label={`${c.name} öffnen`}
-                  className="relative grid h-6 w-6 shrink-0 place-items-center rounded-[5px] text-ink-3 hover:text-ink"
+                  // Unter `sm` weggelassen: die ganze Zeile ist über das
+                  // Pseudoelement des Namenslinks klickbar, der Pfeil wäre nur
+                  // ein Platzfresser vor dem Namen.
+                  className="relative hidden h-6 w-6 shrink-0 place-items-center rounded-[5px] text-ink-3 hover:text-ink sm:grid"
                 >
                   <ChevronRight size={16} strokeWidth={1.5} />
                 </Link>
