@@ -13,6 +13,7 @@ in [`CLAUDE.md`](CLAUDE.md).
 | Warum ist etwas so gebaut? | [`docs/decisions/`](docs/decisions/) — ADRs |
 | Wie prüfe ich vor dem Push? | [`docs/runbooks/pre-push-gate.md`](docs/runbooks/pre-push-gate.md) |
 | Wie kommt Code nach `main`? | [`docs/runbooks/pr-workflow.md`](docs/runbooks/pr-workflow.md) |
+| Wie kommt es in den Betrieb? | [`docs/runbooks/deployment.md`](docs/runbooks/deployment.md) |
 | Wie darf es aussehen? | [`docs/designsystem.md`](docs/designsystem.md) — **verbindlich** |
 | Wie sieht das Datenmodell aus? | `supabase/migrations/*.sql` |
 | Welche Typen gelten in der App? | [`src/data/types.ts`](src/data/types.ts) |
@@ -86,6 +87,6 @@ Sitzplänen.
 - Produktüberblick, Schnellstart, Status: [`README.md`](README.md)
 - Architektur und Datenfluss: [`docs/architecture.md`](docs/architecture.md)
 - Architekturentscheidungen: [`docs/decisions/`](docs/decisions/)
-- Runbooks: [Gate](docs/runbooks/pre-push-gate.md) · [PR-Workflow](docs/runbooks/pr-workflow.md)
+- Runbooks: [Gate](docs/runbooks/pre-push-gate.md) · [PR-Workflow](docs/runbooks/pr-workflow.md) · [Deployment](docs/runbooks/deployment.md)
 - Gestaltung (SSoT): [`docs/designsystem.md`](docs/designsystem.md)
 - Claude Code: [`CLAUDE.md`](CLAUDE.md)
