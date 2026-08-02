@@ -13,11 +13,13 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
+import { Urheber, Wortmarke } from "@/components/Marke";
 
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-canvas px-4">
       <div className="max-w-md text-center">
+        <Wortmarke className="mb-8 justify-center" />
         <p className="eyebrow">Fehler 404</p>
         <h1 className="page-title mt-2">Seite nicht gefunden</h1>
         <p className="mt-2 text-[14px] text-ink-2">
@@ -31,6 +33,7 @@ function NotFoundComponent() {
             Zur Übersicht
           </Link>
         </div>
+        <Urheber className="mt-10" variant="lang" />
       </div>
     </div>
   );
@@ -46,6 +49,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-canvas px-4">
       <div className="max-w-md">
+        <Wortmarke className="mb-8" />
         <p className="eyebrow">Ansicht nicht geladen</p>
         <h1 className="page-title mt-2">Die Daten konnten nicht geladen werden</h1>
         <p className="mt-2 text-[14px] text-ink-2">
@@ -68,6 +72,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
             Zur Übersicht
           </a>
         </div>
+        <Urheber className="mt-10" variant="lang" />
       </div>
     </div>
   );
@@ -85,7 +90,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Sitzplan Studio ist das Werkzeug für Lehrkräfte: Klassen verwalten, Räume zeichnen und Sitzpläne erstellen.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "Sitzplan Studio" },
+      { property: "og:image", content: "https://jana.alexle135.de/logo.png" },
+      { property: "og:image:alt", content: "Logo von Sitzplan Studio" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "https://jana.alexle135.de/logo.png" },
+      { name: "author", content: "Alexander Schneider" },
+      { name: "theme-color", content: "#a8501f" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -96,10 +107,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,600&display=swap",
       },
       // Moderne Browser bevorzugen die scharfe SVG-Marke, ältere fallen
-      // auf die .ico zurück.
-      { rel: "icon", href: "/logo.svg", type: "image/svg+xml" },
-      { rel: "alternate icon", href: "/favicon.ico", type: "image/x-icon" },
-      { rel: "apple-touch-icon", href: "/logo.svg" },
+      // auf die .ico zurück. iOS ignoriert SVG als Touch-Icon — dort muss das
+      // PNG stehen, sonst zeigt der Startbildschirm einen Screenshot.
+      { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+      { rel: "alternate icon", href: "/favicon.ico", sizes: "any" },
+      { rel: "icon", href: "/favicon-32.png", type: "image/png", sizes: "32x32" },
+      { rel: "icon", href: "/favicon-192.png", type: "image/png", sizes: "192x192" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png", sizes: "180x180" },
+      { rel: "manifest", href: "/site.webmanifest" },
+      { rel: "author", href: "https://alexle135.de" },
     ],
   }),
   shellComponent: RootShell,

@@ -18,7 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { DatenschutzHinweis } from "@/components/DatenschutzHinweis";
 // Die Marke lebt in einer eigenen Datei, damit die Anmeldeseite sie nicht
 // über die AppShell beziehen muss.
-import { Wortmarke } from "@/components/Marke";
+import { Urheber, Wortmarke } from "@/components/Marke";
 import { useStore } from "@/store/app";
 
 type NavItem = { to: string; label: string; icon: LucideIcon; count?: number };
@@ -195,6 +195,7 @@ export function AppShell({ children, email }: { children: React.ReactNode; email
           ))}
         </nav>
         <NutzerBlock email={email} abmeldend={abmeldend} onAbmelden={abmelden} />
+        <Urheber className="border-t border-line px-4 py-2.5" />
       </aside>
 
       <div className="md:pl-[236px]">

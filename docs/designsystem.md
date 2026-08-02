@@ -41,8 +41,15 @@ Radien 3 / 6 / 8 / 10 px. Pillenform NUR für Personen-Chips. Genau zwei Schatte
 ## Icons
 lucide-react, 16 px, Strichstärke 1.5. Icon-only-Buttons brauchen `aria-label`.
 
+## Marke
+Bildmarke: ein Raumgrundriss in S-Form mit drei Tischpaaren, Strichstärke 16 auf 256er-Fläche, Terrakotta #A8501F auf transparentem Grund. Wortmarke: Bildmarke plus „Sitzplan Studio" in Source Serif 4 600, „Studio" rund 20 % kleiner, beides in #26211C — nicht farblich trennen. Schutzraum ringsum mindestens die Höhe eines Tischs; unter 180 px Breite entfällt der Namenszug und nur die Bildmarke steht.
+
+Die Dateien liegen in `public/`: `logo.svg` (quer, 1060 × 256), `logo-bildmarke.svg` und `favicon.svg` (256 × 256, identisch), `logo-wortmarke.svg` (760 × 160), dazu `favicon.ico`, `favicon-32/64/192/512.png`, `apple-touch-icon.png` (180 px), `maskable-512.png` (Marke auf #F1EBE0 mit Sicherheitsrand) und `site.webmanifest`. In der Oberfläche kommt die Marke aus `src/components/Marke.tsx` — dieselbe Geometrie, aber `var(--action)` statt Festfarbe. Beide Fassungen ändert man zusammen.
+
+Urhebernachweis: `Urheber` aus derselben Datei, 11 px in #8E8477, verlinkt auf alexle135.de. Steht in der Seitenleiste unter dem Nutzerblock, auf der Anmeldeseite, in den Einstellungen, auf den Fehlerseiten und in der Fußzeile des Ausdrucks.
+
 ## App-Shell
-Linke Seitenleiste 236 px auf #FCFAF6 mit rechter Hairline. Oben Wortmarke: 28-px-Quadrat in Terrakotta mit „S" in Serif, daneben „Sitzplan". Nav-Einträge 38 px hoch, Icon + Label + rechtsbündige Zahl in Mono. Aktiver Eintrag: Fläche #F5E3D3, Text #7A3B15, fett UND `box-shadow: inset 3px 0 0 #A8501F` — drei Merkmale, nicht nur Farbe. Bereiche: Übersicht, Klassen, Räume, Sitzpläne, dann Trennlinie, dann Papierkorb, Einstellungen. Unten abgesetzt der Nutzerblock. Unter 768 px: Seitenleiste weg, stattdessen untere Tab-Leiste mit vier Bereichen, 52 px hoch.
+Linke Seitenleiste 236 px auf #FCFAF6 mit rechter Hairline. Oben die Wortmarke, unter dem Nutzerblock der Urhebernachweis. Nav-Einträge 38 px hoch, Icon + Label + rechtsbündige Zahl in Mono. Aktiver Eintrag: Fläche #F5E3D3, Text #7A3B15, fett UND `box-shadow: inset 3px 0 0 #A8501F` — drei Merkmale, nicht nur Farbe. Bereiche: Übersicht, Klassen, Räume, Sitzpläne, dann Trennlinie, dann Papierkorb, Einstellungen. Unten abgesetzt der Nutzerblock. Unter 768 px: Seitenleiste weg, stattdessen untere Tab-Leiste mit vier Bereichen, 52 px hoch.
 
 ## Seiten
 

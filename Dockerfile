@@ -31,6 +31,17 @@ RUN bun run build
 FROM node:24-alpine AS runtime
 WORKDIR /app
 
+# Marke und Herkunft am Abbild selbst. `docker inspect` und Registry-Oberflächen
+# lesen diese Schlüssel — ohne sie ist das Abbild auf dem Server namenlos.
+LABEL org.opencontainers.image.title="Sitzplan Studio" \
+      org.opencontainers.image.description="Klassen verwalten, Räume maßstabsgetreu zeichnen, Sitzpläne stellen — ein Werkzeug für Lehrkräfte." \
+      org.opencontainers.image.authors="Alexander Schneider <schneider@alexle135.de>" \
+      org.opencontainers.image.vendor="Alexander Schneider — alexle135.de" \
+      org.opencontainers.image.url="https://alexle135.de" \
+      org.opencontainers.image.documentation="https://github.com/arn0ld87/sitzplan-studio#readme" \
+      org.opencontainers.image.source="https://github.com/arn0ld87/sitzplan-studio" \
+      org.opencontainers.image.licenses="AGPL-3.0-or-later"
+
 ENV NODE_ENV=production \
     PORT=3000 \
     HOST=0.0.0.0
