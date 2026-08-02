@@ -16,9 +16,17 @@ Die Anwendung läuft als Docker-Container auf **armserver** (aarch64, Ubuntu
 
 ```bash
 ssh armserver 'cd /home/alex/sitzplan-studio \
-  && git pull \
+  && git switch main \
+  && git pull --ff-only origin main \
   && docker compose -f docker-compose.prod.yml up -d --build'
 ```
+
+`git switch main` steht davor, weil der Klon nicht zwangsläufig auf `main`
+liegt — nach einem Rollback oder einem Probelauf aus einem Zweig steht er
+woanders, und ein bloßes `git pull` würde dann den falschen Stand holen.
+`--ff-only` bricht ab, statt bei einer Abweichung stillschweigend einen
+Merge-Commit auf dem Server anzulegen: Auf einer Maschine, die nur ausliefert,
+ist jede lokale Abweichung ein Fehler und keine Sache, die man zusammenführt.
 
 Gebaut wird auf dem Server, nicht lokal. Das erspart eine Registry und stellt
 sicher, dass das Abbild zur Architektur des Zielrechners passt. Der Bau dauert
@@ -28,6 +36,35 @@ beim `up -d` ersetzt.
 Vor dem Ausrollen gilt das [Gate](pre-push-gate.md). Der Docker-Bau wiederholt
 zwar `vite build`, aber weder Typprüfung noch Tests — ein Abbild kann also
 fehlerfrei entstehen und trotzdem kaputt sein.
+
+## Zuerst die Datenbank, dann der Container
+
+Der Befehl oben rollt allein die Anwendung aus. Enthält ein Release zusätzlich
+eine Migration unter `supabase/migrations/` oder eine Änderung an
+`supabase/functions/ki-sitzplan`, gehören die **vorher** hinaus — sonst läuft die
+neue Anwendung gegen ein altes Schema und scheitert erst zur Laufzeit, mitten in
+der Benutzung.
+
+Beides läuft vom Arbeitsplatz aus gegen das verknüpfte Projekt, nicht auf dem
+Server:
+
+```bash
+supabase db push                                   # Tabellen, Trigger, RLS-Policies
+supabase functions deploy ki-sitzplan --use-api    # nur wenn die Funktion sich geändert hat
+```
+
+Ob eine Migration dabei ist, verrät ein Blick auf den Bereich zwischen
+ausgeliefertem und neuem Stand:
+
+```bash
+git diff --name-only <letzter-ausgerollter-commit>..main -- supabase/
+```
+
+Die Reihenfolge „Schema zuerst" gilt, solange Migrationen **hinzufügen**. Wer
+eine Spalte entfernt oder umbenennt, dreht die Abhängigkeit um: Dann läuft die
+alte Anwendung für die Dauer des Baus gegen das neue Schema. Solche Migrationen
+gehören in zwei Schritte — erst additiv ausrollen, Anwendung nachziehen, dann in
+einem späteren Release aufräumen.
 
 ## Die Falle: Nitro baut voreingestellt für Cloudflare
 
@@ -55,6 +92,18 @@ Die Datei `/home/alex/sitzplan-studio/.env` liegt mit `chmod 600` neben der
 Compose-Datei und ist **nicht** im Repository. Sie überlebt `git pull` und
 `git reset --hard`, weil sie nicht versioniert ist — nach einem Neuklon muss
 sie aber neu hinterlegt werden.
+
+Fehlt sie, bricht der Bau sofort ab:
+
+```
+required variable SUPABASE_SERVICE_ROLE_KEY is missing a value
+```
+
+Dafür sorgt die `${VAR:?meldung}`-Schreibweise in der Compose-Datei. Ohne sie
+setzte Compose eine leere Zeichenkette ein: Der Bau liefe durch, der Container
+startete gesund, und das Bundle zeigte gegen `undefined` — ein Ausfall, der
+erst im Browser auffällt. Prüfen lässt sich das ohne Bau mit
+`docker compose -f docker-compose.prod.yml config`.
 
 Die drei `VITE_`-Werte reicht Compose als Build-Arg durch, weil Vite sie beim
 Bauen fest in das ausgelieferte JavaScript schreibt. Sie sind publishable und
@@ -109,9 +158,16 @@ Zurückrollen heißt: auf den vorherigen Commit gehen und neu bauen.
 ```bash
 ssh armserver 'cd /home/alex/sitzplan-studio \
   && git log --oneline -5 \
-  && git checkout <commit> \
+  && git switch --detach <commit> \
   && docker compose -f docker-compose.prod.yml up -d --build'
 ```
+
+`git switch --detach` statt `git checkout`: Beide lösen den Klon vom Branch, aber
+`--detach` sagt es hin, statt es nebenbei zu tun. Wichtiger ist, was danach
+kommt — **nach einem Rollback steht der Klon nicht mehr auf `main`.** Der
+Ausrollbefehl oben schaltet mit `git switch main` selbst zurück; wer stattdessen
+von Hand `git pull` tippt, bekommt `You are not currently on a branch`. Nach der
+Korrektur also regulär ausrollen, nicht nachziehen.
 
 Ein Abbild des vorherigen Standes wird nicht vorgehalten — `sitzplan-studio:prod`
 wird bei jedem Bau überschrieben. Das ist der Preis dafür, ohne Registry
