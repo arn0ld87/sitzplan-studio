@@ -295,7 +295,8 @@ Papierkorb.
 - Architektur und Datenfluss: [`docs/architecture.md`](docs/architecture.md).
 - Warum etwas so gebaut ist: [`docs/decisions/`](docs/decisions/) (ADRs).
 - Vor dem Push: [`docs/runbooks/pre-push-gate.md`](docs/runbooks/pre-push-gate.md),
-  Branch und Merge: [`docs/runbooks/pr-workflow.md`](docs/runbooks/pr-workflow.md).
+  Branch und Merge: [`docs/runbooks/pr-workflow.md`](docs/runbooks/pr-workflow.md),
+  Produktivbetrieb: [`docs/runbooks/deployment.md`](docs/runbooks/deployment.md).
 - Verbindliche Gestaltung: [`docs/designsystem.md`](docs/designsystem.md).
 - Oberflächentexte, Bezeichner im Datenmodell und Routen sind **deutsch**
   (`klassen`, `raeume`, `sitzplaene`). Code-Bezeichner in `src/data/types.ts`

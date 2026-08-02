@@ -19,9 +19,13 @@ services:
       args:
         # Vite schreibt diese drei beim Bauen in das ausgelieferte JavaScript.
         # Es sind publishable Schlüssel — öffentlich, durch RLS abgesichert.
-        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
-        VITE_SUPABASE_PUBLISHABLE_KEY: ${VITE_SUPABASE_PUBLISHABLE_KEY}
-        VITE_SUPABASE_PROJECT_ID: ${VITE_SUPABASE_PROJECT_ID}
+        # `:?` bricht ab, statt eine leere Zeichenkette einzusetzen. Ohne das
+        # entstünde nach einem Neuklon ohne `.env` ein fehlerfreier Bau, dessen
+        # Bundle gegen `undefined` zeigt — ein stiller Totalausfall, der erst im
+        # Browser auffällt.
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL:?VITE_SUPABASE_URL fehlt — liegt die .env neben der Compose-Datei?}
+        VITE_SUPABASE_PUBLISHABLE_KEY: ${VITE_SUPABASE_PUBLISHABLE_KEY:?VITE_SUPABASE_PUBLISHABLE_KEY fehlt}
+        VITE_SUPABASE_PROJECT_ID: ${VITE_SUPABASE_PROJECT_ID:?VITE_SUPABASE_PROJECT_ID fehlt}
     image: sitzplan-studio:prod
     container_name: sitzplan-studio
     restart: unless-stopped
@@ -30,11 +34,13 @@ services:
       NODE_ENV: production
       PORT: 3000
       HOST: 0.0.0.0
-      SUPABASE_URL: ${SUPABASE_URL}
-      SUPABASE_PUBLISHABLE_KEY: ${SUPABASE_PUBLISHABLE_KEY}
-      SUPABASE_PROJECT_ID: ${SUPABASE_PROJECT_ID}
+      SUPABASE_URL: ${SUPABASE_URL:?SUPABASE_URL fehlt}
+      SUPABASE_PUBLISHABLE_KEY: ${SUPABASE_PUBLISHABLE_KEY:?SUPABASE_PUBLISHABLE_KEY fehlt}
+      SUPABASE_PROJECT_ID: ${SUPABASE_PROJECT_ID:?SUPABASE_PROJECT_ID fehlt}
       # Hebelt jede RLS-Policy aus. Nur serverseitig, nur für "Konto löschen".
-      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      # Fehlt er, startet der Container sonst fehlerfrei und "Konto löschen"
+      # scheitert erst, wenn jemand es benutzt.
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:?SUPABASE_SERVICE_ROLE_KEY fehlt}
 
     networks:
       - proxy
@@ -86,7 +92,8 @@ services:
       traefik.http.middlewares.sitzplan-headers.headers.stsPreload: "true"
       # 'unsafe-inline' bei script-src ist nicht wegzuoptimieren: TanStack Start
       # legt die Hydrationsdaten als Inline-Script in die SSR-Antwort.
-      traefik.http.middlewares.sitzplan-headers.headers.customResponseHeaders.Content-Security-Policy: >-
+      traefik.http.middlewares.sitzplan-headers.headers.customResponseHeaders.Content-Security-Policy:
+        >-
         default-src 'self';
         script-src 'self' 'unsafe-inline';
         style-src 'self' 'unsafe-inline';
