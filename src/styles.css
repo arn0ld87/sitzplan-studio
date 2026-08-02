@@ -274,3 +274,19 @@
     transition-duration: 0.001ms !important;
   }
 }
+
+/* Safari auf dem iPhone zoomt beim Antippen in ein Eingabefeld hinein, sobald
+   dessen Schrift unter 16px liegt. Der Zoom verschiebt den Layout-Viewport:
+   die Seite wirkt danach abgeschnitten und lässt sich seitlich schieben, ohne
+   dass am Layout etwas falsch wäre.
+   Die Regel steht bewusst außerhalb von `@layer`, damit sie die Utilities aus
+   Tailwind schlägt — sonst gewinnt jede `text-[13px]`-Klasse nach
+   Spezifität. Sie greift nur auf grob steuernden Zeigegeräten; am
+   Schreibtisch bleibt die Typografie des Designsystems unangetastet. */
+@media (pointer: coarse) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}

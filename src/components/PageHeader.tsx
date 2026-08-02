@@ -30,12 +30,17 @@ export function PageHeader({
           ))}
         </nav>
       )}
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:flex-wrap sm:items-center sm:justify-between">
+      {/* Unter `sm` stehen Aktionen unter dem Titel statt daneben. Nebeneinander
+          drückten Suchfeld und Primäraktion die Titelspalte auf Wortbreite
+          zusammen und machten die Seite waagerecht scrollbar. */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4">
         <div className="min-w-0">
           <h1 className="page-title truncate">{title}</h1>
           {subtitle && <p className="prose-measure mt-1 text-[14px] text-ink-2">{subtitle}</p>}
         </div>
-        {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+        {actions && (
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">{actions}</div>
+        )}
       </div>
     </header>
   );
