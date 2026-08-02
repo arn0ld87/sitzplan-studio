@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Download, LogOut, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/PageHeader";
+import { PasswortFormular } from "@/components/PasswortFormular";
 import { Button } from "@/components/ui-kit/Button";
 import { ConfirmDialog } from "@/components/ui-kit/ConfirmDialog";
 import { useStore } from "@/store/app";
@@ -101,6 +102,14 @@ function Einstellungen() {
               <LogOut size={16} strokeWidth={1.5} />
               {abmeldend ? "Wird abgemeldet …" : "Abmelden"}
             </Button>
+          </section>
+
+          <section className="rounded-[8px] border border-line bg-elevated p-5">
+            <h2 className="text-[15px] font-semibold">Passwort ändern</h2>
+            <p className="mt-1.5 text-[13px] leading-[1.55] text-ink-2">
+              Gilt sofort. Andere Geräte, an denen Sie angemeldet sind, bleiben es.
+            </p>
+            <PasswortFormular />
           </section>
 
           <section className="rounded-[8px] border border-line bg-elevated p-5">

@@ -33,6 +33,7 @@ function SignIn() {
   const [passwort, setPasswort] = useState("");
   const [busy, setBusy] = useState(false);
   const [fehler, setFehler] = useState<string | null>(null);
+  const [hinweis, setHinweis] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -43,6 +44,7 @@ function SignIn() {
   async function absenden(e: React.FormEvent) {
     e.preventDefault();
     setFehler(null);
+    setHinweis(null);
     setBusy(true);
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password: passwort });
@@ -52,6 +54,30 @@ function SignIn() {
       setFehler(err instanceof Error ? err.message : "Anmeldung fehlgeschlagen.");
     } finally {
       setBusy(false);
+    }
+  }
+
+  /**
+   * Der Link aus der Mail muss auf `/passwort` zeigen, nicht auf die Startseite:
+   * dort steht das Formular, das die Wiederherstellungssitzung auch benutzt.
+   * Die Adresse muss in Supabase unter „Redirect URLs" freigegeben sein, sonst
+   * fällt der Link stillschweigend auf die Site URL zurück.
+   *
+   * Die Rückmeldung ist bewusst gleichlautend, ob es die Adresse gibt oder
+   * nicht — sonst wird das Formular zum Verzeichnis, das verrät, wer ein Konto
+   * hat.
+   */
+  async function zuruecksetzen() {
+    if (!email) return setFehler("Bitte zuerst die E-Mail-Adresse eintragen.");
+    setFehler(null);
+    setBusy(true);
+    try {
+      await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/passwort`,
+      });
+    } finally {
+      setBusy(false);
+      setHinweis("Falls es zu dieser Adresse ein Konto gibt, ist eine E-Mail unterwegs.");
     }
   }
 
@@ -93,10 +119,24 @@ function SignIn() {
               {fehler}
             </p>
           )}
+          {hinweis && (
+            <p className="rounded-[6px] border border-[color:var(--info-bg)] bg-info-bg px-3 py-2 text-[13px] text-info">
+              {hinweis}
+            </p>
+          )}
 
           <Button type="submit" disabled={busy} className="mt-1 w-full justify-center">
             {busy ? "Bitte warten …" : "Anmelden"}
           </Button>
+
+          <button
+            type="button"
+            onClick={zuruecksetzen}
+            disabled={busy}
+            className="self-start text-[13px] text-ink-2 underline underline-offset-2 hover:text-ink disabled:opacity-60"
+          >
+            Passwort vergessen?
+          </button>
         </form>
 
         <p className="mt-5 text-[12px] leading-[1.55] text-ink-3">
