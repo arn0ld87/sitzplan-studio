@@ -431,7 +431,8 @@ Wort- und Bildmarke liegen unter [`public/`](public/) und gehören zum Projekt:
 `favicon.svg` sowie die PNG-Größen für Favicon, Touch-Icon und PWA. Die
 Bildmarke ist in [`src/components/Marke.tsx`](src/components/Marke.tsx) ein
 zweites Mal als React-Komponente geführt, damit sie ihre Farbe aus dem
-Designsystem zieht — wer die eine ändert, ändert die andere mit.
+Designsystem zieht — wer die eine ändert, ändert die andere mit. Die Originale
+samt Entwurfsblatt liegen in [`docs/marke/`](docs/marke/).
 
 | | |
 | --- | --- |
