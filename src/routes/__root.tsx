@@ -3,6 +3,7 @@ import {
   Outlet,
   Link,
   createRootRouteWithContext,
+  useNavigate,
   useRouter,
   HeadContent,
   Scripts,
@@ -11,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { supabase } from "@/integrations/supabase/client";
 
 function NotFoundComponent() {
   return (
@@ -120,8 +122,32 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * Führt einen Wiederherstellungslink zum Passwortformular.
+ *
+ * Wird der Link im Supabase-Dashboard ausgelöst, zeigt er auf die Site URL —
+ * also auf die Startseite, wo es nichts zu setzen gibt. Der Client legt aus dem
+ * Fragment aber eine Sitzung an und meldet dabei `PASSWORD_RECOVERY`. Auf dieses
+ * Ereignis hin gehört der Betreffende auf `/passwort`, sonst landet er
+ * angemeldet in der Anwendung und das eigentliche Anliegen bleibt liegen.
+ *
+ * Der Listener sitzt in der Wurzel, weil das Ereignis auf jeder Seite eintreffen
+ * kann — je nachdem, worauf der Link zeigt.
+ */
+function useWiederherstellung() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange((ereignis) => {
+      if (ereignis === "PASSWORD_RECOVERY") void navigate({ to: "/passwort", replace: true });
+    });
+    return () => data.subscription.unsubscribe();
+  }, [navigate]);
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  useWiederherstellung();
 
   return (
     <QueryClientProvider client={queryClient}>

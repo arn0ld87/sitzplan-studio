@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as PasswortRouteImport } from './routes/passwort'
 import { Route as SigninRouteImport } from './routes/signin'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedEinstellungenRouteImport } from './routes/_authenticated/einstellungen'
@@ -24,6 +25,11 @@ import { Route as AuthenticatedSitzplaeneIdDruckenRouteImport } from './routes/_
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PasswortRoute = PasswortRouteImport.update({
+  id: '/passwort',
+  path: '/passwort',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SigninRoute = SigninRouteImport.update({
@@ -90,6 +96,7 @@ const AuthenticatedSitzplaeneIdDruckenRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
+  '/passwort': typeof PasswortRoute
   '/signin': typeof SigninRoute
   '/einstellungen': typeof AuthenticatedEinstellungenRoute
   '/papierkorb': typeof AuthenticatedPapierkorbRoute
@@ -102,6 +109,7 @@ export interface FileRoutesByFullPath {
   '/sitzplaene/$id/drucken': typeof AuthenticatedSitzplaeneIdDruckenRoute
 }
 export interface FileRoutesByTo {
+  '/passwort': typeof PasswortRoute
   '/signin': typeof SigninRoute
   '/einstellungen': typeof AuthenticatedEinstellungenRoute
   '/papierkorb': typeof AuthenticatedPapierkorbRoute
@@ -117,6 +125,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/passwort': typeof PasswortRoute
   '/signin': typeof SigninRoute
   '/_authenticated/einstellungen': typeof AuthenticatedEinstellungenRoute
   '/_authenticated/papierkorb': typeof AuthenticatedPapierkorbRoute
@@ -133,6 +142,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/passwort'
     | '/signin'
     | '/einstellungen'
     | '/papierkorb'
@@ -145,6 +155,7 @@ export interface FileRouteTypes {
     | '/sitzplaene/$id/drucken'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/passwort'
     | '/signin'
     | '/einstellungen'
     | '/papierkorb'
@@ -159,6 +170,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_authenticated'
+    | '/passwort'
     | '/signin'
     | '/_authenticated/einstellungen'
     | '/_authenticated/papierkorb'
@@ -174,6 +186,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  PasswortRoute: typeof PasswortRoute
   SigninRoute: typeof SigninRoute
 }
 
@@ -184,6 +197,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/passwort': {
+      id: '/passwort'
+      path: '/passwort'
+      fullPath: '/passwort'
+      preLoaderRoute: typeof PasswortRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/signin': {
@@ -297,6 +317,7 @@ const AuthenticatedRouteRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  PasswortRoute: PasswortRoute,
   SigninRoute: SigninRoute,
 }
 export const routeTree = rootRouteImport
