@@ -59,6 +59,18 @@ Farbe: Die Oberfläche zieht sie über `var(--action)` aus dem Designsystem,
 statt Terrakotta fest einzubauen. Geometrie und Pfade sind dieselben wie in
 `sitzplan-studio-bildmarke.svg`.
 
-Wer die Form ändert, ändert beide Stellen — sonst laufen Favicon und
-Oberfläche auseinander, und das fällt niemandem auf, weil beides für sich
-richtig aussieht.
+## Wenn sich die Form ändert
+
+Die Marke liegt an drei Stellen, und sie hängen in dieser Reihenfolge
+voneinander ab:
+
+1. **Quelle** — die SVG-Dateien in diesem Ordner. Hier wird gezeichnet.
+2. **Ausgelieferte Fassungen** in `public/`. Die unveränderten Übernahmen neu
+   kopieren, `favicon.ico` und `maskable-512.png` mit den beiden Befehlen oben
+   neu erzeugen.
+3. **`src/components/Marke.tsx`** — Pfade und Geometrie von Hand nachziehen.
+
+Wer bei Schritt 2 oder 3 aufhört, bekommt keinen Fehler: Favicon, Startbildschirm
+und Oberfläche sehen jedes für sich richtig aus und zeigen trotzdem verschiedene
+Marken. Nach einer Formänderung deshalb einmal `/signin`, den Browser-Tab und
+den Ausdruck ansehen.
