@@ -14,7 +14,7 @@ ein Werkzeug für Lehrkräfte, kein Dashboard.**
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind](https://img.shields.io/badge/Tailwind-4.2-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![Supabase](https://img.shields.io/badge/Supabase-Postgres_%2B_RLS-3FCF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
-[![Lizenz](https://img.shields.io/badge/Lizenz-PolyForm_Noncommercial_1.0.0-6E4B3A?style=for-the-badge&logo=creativecommons&logoColor=white)](LICENSE)
+[![Lizenz](https://img.shields.io/badge/Lizenz-AGPL_3.0-6E4B3A?style=for-the-badge&logo=gnu&logoColor=white)](LICENSE)
 
 <br>
 
@@ -396,19 +396,21 @@ Papierkorb.
 
 ## Lizenz & Herkunft
 
-**[PolyForm Noncommercial 1.0.0](LICENSE)** — kostenlos nutzen, verändern und
-weitergeben, solange die Nutzung nicht kommerziell ist. Für Lehrkräfte, Schulen
-und öffentliche Einrichtungen ist damit alles abgedeckt: Die Lizenz nennt
-Bildungseinrichtungen und Behörden ausdrücklich als erlaubten Zweck, unabhängig
-davon, woher deren Geld kommt.
+**[GNU AGPL 3.0](LICENSE)** — freie Software im Sinne der OSI. Nutzen,
+verändern, weitergeben und selbst betreiben ist ausdrücklich erlaubt, auch
+kommerziell. Für Lehrkräfte, Schulen und öffentliche Einrichtungen heißt das:
+herunterladen, aufsetzen, benutzen — ohne Rückfrage, ohne Preisschild.
 
-Kommerzielle Nutzung — Verkauf, kostenpflichtiges Hosting, Einsatz durch oder
-für ein gewinnorientiertes Unternehmen — braucht eine **gesonderte schriftliche
-Erlaubnis**. Anfragen gern
+Die eine Bedingung ist die Gegenleistung an die Allgemeinheit: Wer eine
+**veränderte** Fassung betreibt und sie anderen über ein Netzwerk zugänglich
+macht, muss deren Quelltext denselben Nutzerinnen und Nutzern anbieten —
+ebenfalls unter AGPL 3.0 (§ 13 der Lizenz). Wer die App unverändert für die
+eigene Schule betreibt, hat damit nichts zu tun.
+
+Copyright © 2026 Alexander Schneider. Frühere Fassungen dieses Repositorys
+standen unter PolyForm Noncommercial 1.0.0; ab dem Wechsel auf AGPL 3.0 gilt für
+alle weiteren Veröffentlichungen diese Lizenz. Fragen zur Lizenz gern
 [als Issue](https://github.com/arn0ld87/sitzplan-studio/issues).
-
-Das ist bewusst keine OSI-Open-Source-Lizenz: Die Einschränkung auf
-nichtkommerzielle Zwecke schließt das aus.
 
 Die Bilder in dieser Datei zeigen ausschließlich erfundene Klassen und Namen aus
 [`scripts/demo-daten.ts`](scripts/demo-daten.ts) — keine echten Schülerdaten.
