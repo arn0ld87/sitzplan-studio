@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui-kit/Button";
-import { Wortmarke } from "@/components/Marke";
+import { Urheber, Wortmarke } from "@/components/Marke";
 
 export const Route = createFileRoute("/signin")({
   ssr: false,
@@ -84,7 +84,7 @@ function SignIn() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-canvas px-4 py-12">
       <div className="w-full max-w-[380px]">
-        <Wortmarke />
+        <Wortmarke size={40} />
         <h1 className="page-title mt-6">Anmelden</h1>
         <p className="mt-1.5 text-[14px] leading-[1.55] text-ink-2">
           Ihre Klassen, Räume und Sitzpläne sind an Ihr Konto gebunden.
@@ -148,6 +148,8 @@ function SignIn() {
           verarbeitet. Für Rechtsgrundlage und Löschfristen ist die betreibende Stelle
           verantwortlich.
         </p>
+
+        <Urheber className="mt-6 border-t border-line pt-4" variant="lang" />
       </div>
     </div>
   );

@@ -73,6 +73,15 @@ services:
         max-file: "3"
 
     labels:
+      # Herkunft am laufenden Container, nicht nur am Abbild: `docker ps
+      # --filter label=…` und jede Container-Oberfläche zeigen sie an.
+      org.opencontainers.image.title: Sitzplan Studio
+      org.opencontainers.image.authors: Alexander Schneider <schneider@alexle135.de>
+      org.opencontainers.image.vendor: Alexander Schneider — alexle135.de
+      org.opencontainers.image.url: https://alexle135.de
+      org.opencontainers.image.source: https://github.com/arn0ld87/sitzplan-studio
+      org.opencontainers.image.licenses: AGPL-3.0-or-later
+
       traefik.enable: "true"
       traefik.docker.network: proxy
 

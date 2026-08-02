@@ -9,6 +9,7 @@ import { ConfirmDialog } from "@/components/ui-kit/ConfirmDialog";
 import { useStore } from "@/store/app";
 import { supabase } from "@/integrations/supabase/client";
 import { kontoLoeschen } from "@/lib/konto.functions";
+import { Wortmarke } from "@/components/Marke";
 
 export const Route = createFileRoute("/_authenticated/einstellungen")({
   component: Einstellungen,
@@ -141,6 +142,59 @@ function Einstellungen() {
             >
               Konto endgültig löschen
             </Button>
+          </section>
+
+          <section className="rounded-[8px] border border-line bg-elevated p-5">
+            <Wortmarke size={36} />
+            <p className="mt-3 text-[13px] leading-[1.55] text-ink-2">
+              Klassen verwalten, Räume maßstabsgetreu zeichnen, Sitzpläne stellen — ein Werkzeug für
+              Lehrkräfte.
+            </p>
+            <dl className="mt-3 divide-y divide-[color:var(--line)] border-y border-line">
+              <div className="flex items-baseline justify-between gap-4 py-2.5">
+                <dt className="text-[13px] text-ink-2">Entwickelt von</dt>
+                <dd className="text-[13px] font-medium">
+                  <a
+                    href="https://alexle135.de"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline underline-offset-2 hover:text-action"
+                  >
+                    Alexander Schneider
+                  </a>
+                </dd>
+              </div>
+              <div className="flex items-baseline justify-between gap-4 py-2.5">
+                <dt className="text-[13px] text-ink-2">Website</dt>
+                <dd className="text-[13px] font-medium">
+                  <a
+                    href="https://alexle135.de"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline underline-offset-2 hover:text-action"
+                  >
+                    alexle135.de
+                  </a>
+                </dd>
+              </div>
+              <div className="flex items-baseline justify-between gap-4 py-2.5">
+                <dt className="text-[13px] text-ink-2">Quelltext</dt>
+                <dd className="text-[13px] font-medium">
+                  <a
+                    href="https://github.com/arn0ld87/sitzplan-studio"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline underline-offset-2 hover:text-action"
+                  >
+                    github.com/arn0ld87
+                  </a>
+                </dd>
+              </div>
+              <div className="flex items-baseline justify-between gap-4 py-2.5">
+                <dt className="text-[13px] text-ink-2">Lizenz</dt>
+                <dd className="text-[13px] font-medium">GNU AGPL 3.0</dd>
+              </div>
+            </dl>
           </section>
         </div>
       </div>

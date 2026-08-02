@@ -1,12 +1,16 @@
 <div align="center">
 
-<img src="public/logo.svg" alt="" width="88" height="88">
+<img src="public/logo.svg" alt="Sitzplan Studio" width="460">
 
 # Sitzplan Studio
 
 **Klassen verwalten, Räume maßstabsgetreu zeichnen, Sitzpläne stellen —
 ein Werkzeug für Lehrkräfte, kein Dashboard.**
 
+Ein Projekt von **[Alexander Schneider](https://alexle135.de)** ·
+[alexle135.de](https://alexle135.de)
+
+[![Website](https://img.shields.io/badge/Website-alexle135.de-A8501F?style=for-the-badge&logo=firefoxbrowser&logoColor=white)](https://alexle135.de)
 [![GitHub Repo](https://img.shields.io/badge/GitHub-arn0ld87%2Fsitzplan--studio-111?style=for-the-badge&logo=github&logoColor=white)](https://github.com/arn0ld87/sitzplan-studio)
 [![Status](https://img.shields.io/badge/Status-Preview-orange?style=for-the-badge&logo=rocket&logoColor=white)](#aktueller-produktstatus)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://react.dev/)
@@ -419,3 +423,34 @@ Der erste Aufschlag entstand mit [Lovable](https://lovable.dev); der
 Repository-Sync ist seit Juli 2026 gekappt, die Build-Konfiguration
 (`@lovable.dev/vite-tanstack-config`) blieb. Gepflegt von
 [Alexander Schneider](https://github.com/arn0ld87).
+
+### Marke
+
+Wort- und Bildmarke liegen unter [`public/`](public/) und gehören zum Projekt:
+`logo.svg` (Masterlogo), `logo-bildmarke.svg`, `logo-wortmarke.svg`,
+`favicon.svg` sowie die PNG-Größen für Favicon, Touch-Icon und PWA. Die
+Bildmarke ist in [`src/components/Marke.tsx`](src/components/Marke.tsx) ein
+zweites Mal als React-Komponente geführt, damit sie ihre Farbe aus dem
+Designsystem zieht — wer die eine ändert, ändert die andere mit.
+
+| | |
+| --- | --- |
+| Terrakotta (Primäraktion) | `#A8501F` |
+| Warmes Anthrazit (Text) | `#26211C` |
+| Petrol (Auswahl, Fokus) | `#2F5D73` |
+| Helle Fläche | `#F1EBE0` |
+
+---
+
+<div align="center">
+
+<img src="public/logo-bildmarke.svg" alt="" width="44" height="44">
+
+**Sitzplan Studio** — ein Projekt von
+**[Alexander Schneider](https://alexle135.de)**
+
+[alexle135.de](https://alexle135.de) ·
+[github.com/arn0ld87](https://github.com/arn0ld87) ·
+[jana.alexle135.de](https://jana.alexle135.de)
+
+</div>

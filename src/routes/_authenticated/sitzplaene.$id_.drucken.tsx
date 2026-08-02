@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui-kit/Button";
 import { RoomPlan } from "@/components/plan/RoomPlan";
+import { Wortmarke } from "@/components/Marke";
 import { merkmalLabel, seatCount, studentName, type Student } from "@/data/types";
 import { useStore } from "@/store/app";
 
@@ -135,6 +136,12 @@ function Drucken() {
             })}
         </ol>
       </section>
+
+      {/* Fußzeile: sagt auf dem ausgedruckten Blatt, woher es stammt. */}
+      <footer className="mt-8 flex items-center justify-between gap-4 border-t border-line pt-3">
+        <Wortmarke size={20} />
+        <span className="text-[11px] text-ink-3">alexle135.de · Alexander Schneider</span>
+      </footer>
     </div>
   );
 }
