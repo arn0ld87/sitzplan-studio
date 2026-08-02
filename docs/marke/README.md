@@ -36,8 +36,16 @@ magick public/favicon-512.png -define icon:auto-resize=64,48,32,16 public/favico
 # Maskierbares Icon: Android beschneidet das Icon auf eine Gerätemaske. Die
 # Marke füllt ihre Fläche fast randlos, deshalb hier auf 56 % verkleinert und
 # auf die helle Fläche des Designsystems gesetzt.
+#
+# `-extent` hängt keine Ränder an, sondern legt eine neue Leinwand in
+# `-background` an und komponiert das Bild mit `over` darauf — die Transparenz
+# der Quelle wird dabei schon gegen #F1EBE0 gerechnet. `-alpha remove -alpha
+# off` ändert am Ergebnis daher nichts und steht nur da, damit die Absicht
+# nicht vom Verhalten von `-extent` abhängt: ein maskierbares Icon muss
+# deckend sein, sonst füllt der Launcher den Rest nach eigenem Gutdünken.
 magick public/logo-bildmarke.png -resize 288x288 \
-  -background "#f1ebe0" -gravity center -extent 512x512 public/maskable-512.png
+  -background "#f1ebe0" -gravity center -extent 512x512 \
+  -alpha remove -alpha off public/maskable-512.png
 ```
 
 Die restlichen Dateien in `public/` sind unveränderte Übernahmen aus diesem
