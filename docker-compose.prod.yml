@@ -1,0 +1,104 @@
+# Produktionsbetrieb hinter Traefik auf armserver.
+#
+# Der Container veröffentlicht keinen Port auf den Host. Erreichbar ist er
+# ausschließlich über das externe Netz `proxy`, in dem Traefik die TLS-
+# Terminierung und das Routing übernimmt. Ein veröffentlichter Port würde an
+# UFW vorbei direkt in die iptables-Regeln von Docker geschrieben.
+#
+# Aufruf auf dem Server:
+#   docker compose -f docker-compose.prod.yml up -d --build
+#
+# Werte kommen aus der `.env` daneben — sie enthält den Service-Role-Schlüssel
+# und gehört weder in das Image noch in einen Commit.
+
+services:
+  sitzplan:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Vite schreibt diese drei beim Bauen in das ausgelieferte JavaScript.
+        # Es sind publishable Schlüssel — öffentlich, durch RLS abgesichert.
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
+        VITE_SUPABASE_PUBLISHABLE_KEY: ${VITE_SUPABASE_PUBLISHABLE_KEY}
+        VITE_SUPABASE_PROJECT_ID: ${VITE_SUPABASE_PROJECT_ID}
+    image: sitzplan-studio:prod
+    container_name: sitzplan-studio
+    restart: unless-stopped
+
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOST: 0.0.0.0
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_PUBLISHABLE_KEY: ${SUPABASE_PUBLISHABLE_KEY}
+      SUPABASE_PROJECT_ID: ${SUPABASE_PROJECT_ID}
+      # Hebelt jede RLS-Policy aus. Nur serverseitig, nur für "Konto löschen".
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+
+    networks:
+      - proxy
+
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    cap_drop:
+      - ALL
+
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/signin"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+          cpus: "1.0"
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: proxy
+
+      traefik.http.routers.sitzplan.rule: Host(`jana.alexle135.de`)
+      traefik.http.routers.sitzplan.entrypoints: websecure
+      traefik.http.routers.sitzplan.tls.certresolver: letsencrypt
+      traefik.http.routers.sitzplan.middlewares: sitzplan-headers@docker
+      traefik.http.services.sitzplan.loadbalancer.server.port: "3000"
+
+      traefik.http.middlewares.sitzplan-headers.headers.contentTypeNosniff: "true"
+      traefik.http.middlewares.sitzplan-headers.headers.customFrameOptionsValue: DENY
+      traefik.http.middlewares.sitzplan-headers.headers.referrerPolicy: strict-origin-when-cross-origin
+      traefik.http.middlewares.sitzplan-headers.headers.permissionsPolicy: "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+      traefik.http.middlewares.sitzplan-headers.headers.forceSTSHeader: "true"
+      traefik.http.middlewares.sitzplan-headers.headers.stsSeconds: "63072000"
+      traefik.http.middlewares.sitzplan-headers.headers.stsIncludeSubdomains: "true"
+      traefik.http.middlewares.sitzplan-headers.headers.stsPreload: "true"
+      # 'unsafe-inline' bei script-src ist nicht wegzuoptimieren: TanStack Start
+      # legt die Hydrationsdaten als Inline-Script in die SSR-Antwort.
+      traefik.http.middlewares.sitzplan-headers.headers.customResponseHeaders.Content-Security-Policy: >-
+        default-src 'self';
+        script-src 'self' 'unsafe-inline';
+        style-src 'self' 'unsafe-inline';
+        connect-src 'self' ${SUPABASE_URL} wss://${SUPABASE_PROJECT_ID}.supabase.co;
+        img-src 'self' data: blob:;
+        font-src 'self' data:;
+        worker-src 'self' blob:;
+        base-uri 'self';
+        form-action 'self';
+        object-src 'none';
+        frame-ancestors 'none'
+
+networks:
+  proxy:
+    external: true

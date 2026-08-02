@@ -1,0 +1,15 @@
+.git
+.github
+node_modules
+.output
+.tanstack
+.wrangler
+.lovable
+coverage
+.env
+.env.*
+!.env.example
+.DS_Store
+docs
+*.md
+!README.md
