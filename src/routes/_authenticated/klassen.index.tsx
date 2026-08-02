@@ -152,7 +152,12 @@ function Klassen() {
           <KeineTreffer suche={q} onReset={() => setQ("")} />
         ) : (
           <ul className="overflow-hidden rounded-[8px] border border-line bg-panel">
-            <li className="flex items-center gap-3 border-b border-line bg-sunken px-4 py-2">
+            {/* Die Spaltenköpfe ordnen nur, solange Kopf und Zeile dieselbe
+                Spaltenbreite haben. Unter `sm` ist die Zeile zweizeilig und die
+                Zählung auf die nackte Zahl gekürzt — „Schüler“ stünde dann 55 px
+                neben seinem Wert und läge am Titel. Darum dort keine Kopfzeile;
+                sortiert wird am Rechner. */}
+            <li className="hidden items-center gap-3 border-b border-line bg-sunken px-4 py-2 sm:flex">
               <span className="w-8 shrink-0" />
               <span className="min-w-0 flex-1">
                 <SortHeader
