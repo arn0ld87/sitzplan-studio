@@ -39,8 +39,11 @@ export function SearchField({
     return () => clearTimeout(t);
   }, [roh, delay, onChange]);
 
+  // `width` ist eine Obergrenze, keine feste Breite: auf einem Telefon muss das
+  // Feld schrumpfen dürfen, sonst sprengt es die Kopfzeile und mit ihr die
+  // ganze Seitenbreite.
   return (
-    <div className="relative" style={{ width }}>
+    <div className="relative w-full" style={{ maxWidth: width }}>
       <Search
         size={16}
         strokeWidth={1.5}

@@ -78,7 +78,7 @@ export function ConfirmDialog({
         aria-labelledby="cd-title"
         aria-describedby="cd-desc"
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-[440px] rounded-[10px] border border-line bg-elevated p-5 shadow-[var(--shadow-overlay)]"
+        className="max-h-[calc(100dvh-2rem)] w-full max-w-[440px] overflow-y-auto overscroll-contain rounded-[10px] border border-line bg-elevated p-5 shadow-[var(--shadow-overlay)]"
       >
         <div className="flex gap-3">
           <span

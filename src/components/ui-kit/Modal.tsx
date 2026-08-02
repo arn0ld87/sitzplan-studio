@@ -89,7 +89,10 @@ export function Modal({
         aria-modal="true"
         aria-labelledby={titleId}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-[480px] rounded-[10px] border border-line bg-elevated p-5 shadow-[var(--shadow-overlay)]"
+        // Höhe begrenzen und im Panel scrollen: lange Formulare — etwa
+        // „Schüler hinzufügen“ mit seiner Merkmalsliste — liefen sonst unten
+        // aus dem Bild, ohne erreichbar zu sein.
+        className="max-h-[calc(100dvh-2rem)] w-full max-w-[480px] overflow-y-auto overscroll-contain rounded-[10px] border border-line bg-elevated p-5 shadow-[var(--shadow-overlay)]"
       >
         <h2 id={titleId} className="font-serif text-[20px] font-semibold leading-7">
           {title}
