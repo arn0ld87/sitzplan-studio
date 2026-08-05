@@ -104,6 +104,13 @@ sorgfältiges Lesen und einmal Durchklicken das grüne Häkchen.
 Issues leben als GitHub Issues in `arn0ld87/sitzplan-studio`, bedient über die
 `gh`-CLI. Siehe [`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md).
 
+### Triage labels
+
+Die fünf Triage-Rollen laufen über das bestehende deutsche Präfix-Schema
+(`status: triage`, `status: info-fehlt`, `status: agent-ready`,
+`status: mensch`, `wontfix`). Siehe
+[`docs/agents/triage-labels.md`](docs/agents/triage-labels.md).
+
 ### Domain docs
 
 Single-context: `CONTEXT.md` im Wurzelverzeichnis (noch nicht angelegt), ADRs
