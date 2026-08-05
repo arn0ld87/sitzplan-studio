@@ -96,3 +96,23 @@ sorgfältiges Lesen und einmal Durchklicken das grüne Häkchen.
 - Keine Emojis, keine Entschuldigungen, keine Meta-Kommentare.
 - Widerworte sind erwünscht: unsinnige oder riskante Anforderungen erst
   benennen, dann Gegenvorschlag, dann auf Entscheidung warten.
+
+## Agent skills
+
+### Issue tracker
+
+Issues leben als GitHub Issues in `arn0ld87/sitzplan-studio`, bedient über die
+`gh`-CLI. Siehe [`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md).
+
+### Triage labels
+
+Die fünf Triage-Rollen laufen über das bestehende deutsche Präfix-Schema
+(`status: triage`, `status: info-fehlt`, `status: agent-ready`,
+`status: mensch`, `wontfix`). Siehe
+[`docs/agents/triage-labels.md`](docs/agents/triage-labels.md).
+
+### Domain docs
+
+Single-context: `CONTEXT.md` im Wurzelverzeichnis, falls vorhanden, ADRs
+unter [`docs/decisions/`](docs/decisions/) — nicht unter `docs/adr/`. Siehe
+[`docs/agents/domain.md`](docs/agents/domain.md).
