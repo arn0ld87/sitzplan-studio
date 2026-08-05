@@ -20,9 +20,7 @@ terms or decisions actually get resolved.
 ```
 /
 ├── CONTEXT.md
-├── docs/decisions/
-│   ├── 0001-supabase-als-backend.md
-│   └── 0002-dokumenten-jsonb-fuer-geometrie.md
+├── docs/decisions/        ← alle ADRs, aktuell 0001 bis 0007
 └── src/
 ```
 

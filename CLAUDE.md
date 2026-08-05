@@ -113,6 +113,6 @@ Die fünf Triage-Rollen laufen über das bestehende deutsche Präfix-Schema
 
 ### Domain docs
 
-Single-context: `CONTEXT.md` im Wurzelverzeichnis (noch nicht angelegt), ADRs
+Single-context: `CONTEXT.md` im Wurzelverzeichnis, falls vorhanden, ADRs
 unter [`docs/decisions/`](docs/decisions/) — nicht unter `docs/adr/`. Siehe
 [`docs/agents/domain.md`](docs/agents/domain.md).
