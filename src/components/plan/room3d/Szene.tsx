@@ -8,6 +8,7 @@
 import { useCallback, useEffect, useMemo } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
 import type { RoomGeometry } from "@/data/types";
+import { Ausstattung3D } from "./Ausstattung3D";
 import { useBausatz } from "./bausatz";
 import { leseSzenenfarben, type Szenenfarben } from "./farben";
 import { Kamerasteuerung, type Ansichtsmodus } from "./Kamerasteuerung";
@@ -23,6 +24,7 @@ export type SzeneProps = {
   modus: Ansichtsmodus;
   zuruecksetzen: number;
   beschriftung: string;
+  ausstattungZeigen: boolean;
   onFehler?: () => void;
 };
 
@@ -83,6 +85,7 @@ export default function Szene({
   modus,
   zuruecksetzen,
   beschriftung,
+  ausstattungZeigen,
   onFehler,
 }: SzeneProps) {
   const start = startKamera(raum);
@@ -106,6 +109,7 @@ export default function Szene({
       <Kamerasteuerung raum={raum} modus={modus} zuruecksetzen={zuruecksetzen} />
       <Beleuchtung raum={raum} farben={farben} />
       <Raumhuelle raum={raum} farben={farben} rasterZeigen={rasterZeigen} />
+      {ausstattungZeigen && <Ausstattung3D raum={raum} farben={farben} />}
       {raum.furniture.map((moebel) => (
         <Moebel3D
           key={moebel.id}
