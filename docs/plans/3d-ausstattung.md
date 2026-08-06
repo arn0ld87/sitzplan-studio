@@ -458,7 +458,7 @@ regal:       { label: "Regal",       w: 100, h: 35, seats: 0 },
 waschbecken: { label: "Waschbecken", w: 60,  h: 45, seats: 0 },
 ```
 
-- Dokument-Typen (Englisch, wie die bestehenden): `cabinet` ↔ `schrank`, `shelf` ↔ `regal`, `sink` ↔ `waschbecken`. `RAUM_DOKUMENT_VERSION` bleibt **3** — die Erweiterung ist additiv, und der bestehende Fallback (`TYP_ZU_KIND[o.typ] ?? "einzeltisch"`, `mapping.ts:100`) macht alte Leser tolerant (ein unbekannter Typ wird dort zum sitzlosen Einzeltisch-Rechteck, verliert aber keine Daten).
+- Dokument-Typen (Englisch, wie die bestehenden): `cabinet` ↔ `schrank`, `shelf` ↔ `regal`, `sink` ↔ `waschbecken`. `RAUM_DOKUMENT_VERSION` bleibt **3** — die Erweiterung ist additiv, und der bestehende Fallback (`TYP_ZU_KIND[o.typ] ?? "einzeltisch"`, `mapping.ts:100`) macht alte Leser tolerant (ein unbekannter Typ wird dort zum sitzlosen Einzeltisch-Rechteck). Bewusst akzeptierte Grenze: Speichert ein **alter** Client ein so gelesenes Dokument, schreibt er `desk` statt des Originaltyps zurück — der Typ geht dann verloren. Das Fenster ist auf den Deployment-Übergang beschränkt; ein Versionsbump mit hartem Ablehnen alter Dokumente stünde dazu in keinem Verhältnis.
 
 - [ ] **Step 1: Tests zuerst erweitern (schlagen fehl)**
 
