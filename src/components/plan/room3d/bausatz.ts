@@ -36,7 +36,7 @@ export type Bausatz = {
 };
 
 /** Nichtmetallisches Standardmaterial in der angegebenen Farbe und Rauheit. */
-function flaeche(farbe: string, rauheit: number): THREE.Material {
+export function flaeche(farbe: string, rauheit: number): THREE.Material {
   return new THREE.MeshStandardMaterial({ color: farbe, roughness: rauheit, metalness: 0 });
 }
 
@@ -60,7 +60,7 @@ function werkstoffeBauen(farben: Szenenfarben): Werkstoffe {
 }
 
 /** Quaderförmiges Bauteil mit den angegebenen Maßen und der angegebenen Position. */
-function kasten(
+export function kasten(
   material: THREE.Material,
   masse: [number, number, number],
   position: [number, number, number],

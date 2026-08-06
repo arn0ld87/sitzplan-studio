@@ -28,6 +28,7 @@ Aktion (Terrakotta, höchstens EINE Primäraktion pro Ansicht): #A8501F · hover
 Auswahl UND Fokus (Petrol, niemals Rot): #2F5D73 · soft #E1ECF1
 Status: success #33573C auf #E5EDE3 · warning #7A5010 auf #F7EDD8 · danger #A32E24 auf #F8E4E0 · info #2A5468 auf #E1ECF1
 Schülerfarben (index-stabil, Text darauf immer #15110D): #E08A6B #9DBFA8 #E3B56B #A99CCB #7CA9C2 #D88BA0 #B89970 #82B7A5
+Ausstattung (nur 3D-Szene): wood #9C7A58 · plant #6A8F5F · metal #8E8B86 · posterA #C97B5B · posterB #9DBFA8
 
 Regel: Rot ist ausschließlich für Löschen und Fehler. Auswahl und Fokus sind Petrol. Terrakotta ist nur die Primäraktion.
 

@@ -15,6 +15,11 @@ const TOKENS = [
   "--board",
   "--window",
   "--select",
+  "--wood",
+  "--plant",
+  "--metal",
+  "--poster-a",
+  "--poster-b",
 ] as const;
 
 export type Farbtoken = (typeof TOKENS)[number];

@@ -23,7 +23,6 @@
   --on-brand: #15110d;
 
   /* Linien */
-  --line: #e4dacа;
   --line: #e4daca;
   --line-strong: #d2c5af;
   --line-control: #8e7e63;
@@ -53,6 +52,13 @@
   --grid-line: #e7dcc8;
   --board: #3d4a41;
   --window: #7ca9c2;
+
+  /* Ausstattung (3D-Szene) */
+  --wood: #9c7a58;
+  --plant: #6a8f5f;
+  --metal: #8e8b86;
+  --poster-a: #c97b5b;
+  --poster-b: #9dbfa8;
 
   --shadow-panel: 0 1px 2px rgba(38, 33, 28, 0.05);
   --shadow-overlay: 0 22px 48px -16px rgba(38, 33, 28, 0.4);
@@ -101,6 +107,12 @@
   --color-board: var(--board);
   --color-window: var(--window);
   --color-grid-line: var(--grid-line);
+
+  --color-wood: var(--wood);
+  --color-plant: var(--plant);
+  --color-metal: var(--metal);
+  --color-poster-a: var(--poster-a);
+  --color-poster-b: var(--poster-b);
 
   --font-sans: "IBM Plex Sans", ui-sans-serif, sans-serif;
   --font-serif: "Source Serif 4", Georgia, serif;
