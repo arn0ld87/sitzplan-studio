@@ -328,9 +328,10 @@ export function ausstattungPlatzierungen(raum: RoomGeometry): DekoPlatzierung[] 
       { x: 35, y: raum.height - 35 },
       { x: raum.width - 35, y: raum.height - 35 },
     ];
+    // Ohne Tür 0 statt Infinity, sonst rechnet der Comparator Infinity − Infinity = NaN.
     const mindestabstand = (ecke: { x: number; y: number }) =>
       tuerMitten.length === 0
-        ? Infinity
+        ? 0
         : Math.min(...tuerMitten.map((t) => Math.hypot(ecke.x - t.x, ecke.y - t.y)));
     const kandidaten = [...ecken].sort((a, b) => mindestabstand(b) - mindestabstand(a));
     for (const ecke of kandidaten) {
@@ -381,33 +382,40 @@ export function ausstattungPlatzierungen(raum: RoomGeometry): DekoPlatzierung[] 
     const SCHRANK_BREITE = 120;
     const SCHRANK_TIEFE = 50;
     const MIN_BREITE = 130;
-    for (const seite of ["sued", "ost", "west"] as const) {
-      const abschnitt = freieAbschnitteMitTracker(seite).find((a) => a.bis - a.von >= MIN_BREITE);
-      if (!abschnitt) continue;
-      const mitte = (abschnitt.von + abschnitt.bis) / 2;
-      const wandversatz = 2 + SCHRANK_TIEFE / 2; // 27 cm vor der Wand
-      let xCm: number;
-      let yCm: number;
-      if (seite === "sued") {
-        xCm = mitte;
-        yCm = raum.height - wandversatz;
-      } else if (seite === "west") {
-        xCm = wandversatz;
-        yCm = mitte;
-      } else {
-        xCm = raum.width - wandversatz;
-        yCm = mitte;
+    aussen: for (const seite of ["sued", "ost", "west"] as const) {
+      for (const abschnitt of freieAbschnitteMitTracker(seite)) {
+        if (abschnitt.bis - abschnitt.von < MIN_BREITE) continue;
+        const mitte = (abschnitt.von + abschnitt.bis) / 2;
+        const wandversatz = 2 + SCHRANK_TIEFE / 2; // 27 cm vor der Wand
+        let xCm: number;
+        let yCm: number;
+        if (seite === "sued") {
+          xCm = mitte;
+          yCm = raum.height - wandversatz;
+        } else if (seite === "west") {
+          xCm = wandversatz;
+          yCm = mitte;
+        } else {
+          xCm = raum.width - wandversatz;
+          yCm = mitte;
+        }
+        // Grundfläche nach Drehung: an West/Ost stehen Breite und Tiefe quer.
+        const quer = seite === "west" || seite === "ost";
+        const w = quer ? SCHRANK_TIEFE : SCHRANK_BREITE;
+        const h = quer ? SCHRANK_BREITE : SCHRANK_TIEFE;
+        if (!bodenflaecheFrei(xCm, yCm, w, h, raum.furniture, bodenRechtecke)) continue;
+        bodenRechtecke.push(rechteckAusMitte(xCm, yCm, w, h));
+        ergebnis.push({
+          art: "schrankDeko",
+          xCm,
+          yCm,
+          zCm: 0,
+          drehungGrad: wandparalleleDrehung(seite),
+        });
+        const halbeBreite = SCHRANK_BREITE / 2;
+        belegeAbschnitt(seite, { von: mitte - halbeBreite, bis: mitte + halbeBreite });
+        break aussen;
       }
-      ergebnis.push({
-        art: "schrankDeko",
-        xCm,
-        yCm,
-        zCm: 0,
-        drehungGrad: wandparalleleDrehung(seite),
-      });
-      const halbeBreite = SCHRANK_BREITE / 2;
-      belegeAbschnitt(seite, { von: mitte - halbeBreite, bis: mitte + halbeBreite });
-      break;
     }
   }
 
@@ -418,33 +426,40 @@ export function ausstattungPlatzierungen(raum: RoomGeometry): DekoPlatzierung[] 
     const MIN_BREITE = 110;
     // Gleiche Reihenfolge wie beim Schrank; der Tracker schließt dessen
     // Abschnitt bereits aus, unabhängig davon, auf welcher Wand er steht.
-    for (const seite of ["sued", "ost", "west"] as const) {
-      const abschnitt = freieAbschnitteMitTracker(seite).find((a) => a.bis - a.von >= MIN_BREITE);
-      if (!abschnitt) continue;
-      const mitte = (abschnitt.von + abschnitt.bis) / 2;
-      const wandversatz = 2 + REGAL_TIEFE / 2; // 17 cm vor der Wand
-      let xCm: number;
-      let yCm: number;
-      if (seite === "sued") {
-        xCm = mitte;
-        yCm = raum.height - wandversatz;
-      } else if (seite === "west") {
-        xCm = wandversatz;
-        yCm = mitte;
-      } else {
-        xCm = raum.width - wandversatz;
-        yCm = mitte;
+    aussen: for (const seite of ["sued", "ost", "west"] as const) {
+      for (const abschnitt of freieAbschnitteMitTracker(seite)) {
+        if (abschnitt.bis - abschnitt.von < MIN_BREITE) continue;
+        const mitte = (abschnitt.von + abschnitt.bis) / 2;
+        const wandversatz = 2 + REGAL_TIEFE / 2; // 17 cm vor der Wand
+        let xCm: number;
+        let yCm: number;
+        if (seite === "sued") {
+          xCm = mitte;
+          yCm = raum.height - wandversatz;
+        } else if (seite === "west") {
+          xCm = wandversatz;
+          yCm = mitte;
+        } else {
+          xCm = raum.width - wandversatz;
+          yCm = mitte;
+        }
+        // Grundfläche nach Drehung: an West/Ost stehen Breite und Tiefe quer.
+        const quer = seite === "west" || seite === "ost";
+        const w = quer ? REGAL_TIEFE : REGAL_BREITE;
+        const h = quer ? REGAL_BREITE : REGAL_TIEFE;
+        if (!bodenflaecheFrei(xCm, yCm, w, h, raum.furniture, bodenRechtecke)) continue;
+        bodenRechtecke.push(rechteckAusMitte(xCm, yCm, w, h));
+        ergebnis.push({
+          art: "regalDeko",
+          xCm,
+          yCm,
+          zCm: 0,
+          drehungGrad: wandparalleleDrehung(seite),
+        });
+        const halbeBreite = REGAL_BREITE / 2;
+        belegeAbschnitt(seite, { von: mitte - halbeBreite, bis: mitte + halbeBreite });
+        break aussen;
       }
-      ergebnis.push({
-        art: "regalDeko",
-        xCm,
-        yCm,
-        zCm: 0,
-        drehungGrad: wandparalleleDrehung(seite),
-      });
-      const halbeBreite = REGAL_BREITE / 2;
-      belegeAbschnitt(seite, { von: mitte - halbeBreite, bis: mitte + halbeBreite });
-      break;
     }
   }
 

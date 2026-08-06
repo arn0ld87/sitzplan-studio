@@ -111,4 +111,11 @@ describe("ausstattungPlatzierungen", () => {
     // Nächstbeste Ecke nach Türferne (nach der belegten (865,35)) ist (865,665).
     expect(pflanze).toMatchObject({ xCm: 865, yCm: 665 });
   });
+  it("weicht mit dem Deko-Schrank auf die Ostwand aus, wenn vor der Südwand ein Tisch steht", () => {
+    // Schrank-Zielfläche an der Südwand wäre x:[390,510], y:[648,698] — der Tisch
+    // (420–480, 640–690) steht frei im Raum (kein wandgebundenes Möbel) und ragt hinein.
+    const tisch = moebel("einzeltisch", 420, 640);
+    const schrank = ausstattungPlatzierungen(raumMit([tisch])).find((p) => p.art === "schrankDeko");
+    expect(schrank).toMatchObject({ xCm: 873, yCm: 350, drehungGrad: 90 });
+  });
 });
