@@ -87,6 +87,16 @@ export const KIND = {
   unterschenkel: 16,
 } as const;
 
+/** Maße der stilisierten, stehenden Lehrerinnenfigur in Zentimetern. */
+export const LEHRERIN = {
+  beinhoehe: 78,
+  koerperhoehe: 58,
+  koerperbreite: 34,
+  koerpertiefe: 22,
+  kopfdurchmesser: 22,
+  armlaenge: 56,
+} as const;
+
 export type Platzierung = {
   /** Weltposition des Möbelmittelpunkts; Y ist die **Unterkante**. */
   position: [number, number, number];
@@ -175,6 +185,23 @@ export function kindPlatzierung(
   // Mitte des Stuhls, leicht nach vorne versetzt, und schaut vom Tisch weg.
   return {
     position: [0, cmZuEinheit(STUHL.sitzhoehe), cmZuEinheit(STUHL.tiefe / 6)],
+    drehung: 0,
+  };
+}
+
+/**
+ * Position der Lehrerinnenfigur hinter dem Lehrerpult. Die Figur blickt entlang
+ * der positiven Z-Achse in den Raum; an anderen Möbelarten erscheint sie nicht.
+ */
+export function lehrerinPlatzierung(kind: FurnitureKind): {
+  position: [number, number, number];
+  drehung: number;
+} | null {
+  if (kind !== "pult") return null;
+
+  const abstandZurPultmitte = FURNITURE_SPECS.pult.h / 2 + LEHRERIN.koerpertiefe / 2 + 6;
+  return {
+    position: [0, 0, -cmZuEinheit(abstandZurPultmitte)],
     drehung: 0,
   };
 }
