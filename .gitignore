@@ -46,3 +46,6 @@ coverage/
 
 # Wegwerfdatei beim Setzen von Function-Secrets (siehe README).
 .gemini.env
+
+# open-mem: Auto-generierte Kontext-Datenbank (SQLite-WAL) bleibt lokal.
+.open-mem/
