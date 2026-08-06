@@ -386,6 +386,9 @@ function SitzplanEditor() {
                 </option>
               ))}
             </select>
+            <span className="sr-only" aria-live="polite">
+              {`Vorn im Raum: ${VORN_LABEL[plan.room.vorn]}`}
+            </span>
             <Button variant="secondary" onClick={() => setForm({ title: plan.title })}>
               <Pencil size={16} strokeWidth={1.5} />
               Umbenennen
