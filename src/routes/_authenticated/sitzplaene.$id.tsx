@@ -25,6 +25,7 @@ import { ConfirmDialog } from "@/components/ui-kit/ConfirmDialog";
 import { Field, Modal, inputClass } from "@/components/ui-kit/Modal";
 import { SearchField } from "@/components/ui-kit/SearchField";
 import { RoomPlan } from "@/components/plan/RoomPlan";
+import { RoomPlan3D } from "@/components/plan/RoomPlan3D";
 import {
   allSeats,
   seatCount,
@@ -32,6 +33,7 @@ import {
   VORN_LABEL,
   VORN_SEITEN,
   type PlanStatus,
+  type SeatAssignment,
   type Student,
   type VornSeite,
 } from "@/data/types";
@@ -41,6 +43,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ladeVersionen, speichereVersion, type PlanVersion } from "@/lib/versionen";
 import { befundZusammenfassung, type GepruefterVorschlag } from "@/data/ki-vorschlag";
 import { erzeugeSitzplanVorschlag, type KiFehler } from "@/lib/ki";
+import { AnsichtUmschalter, type Ansicht } from "@/components/plan/AnsichtUmschalter";
 
 export const Route = createFileRoute("/_authenticated/sitzplaene/$id")({
   head: () => ({
@@ -71,6 +74,8 @@ function SitzplanEditor() {
   const cls = plan ? data.classes.find((c) => c.id === plan.classId) : undefined;
 
   const [carry, setCarry] = useState<{ studentId: string; from: string | null } | null>(null);
+  const [ansicht, setAnsicht] = useState<Ansicht>("2d");
+  const [selected3dId, setSelected3dId] = useState<string | null>(null);
   const [q, setQ] = useState("");
   const [loeschen, setLoeschen] = useState(false);
   const [leeren, setLeeren] = useState(false);
@@ -92,6 +97,23 @@ function SitzplanEditor() {
     () => Object.fromEntries((cls?.students ?? []).map((s) => [s.id, s])),
     [cls],
   );
+
+  const sitzplanBelegung = useMemo<SeatAssignment[]>(() => {
+    if (!plan) return [];
+    return Object.entries(plan.assignments)
+      .map(([seatId, studentId]) => {
+        const student = studentsById[studentId];
+        if (!student) return null;
+        return {
+          seatId,
+          studentId,
+          firstName: student.firstName,
+          lastName: student.lastName,
+          colorIndex: student.colorIndex,
+        } satisfies SeatAssignment;
+      })
+      .filter((e): e is NonNullable<typeof e> => e !== null);
+  }, [plan, studentsById]);
 
   const setAssignments = useCallback(
     (next: Record<string, string>) => {
@@ -663,28 +685,42 @@ function SitzplanEditor() {
               ))}
             </ul>
           )}
+          <div className="mb-3 flex items-center gap-1.5">
+            <AnsichtUmschalter wert={ansicht} onChange={setAnsicht} />
+          </div>
           {plaetze === 0 && (
             <p className="mb-3 rounded-[6px] border border-line bg-panel px-3 py-2 text-[13px] text-ink-2">
               Dieser Grundriss enthält keine Sitzplätze.
             </p>
           )}
           <div className="overflow-hidden rounded-[8px] border border-line bg-plan">
-            <RoomPlan
-              room={plan.room}
-              mode="seating"
-              showGrid={false}
-              assignments={sichtbareZuordnung}
-              studentsById={studentsById}
-              carriedStudentId={carry?.studentId ?? null}
-              onSeatDown={seatDown}
-              onSeatUp={seatUp}
-              onSeatDropStudent={(seatId) => {
-                if (!carry) return;
-                place(seatId, carry.studentId, carry.from);
-                setCarry(null);
-              }}
-              className="block h-auto w-full"
-            />
+            {ansicht === "3d" ? (
+              <RoomPlan3D
+                room={plan.room}
+                selectedId={selected3dId}
+                onSelect={setSelected3dId}
+                showGrid={false}
+                belegung={sitzplanBelegung}
+                onZurueckZu2D={() => setAnsicht("2d")}
+              />
+            ) : (
+              <RoomPlan
+                room={plan.room}
+                mode="seating"
+                showGrid={false}
+                assignments={sichtbareZuordnung}
+                studentsById={studentsById}
+                carriedStudentId={carry?.studentId ?? null}
+                onSeatDown={seatDown}
+                onSeatUp={seatUp}
+                onSeatDropStudent={(seatId) => {
+                  if (!carry) return;
+                  place(seatId, carry.studentId, carry.from);
+                  setCarry(null);
+                }}
+                className="block h-auto w-full"
+              />
+            )}
           </div>
         </div>
       </div>

@@ -6,10 +6,12 @@
 import { useEffect, useMemo } from "react";
 import type { ThreeEvent } from "@react-three/fiber";
 import * as THREE from "three";
-import type { Furniture, RoomGeometry } from "@/data/types";
+import type { Furniture, RoomGeometry, SeatAssignment } from "@/data/types";
 import type { Bausatz, Bauteil } from "./bausatz";
 import type { Szenenfarben } from "./farben";
-import { cmZuEinheit, moebelPlatzierung, stuhlPlatzierung } from "./geometrie";
+import { cmZuEinheit, moebelPlatzierung, stuhlPlatzierung, kindPlatzierung } from "./geometrie";
+import { Kind3D } from "./Kind3D";
+import { belegungFuerMoebel } from "./kinder";
 
 /** Rendert die Bauteile eines Möbelstücks als Three.js-Meshes mit ihrer vorgegebenen Geometrie, ihrem Material und ihrer Position. */
 function Bauteile({ teile }: { teile: Bauteil[] }) {
@@ -66,6 +68,7 @@ export function Moebel3D({
   bausatz,
   farben,
   ausgewaehlt,
+  belegung,
   onSelect,
 }: {
   moebel: Furniture;
@@ -73,12 +76,14 @@ export function Moebel3D({
   bausatz: Bausatz;
   farben: Szenenfarben;
   ausgewaehlt: boolean;
+  belegung?: SeatAssignment[] | undefined;
   onSelect?: ((id: string) => void) | undefined;
 }) {
   const { position, drehung, masse } = moebelPlatzierung(moebel, raum);
   const stuehle = moebel.seats
     .map((_, i) => stuhlPlatzierung(moebel.kind, i))
     .filter((s): s is NonNullable<typeof s> => s !== null);
+  const stuhlBelegung = belegungFuerMoebel(belegung, moebel);
 
   return (
     <group
@@ -94,11 +99,20 @@ export function Moebel3D({
         : {})}
     >
       <Bauteile teile={bausatz.moebel[moebel.kind]} />
-      {stuehle.map((stuhl, i) => (
-        <group key={i} position={stuhl.position}>
-          <Bauteile teile={bausatz.stuhl} />
-        </group>
-      ))}
+      {stuehle.map((stuhl, i) => {
+        const kindPlatz = kindPlatzierung(moebel.kind, i);
+        const student = stuhlBelegung.find((b) => b.seatIndex === i)?.student;
+        return (
+          <group key={i} position={stuhl.position}>
+            <Bauteile teile={bausatz.stuhl} />
+            {student && kindPlatz && (
+              <group position={kindPlatz.position} rotation={[0, kindPlatz.drehung, 0]}>
+                <Kind3D colorIndex={student.colorIndex} ausgewaehlt={ausgewaehlt} />
+              </group>
+            )}
+          </group>
+        );
+      })}
       {ausgewaehlt && (
         <Auswahlrahmen
           breite={masse.breite}
