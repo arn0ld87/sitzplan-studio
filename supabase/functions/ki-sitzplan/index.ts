@@ -129,6 +129,51 @@ const OBJEKT_LABEL: Record<string, string> = {
   teacher_desk: "Lehrerpult",
 };
 
+/** Spiegel von `VornSeite` in `src/data/types.ts` — Begründung siehe `MERKMAL_LABEL`. */
+type VornSeite = "oben" | "rechts" | "unten" | "links";
+
+const VORN_SEITEN: readonly string[] = ["oben", "rechts", "unten", "links"];
+
+/** Tolerante Lesart: Dokumente ohne Feld liefen immer mit „vorn = oben". */
+function vornSeite(wert: unknown): VornSeite {
+  return VORN_SEITEN.includes(wert as string) ? (wert as VornSeite) : "oben";
+}
+
+/**
+ * Spiegel von `nachVornOben` in `src/data/ausrichtung.ts` — dort liegen der
+ * Vertrag und die Tests, Begründung für die Doppelung siehe `MERKMAL_LABEL`.
+ *
+ * Dreht den Grundriss so, dass die eingestellte Vorn-Seite bei kleinen
+ * y-Werten liegt. Der Prompt verspricht dem Modell „kleine y-Werte sind vorn";
+ * statt den Text je Ausrichtung zu variieren, wird die Welt normalisiert —
+ * das Modell rechnet nie selbst um. Alle Fälle sind echte Drehungen, keine
+ * Spiegelungen; bei 90°/270° tauschen Breite und Tiefe die Rollen.
+ */
+function nachVornOben(breiteCm: number, laengeCm: number, vorn: VornSeite) {
+  if (vorn === "unten") {
+    return {
+      breiteCm,
+      laengeCm,
+      punkt: (x: number, y: number) => ({ x: breiteCm - x, y: laengeCm - y }),
+    };
+  }
+  if (vorn === "links") {
+    return {
+      breiteCm: laengeCm,
+      laengeCm: breiteCm,
+      punkt: (x: number, y: number) => ({ x: laengeCm - y, y: x }),
+    };
+  }
+  if (vorn === "rechts") {
+    return {
+      breiteCm: laengeCm,
+      laengeCm: breiteCm,
+      punkt: (x: number, y: number) => ({ x: y, y: breiteCm - x }),
+    };
+  }
+  return { breiteCm, laengeCm, punkt: (x: number, y: number) => ({ x, y }) };
+}
+
 type SchuelerZeile = {
   id: string;
   vorname: string;
@@ -145,22 +190,26 @@ function bauePrompt(
   plaetze: CanvasSitzplatz[],
   schueler: SchuelerZeile[],
   regeln: RegelZeile[],
+  vorn: VornSeite,
 ) {
   const objektVonId = new Map(objekte.map((o) => [o.id, o]));
 
+  // Ab hier gilt die gedrehte Welt: „vorn" liegt garantiert bei kleinen
+  // y-Werten, egal wie der Raum gezeichnet wurde.
+  const welt = nachVornOben(raum.breiteCm, raum.laengeCm, vorn);
+
   const orientierung = objekte
     .filter((o) => OBJEKT_LABEL[o.typ])
-    .map(
-      (o) =>
-        `- ${OBJEKT_LABEL[o.typ]} bei x=${Math.round(o.x_cm + o.breite_cm / 2)}, y=${Math.round(
-          o.y_cm + o.tiefe_cm / 2,
-        )}`,
-    );
+    .map((o) => {
+      const c = welt.punkt(o.x_cm + o.breite_cm / 2, o.y_cm + o.tiefe_cm / 2);
+      return `- ${OBJEKT_LABEL[o.typ]} bei x=${Math.round(c.x)}, y=${Math.round(c.y)}`;
+    });
 
   const sitzZeilen = plaetze.flatMap((p) => {
     const o = objektVonId.get(p.objektId);
     if (!o) return [];
-    const { x, y } = sitzPosition(o, p);
+    const roh = sitzPosition(o, p);
+    const { x, y } = welt.punkt(roh.x, roh.y);
     const nachbarn = plaetze
       .filter((q) => q.objektId === p.objektId && q.id !== p.id)
       .map((q) => q.id);
@@ -192,7 +241,7 @@ function bauePrompt(
   return [
     "Du hilfst einer Lehrkraft, einen Sitzplan für eine Schulklasse zu stellen.",
     "",
-    `Der Raum ist ${raum.breiteCm} cm breit und ${raum.laengeCm} cm tief. Koordinaten sind Zentimeter;`,
+    `Der Raum ist ${welt.breiteCm} cm breit und ${welt.laengeCm} cm tief. Koordinaten sind Zentimeter;`,
     "x wächst nach rechts, y wächst nach hinten. Kleine y-Werte sind vorn.",
     "",
     orientierung.length ? "Orientierungspunkte:" : "Keine Orientierungspunkte im Raum.",
@@ -353,6 +402,7 @@ Deno.serve(async (req: Request) => {
     raumGeometrie?: {
       breiteCm?: number;
       laengeCm?: number;
+      vorn?: unknown;
       objekte?: CanvasObjekt[];
       sitzplaetze?: CanvasSitzplatz[];
     };
@@ -376,6 +426,7 @@ Deno.serve(async (req: Request) => {
     plaetze,
     schueler as SchuelerZeile[],
     (regeln ?? []) as RegelZeile[],
+    vornSeite(geo.vorn),
   );
 
   // ---- Platz im Deckel belegen, bevor Geld fließt ----

@@ -26,6 +26,7 @@ import {
   type Furniture,
   type FurnitureKind,
   type RoomGeometry,
+  type VornSeite,
 } from "@/data/types";
 
 /** Maßstab der Szene: 100 cm entsprechen einer Welteinheit. */
@@ -172,13 +173,31 @@ function spanne(raum: Pick<RoomGeometry, "width" | "height">): number {
   return Math.max(breite, tiefe);
 }
 
-/** Perspektivkamera erhöht und der Tafel gegenüber positioniert. */
-export function startKamera(raum: Pick<RoomGeometry, "width" | "height">): Kamerastand {
+/**
+ * Perspektivkamera erhöht und der Vorn-Kante gegenüber positioniert. `vorn`
+ * dreht die Kamera um den Raum, sodass die Klasse immer von „hinten" auf die
+ * Vorn-Kante blickt — unabhängig davon, welche Seite des Grundrisses „vorn" ist.
+ * Fehlt `vorn` (etwa in alten Tests), gilt „oben" und die Kamera steht wie
+ * bisher bei positivem Z.
+ */
+export function startKamera(
+  raum: Pick<RoomGeometry, "width" | "height"> & { vorn?: VornSeite },
+): Kamerastand {
   const s = spanne(raum);
-  return {
-    position: [s * 0.62, s * 0.78, s * 1.05],
-    ziel: [0, cmZuEinheit(60), 0],
-  };
+  const y = s * 0.78;
+  const lang = s * 1.05;
+  const quer = s * 0.62;
+  const ziel = [0, cmZuEinheit(60), 0] as [number, number, number];
+  switch (raum.vorn ?? "oben") {
+    case "unten":
+      return { position: [quer, y, -lang], ziel };
+    case "links":
+      return { position: [lang, y, quer], ziel };
+    case "rechts":
+      return { position: [-lang, y, quer], ziel };
+    default:
+      return { position: [quer, y, lang], ziel };
+  }
 }
 
 /** Nahezu senkrechte Draufsicht-Kamera, ausgerichtet wie der Grundriss. */

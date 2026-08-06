@@ -9,7 +9,7 @@ import { KeineTreffer } from "@/components/ui-kit/KeineTreffer";
 import { ConfirmDialog } from "@/components/ui-kit/ConfirmDialog";
 import { Field, Modal, inputClass } from "@/components/ui-kit/Modal";
 import { PlanThumb } from "@/components/plan/RoomPlan";
-import { seatCount } from "@/data/types";
+import { seatCount, VORN_LABEL, VORN_SEITEN, type VornSeite } from "@/data/types";
 import { useStore } from "@/store/app";
 
 export const Route = createFileRoute("/_authenticated/raeume/")({
@@ -49,7 +49,13 @@ function Raeume() {
       navigate({ to: "/raeume", search: {}, replace: true });
     }
   }, [search.neu, navigate]);
-  const [form, setForm] = useState({ name: "", width: "800", height: "600", grid: "25" });
+  const [form, setForm] = useState({
+    name: "",
+    width: "800",
+    height: "600",
+    grid: "25",
+    vorn: "oben" as VornSeite,
+  });
   const [fehler, setFehler] = useState("");
   const [loeschen, setLoeschen] = useState<string | null>(null);
 
@@ -81,7 +87,15 @@ function Raeume() {
     const grid = Number(form.grid);
     const f = pruefen(name, width, height, grid, inBearbeitung.id);
     if (f) return setFehler(f);
-    dispatch({ type: "room/update", id: inBearbeitung.id, name, width, height, grid });
+    dispatch({
+      type: "room/update",
+      id: inBearbeitung.id,
+      name,
+      width,
+      height,
+      grid,
+      vorn: form.vorn,
+    });
     setBearbeiten(null);
     setFehler("");
   }
@@ -99,9 +113,9 @@ function Raeume() {
     if (!Number.isFinite(height) || height < MASSE.minH || height > MASSE.maxH)
       return setFehler(`Tiefe zwischen ${MASSE.minH} und ${MASSE.maxH} cm.`);
     if (![10, 20, 25, 50].includes(grid)) return setFehler("Rasterweite ungültig.");
-    dispatch({ type: "room/add", name, width, height, grid });
+    dispatch({ type: "room/add", name, width, height, grid, vorn: form.vorn });
     setNeu(false);
-    setForm({ name: "", width: "800", height: "600", grid: "25" });
+    setForm({ name: "", width: "800", height: "600", grid: "25", vorn: "oben" });
     setFehler("");
   }
 
@@ -117,7 +131,7 @@ function Raeume() {
             <Button
               variant="primary"
               onClick={() => {
-                setForm({ name: "", width: "800", height: "600", grid: "25" });
+                setForm({ name: "", width: "800", height: "600", grid: "25", vorn: "oben" });
                 setFehler("");
                 setNeu(true);
               }}
@@ -174,6 +188,7 @@ function Raeume() {
                       width: String(r.width),
                       height: String(r.height),
                       grid: String(r.grid),
+                      vorn: r.vorn,
                     });
                     setFehler("");
                   }}
@@ -253,6 +268,19 @@ function Raeume() {
             <option value="50">50</option>
           </select>
         </Field>
+        <Field label="Wo ist vorn?">
+          <select
+            className={inputClass}
+            value={form.vorn}
+            onChange={(e) => setForm({ ...form, vorn: e.target.value as VornSeite })}
+          >
+            {VORN_SEITEN.map((s) => (
+              <option key={s} value={s}>
+                {VORN_LABEL[s]}
+              </option>
+            ))}
+          </select>
+        </Field>
       </Modal>
 
       <Modal
@@ -303,6 +331,19 @@ function Raeume() {
             <option value="20">20</option>
             <option value="25">25</option>
             <option value="50">50</option>
+          </select>
+        </Field>
+        <Field label="Wo ist vorn?">
+          <select
+            className={inputClass}
+            value={form.vorn}
+            onChange={(e) => setForm({ ...form, vorn: e.target.value as VornSeite })}
+          >
+            {VORN_SEITEN.map((s) => (
+              <option key={s} value={s}>
+                {VORN_LABEL[s]}
+              </option>
+            ))}
           </select>
         </Field>
       </Modal>

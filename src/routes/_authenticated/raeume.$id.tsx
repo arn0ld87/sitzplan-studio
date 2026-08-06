@@ -31,8 +31,11 @@ import {
   makeFurniture,
   newId,
   seatCount,
+  VORN_LABEL,
+  VORN_SEITEN,
   type Furniture,
   type FurnitureKind,
+  type VornSeite,
 } from "@/data/types";
 import { useStore } from "@/store/app";
 
@@ -81,6 +84,7 @@ function RaumEditor() {
     width: string;
     height: string;
     grid: string;
+    vorn: VornSeite;
   } | null>(null);
   const [fehler, setFehler] = useState("");
   const [loeschen, setLoeschen] = useState(false);
@@ -210,7 +214,7 @@ function RaumEditor() {
       return setFehler("Breite zwischen 200 und 2000 cm.");
     if (!Number.isFinite(height) || height < 200 || height > 2000)
       return setFehler("Tiefe zwischen 200 und 2000 cm.");
-    dispatch({ type: "room/update", id: room.id, name, width, height, grid });
+    dispatch({ type: "room/update", id: room.id, name, width, height, grid, vorn: form.vorn });
     setForm(null);
     setFehler("");
   }
@@ -242,6 +246,7 @@ function RaumEditor() {
                   width: String(room.width),
                   height: String(room.height),
                   grid: String(room.grid),
+                  vorn: room.vorn,
                 })
               }
             >
@@ -503,6 +508,19 @@ function RaumEditor() {
             <option value="20">20</option>
             <option value="25">25</option>
             <option value="50">50</option>
+          </select>
+        </Field>
+        <Field label="Wo ist vorn?">
+          <select
+            className={inputClass}
+            value={form?.vorn ?? "oben"}
+            onChange={(e) => setForm((f) => (f ? { ...f, vorn: e.target.value as VornSeite } : f))}
+          >
+            {VORN_SEITEN.map((s) => (
+              <option key={s} value={s}>
+                {VORN_LABEL[s]}
+              </option>
+            ))}
           </select>
         </Field>
       </Modal>

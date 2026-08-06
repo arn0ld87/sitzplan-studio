@@ -21,6 +21,7 @@ import {
   type PlanStatus,
   type Student,
   type TrashItem,
+  type VornSeite,
 } from "@/data/types";
 import {
   klasseZuRow,
@@ -67,12 +68,21 @@ export type Action =
       notiz: string;
     }
   | { type: "student/remove"; classId: string; id: string }
-  | { type: "room/add"; name: string; width: number; height: number; grid: number }
-  | { type: "room/update"; id: string; name: string; width: number; height: number; grid: number }
+  | { type: "room/add"; name: string; width: number; height: number; grid: number; vorn: VornSeite }
+  | {
+      type: "room/update";
+      id: string;
+      name: string;
+      width: number;
+      height: number;
+      grid: number;
+      vorn: VornSeite;
+    }
   | { type: "room/furniture"; id: string; furniture: Furniture[] }
   | { type: "room/delete"; id: string }
   | { type: "plan/create"; title: string; classId: string; room: Room }
   | { type: "plan/update"; id: string; patch: Partial<Pick<SeatingPlan, "title" | "status">> }
+  | { type: "plan/vorn"; id: string; vorn: VornSeite }
   | { type: "plan/assignments"; id: string; assignments: Record<string, string> }
   | { type: "plan/delete"; id: string }
   | { type: "rule/add"; classId: string; a: string; b: string; kind: RuleKind }
@@ -199,6 +209,7 @@ export function reducer(state: AppData, action: Action): AppData {
         width: action.width,
         height: action.height,
         grid: action.grid,
+        vorn: action.vorn,
         furniture: [],
         createdAt: now(),
       };
@@ -215,6 +226,7 @@ export function reducer(state: AppData, action: Action): AppData {
                 width: action.width,
                 height: action.height,
                 grid: action.grid,
+                vorn: action.vorn,
               }
             : r,
         ),
@@ -242,6 +254,7 @@ export function reducer(state: AppData, action: Action): AppData {
         width: action.room.width,
         height: action.room.height,
         grid: action.room.grid,
+        vorn: action.room.vorn,
         furniture: action.room.furniture.map((f) => ({ ...f, seats: [...f.seats] })),
       };
       const plan: SeatingPlan = {
@@ -261,6 +274,13 @@ export function reducer(state: AppData, action: Action): AppData {
         ...state,
         plans: state.plans.map((p) =>
           p.id === action.id ? touchPlan({ ...p, ...action.patch }) : p,
+        ),
+      };
+    case "plan/vorn":
+      return {
+        ...state,
+        plans: state.plans.map((p) =>
+          p.id === action.id ? touchPlan({ ...p, room: { ...p.room, vorn: action.vorn } }) : p,
         ),
       };
     case "plan/assignments":

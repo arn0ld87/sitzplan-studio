@@ -37,7 +37,7 @@ export function Kamerasteuerung({
   modus,
   zuruecksetzen,
 }: {
-  raum: Pick<RoomGeometry, "width" | "height">;
+  raum: Pick<RoomGeometry, "width" | "height" | "vorn">;
   modus: Ansichtsmodus;
   /** Zählerstand: jede Erhöhung stellt die Startansicht wieder her. */
   zuruecksetzen: number;
@@ -47,11 +47,11 @@ export function Kamerasteuerung({
   const invalidate = useThree((s) => s.invalidate);
   const steuerung = useRef<OrbitControls | null>(null);
 
-  // Nur die beiden Zahlen zählen. Ein neues `raum`-Objekt mit gleichen Maßen
-  // darf die Steuerung nicht neu aufbauen — sonst springt die Kamera.
+  // Nur Maße und Ausrichtung zählen. Ein neues `raum`-Objekt mit gleichen
+  // Werten darf die Steuerung nicht neu aufbauen — sonst springt die Kamera.
   const masse = useMemo(
-    () => ({ width: raum.width, height: raum.height }),
-    [raum.width, raum.height],
+    () => ({ width: raum.width, height: raum.height, vorn: raum.vorn }),
+    [raum.width, raum.height, raum.vorn],
   );
 
   useEffect(() => {

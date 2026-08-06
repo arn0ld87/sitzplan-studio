@@ -158,7 +158,14 @@ describe("Plandokument", () => {
     title: "Klassenarbeit",
     classId: "klasse-1",
     roomId: "raum-1",
-    room: { name: "Raum 204", width: 800, height: 600, grid: 10, furniture: [tisch] },
+    room: {
+      name: "Raum 204",
+      width: 800,
+      height: 600,
+      grid: 10,
+      vorn: "rechts",
+      furniture: [tisch],
+    },
     status: "entwurf",
     updated: "2026-08-01T10:00:00Z",
     assignments: { [erster(tisch.seats, "Sitzplatz")]: "schueler-1" },
@@ -177,6 +184,13 @@ describe("Plandokument", () => {
     const { room, assignments } = ausPlanDokument(zuPlanDokument(plan), "Raum 204");
     expect(room).toEqual(plan.room);
     expect(assignments).toEqual(plan.assignments);
+  });
+
+  it("liest Altdokumente ohne Vorn-Feld als „vorn = oben“", () => {
+    const doc = zuPlanDokument(plan);
+    const { vorn: _weg, ...altGeometrie } = doc.raumGeometrie;
+    const { room } = ausPlanDokument({ ...doc, raumGeometrie: altGeometrie }, "Raum 204");
+    expect(room.vorn).toBe("oben");
   });
 
   it("verwendet den übergebenen Raumnamen — der Plan trägt eine eingefrorene Kopie", () => {
@@ -349,12 +363,21 @@ describe("raumZuRow und rowZuRaum", () => {
     width: 800,
     height: 600,
     grid: 10,
+    vorn: "unten",
     furniture: [makeFurniture("doppeltisch", 100, 100), makeFurniture("tafel", 0, 0)],
     createdAt: "2026-01-15T08:00:00Z",
   };
 
   it("führt den Raum samt Möblierung unverändert hin und zurück", () => {
     expect(rowZuRaum(raumZuRow(raum, NUTZER, null))).toEqual(raum);
+  });
+
+  it("liest Altdokumente ohne Vorn-Feld als „vorn = oben“", () => {
+    // Räume aus der Zeit vor dem Feld haben im canvas_document kein `vorn` —
+    // sie verhielten sich immer so, als wäre vorn oben.
+    const row = raumZuRow(raum, NUTZER, null);
+    const { vorn: _weg, ...altDokument } = row.canvas_document;
+    expect(rowZuRaum({ ...row, canvas_document: altDokument }).vorn).toBe("oben");
   });
 
   it("liest Maße auch dann als Zahl, wenn die Datenbank sie als Text liefert", () => {
@@ -374,7 +397,14 @@ describe("planZuRow und rowZuPlan", () => {
     title: "Klassenarbeit",
     classId: "k1",
     roomId: "r1",
-    room: { name: "Raum 204", width: 800, height: 600, grid: 10, furniture: [tisch] },
+    room: {
+      name: "Raum 204",
+      width: 800,
+      height: 600,
+      grid: 10,
+      vorn: "links",
+      furniture: [tisch],
+    },
     status: "aktiv",
     updated: "2026-08-01T10:00:00Z",
     assignments: { [erster(tisch.seats, "Sitzplatz")]: "s1" },

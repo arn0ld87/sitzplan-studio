@@ -161,12 +161,37 @@ export function makeFurniture(kind: FurnitureKind, x: number, y: number): Furnit
   return { id, kind, x, y, rotation: 0, seats };
 }
 
+/**
+ * Seite des Grundrisses, an der die Klasse „vorn" hat — dort steht in aller
+ * Regel die Tafel. Bezugsystem ist die Zeichnung: „oben" ist die obere Kante
+ * des Grundrisses, nicht eine Himmelsrichtung.
+ */
+export const VORN_SEITEN = ["oben", "rechts", "unten", "links"] as const;
+export type VornSeite = (typeof VORN_SEITEN)[number];
+
+export const VORN_LABEL: Record<VornSeite, string> = {
+  oben: "Oben",
+  rechts: "Rechts",
+  unten: "Unten",
+  links: "Links",
+};
+
+/**
+ * Tolerante Lesart für Dokumente und Fremdwerte: Alles Unbekannte fällt auf
+ * „oben" zurück — die stillschweigende Annahme aller Pläne vor diesem Feld.
+ */
+export function vornSeite(wert: unknown): VornSeite {
+  return (VORN_SEITEN as readonly unknown[]).includes(wert) ? (wert as VornSeite) : "oben";
+}
+
 /** Geometrie eines Raums — sowohl Vorlage als auch die Kopie im Sitzplan. */
 export type RoomGeometry = {
   name: string;
   width: number;
   height: number;
   grid: number;
+  /** Wo die Klasse „vorn" hat — siehe {@link VornSeite}. */
+  vorn: VornSeite;
   furniture: Furniture[];
 };
 
