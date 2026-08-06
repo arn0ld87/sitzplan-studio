@@ -53,26 +53,23 @@ describe("ausstattungPlatzierungen", () => {
     const pflanze = ausstattungPlatzierungen(raumMit([tuer])).find((p) => p.art === "pflanze");
     expect(pflanze).toMatchObject({ xCm: 865, yCm: 35 }); // oben rechts
   });
-  it("lässt den Deko-Schrank weg, wenn keine Wand 130 cm frei hat", () => {
-    // Raum 200×300: Süd/Nord je 200 breit, West/Ost je 300 tief.
-    // Höhe bewusst auf 300 verkürzt (statt des raumMit-Standards 700): Ein
-    // Fenster ist nur 180 cm hoch — auf einer 700 cm langen Wand bliebe nach
-    // einem einzigen Fenster immer ein Rest ≥ 130 cm frei, egal wie die
-    // Randwand-Zuordnung bei Gleichstand entscheidet. Erst bei 300 cm Wandlänge
-    // lässt ein 180-cm-Fenster (bei y=1) beidseitig nur Reste < 130 cm frei.
-    const raum: RoomGeometry = {
-      ...raumMit([]),
-      width: 200,
-      height: 300,
-      furniture: [
-        { ...moebel("fenster", 0, 1), rotation: 0 }, // eindeutig Westwand (Abstand 0 < 1 zur Nordwand)
-        { ...moebel("fenster", 185, 1), rotation: 0 }, // eindeutig Ostwand
-      ],
-    };
-    // Südwand (Länge = width = 200): 200 ≥ 130 wäre frei — deshalb Tür in die Südwand:
-    raum.furniture.push(moebel("tuer", 55, 280));
-    const arten = ausstattungPlatzierungen(raum).map((p) => p.art);
+  it("enthält keine Großmöbel-Deko mehr — Schrank und Regal sind jetzt platzierbar", () => {
+    const arten = ausstattungPlatzierungen(raumMit([])).map((p) => p.art);
     expect(arten).not.toContain("schrankDeko");
+    expect(arten).not.toContain("regalDeko");
+  });
+
+  it("setzt kein Poster auf einen Wandabschnitt, den ein echter Schrank belegt", () => {
+    // Tafel an der Nordwand schließt Poster dort aus.
+    const tafel = moebel("tafel", 250, 0);
+    // Schrank mittig an der Südwand — ohne die WANDGEBUNDEN-Erweiterung würde
+    // das erste Poster auf der Südwand bei x≈450 (im belegten Intervall) landen.
+    const schrank = moebel("schrank", 390, 650);
+    const poster = ausstattungPlatzierungen(raumMit([tafel, schrank])).filter(
+      (p) => p.art === "poster",
+    );
+    expect(poster.length).toBeGreaterThan(0);
+    expect(poster.some((p) => p.yCm > 600 && p.xCm >= 390 && p.xCm <= 510)).toBe(false);
   });
   it("erzeugt für jedes Fenster einen Topf", () => {
     const raum = raumMit([moebel("fenster", 0, 100), moebel("fenster", 0, 400)]);
@@ -116,12 +113,5 @@ describe("ausstattungPlatzierungen", () => {
     expect(pflanze).not.toMatchObject({ xCm: 865, yCm: 35 });
     // Nächstbeste Ecke nach Türferne (nach der belegten (865,35)) ist (865,665).
     expect(pflanze).toMatchObject({ xCm: 865, yCm: 665 });
-  });
-  it("weicht mit dem Deko-Schrank auf die Ostwand aus, wenn vor der Südwand ein Tisch steht", () => {
-    // Schrank-Zielfläche an der Südwand wäre x:[390,510], y:[648,698] — der Tisch
-    // (420–480, 640–690) steht frei im Raum (kein wandgebundenes Möbel) und ragt hinein.
-    const tisch = moebel("einzeltisch", 420, 640);
-    const schrank = ausstattungPlatzierungen(raumMit([tisch])).find((p) => p.art === "schrankDeko");
-    expect(schrank).toMatchObject({ xCm: 873, yCm: 350, drehungGrad: 90 });
   });
 });

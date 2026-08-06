@@ -27,6 +27,9 @@ type Werkstoffe = {
   rahmen: THREE.Material;
   glas: THREE.Material;
   sitz: THREE.Material;
+  holz: THREE.Material;
+  keramik: THREE.Material;
+  metall: THREE.Material;
 };
 
 export type Bausatz = {
@@ -56,6 +59,9 @@ function werkstoffeBauen(farben: Szenenfarben): Werkstoffe {
       opacity: 0.42,
     }),
     sitz: flaeche(farben["--panel"], 0.82),
+    holz: flaeche(farben["--wood"], 0.7),
+    keramik: flaeche(farben["--elevated"], 0.2),
+    metall: flaeche(farben["--metal"], 0.5),
   };
 }
 
@@ -218,6 +224,81 @@ function stuhlBauen(w: Werkstoffe): Bauteil[] {
   ];
 }
 
+/** Korpus mit zwei Türfugen und Griffen. */
+function schrankBauen(w: Werkstoffe): Bauteil[] {
+  const spec = FURNITURE_SPECS.schrank;
+  const breite = cmZuEinheit(spec.w);
+  const tiefe = cmZuEinheit(spec.h);
+  const hoehe = cmZuEinheit(MOEBEL_AUFBAU.schrank.hoehe);
+  return [
+    kasten(w.holz, [breite, hoehe, tiefe], [0, hoehe / 2, 0]),
+    // Türfuge mittig, minimal vorstehend — wie die Trennfuge des Doppeltischs.
+    kasten(
+      w.gestell,
+      [cmZuEinheit(1), hoehe * 0.92, cmZuEinheit(0.5)],
+      [0, hoehe * 0.48, tiefe / 2],
+    ),
+    kasten(
+      w.metall,
+      [cmZuEinheit(2), cmZuEinheit(10), cmZuEinheit(2)],
+      [-cmZuEinheit(6), cmZuEinheit(100), tiefe / 2],
+    ),
+    kasten(
+      w.metall,
+      [cmZuEinheit(2), cmZuEinheit(10), cmZuEinheit(2)],
+      [cmZuEinheit(6), cmZuEinheit(100), tiefe / 2],
+    ),
+  ];
+}
+
+/** Offenes Regal: Wangen, Böden, Rückwand. */
+function regalBauen(w: Werkstoffe): Bauteil[] {
+  const spec = FURNITURE_SPECS.regal;
+  const breite = cmZuEinheit(spec.w);
+  const tiefe = cmZuEinheit(spec.h);
+  const hoehe = cmZuEinheit(MOEBEL_AUFBAU.regal.hoehe);
+  const staerke = cmZuEinheit(3);
+  const teile: Bauteil[] = [
+    kasten(w.holz, [staerke, hoehe, tiefe], [-(breite - staerke) / 2, hoehe / 2, 0]),
+    kasten(w.holz, [staerke, hoehe, tiefe], [(breite - staerke) / 2, hoehe / 2, 0]),
+    kasten(w.holz, [breite, staerke, cmZuEinheit(2)], [0, hoehe / 2, -tiefe / 2 + cmZuEinheit(1)]),
+  ];
+  for (const anteil of [0, 1 / 3, 2 / 3, 1]) {
+    teile.push(
+      kasten(w.holz, [breite, staerke, tiefe], [0, staerke / 2 + anteil * (hoehe - staerke), 0]),
+    );
+  }
+  return teile;
+}
+
+/** Keramikbecken auf Unterschrank mit Hahn. */
+function waschbeckenBauen(w: Werkstoffe): Bauteil[] {
+  const spec = FURNITURE_SPECS.waschbecken;
+  const breite = cmZuEinheit(spec.w);
+  const tiefe = cmZuEinheit(spec.h);
+  const hoehe = cmZuEinheit(MOEBEL_AUFBAU.waschbecken.hoehe);
+  const beckenHoehe = cmZuEinheit(15);
+  return [
+    kasten(
+      w.korpus,
+      [breite - cmZuEinheit(6), hoehe - beckenHoehe, tiefe - cmZuEinheit(6)],
+      [0, (hoehe - beckenHoehe) / 2, 0],
+    ),
+    kasten(w.keramik, [breite, beckenHoehe, tiefe], [0, hoehe - beckenHoehe / 2, 0]),
+    // Hahn: Steigrohr + Auslauf.
+    {
+      geometrie: new THREE.CylinderGeometry(cmZuEinheit(1.2), cmZuEinheit(1.2), cmZuEinheit(18), 8),
+      material: w.metall,
+      position: [0, hoehe + cmZuEinheit(9), -tiefe / 2 + cmZuEinheit(6)],
+    },
+    kasten(
+      w.metall,
+      [cmZuEinheit(2.4), cmZuEinheit(2.4), cmZuEinheit(12)],
+      [0, hoehe + cmZuEinheit(17), -tiefe / 2 + cmZuEinheit(11)],
+    ),
+  ];
+}
+
 /** Baut Möbelbauteile und Materialien für die Szene und memoisiert sie. */
 export function useBausatz(farben: Szenenfarben): Bausatz {
   const bausatz = useMemo<Bausatz>(() => {
@@ -232,6 +313,9 @@ export function useBausatz(farben: Szenenfarben): Bausatz {
         tafel: tafelBauen(werkstoffe),
         tuer: tuerBauen(werkstoffe),
         fenster: fensterBauen(werkstoffe),
+        schrank: schrankBauen(werkstoffe),
+        regal: regalBauen(werkstoffe),
+        waschbecken: waschbeckenBauen(werkstoffe),
       },
     };
   }, [farben]);

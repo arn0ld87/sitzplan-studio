@@ -129,6 +129,65 @@ export function FurnitureShape({ kind }: { kind: Furniture["kind"] }) {
           <line x1={w - 3} y1="0" x2={w - 3} y2={h} stroke="var(--window)" strokeWidth="2.5" />
         </>
       );
+    case "schrank":
+      return (
+        <g>
+          <rect
+            width={w}
+            height={h}
+            rx="2"
+            fill="var(--wood)"
+            stroke="var(--line-plan)"
+            strokeWidth="1.5"
+          />
+          <line x1={w / 2} y1="0" x2={w / 2} y2={h} stroke="var(--line-plan)" strokeWidth="1" />
+        </g>
+      );
+    case "regal":
+      return (
+        <g>
+          <rect
+            width={w}
+            height={h}
+            rx="2"
+            fill="var(--wood)"
+            stroke="var(--line-plan)"
+            strokeWidth="1.5"
+          />
+          <line x1={w / 3} y1="0" x2={w / 3} y2={h} stroke="var(--line-plan)" strokeWidth="1" />
+          <line
+            x1={(2 * w) / 3}
+            y1="0"
+            x2={(2 * w) / 3}
+            y2={h}
+            stroke="var(--line-plan)"
+            strokeWidth="1"
+          />
+        </g>
+      );
+    case "waschbecken":
+      return (
+        <g>
+          <rect
+            width={w}
+            height={h}
+            rx="3"
+            fill="var(--elevated)"
+            stroke="var(--line-plan)"
+            strokeWidth="1.5"
+          />
+          <ellipse
+            cx={w / 2}
+            cy={h / 2}
+            rx={w * 0.32}
+            ry={h * 0.3}
+            fill="none"
+            stroke="var(--line-plan)"
+            strokeWidth="1.5"
+          />
+          <circle cx={w / 2} cy={h * 0.14} r="2" fill="var(--line-plan)" />
+        </g>
+      );
   }
 }
 

@@ -302,3 +302,16 @@ describe("seatPositions", () => {
     }
   });
 });
+
+describe("FURNITURE_SPECS — neue Typen", () => {
+  it("kennt Schrank, Regal und Waschbecken ohne Sitzplätze", () => {
+    expect(FURNITURE_SPECS.schrank).toEqual({ label: "Schrank", w: 120, h: 50, seats: 0 });
+    expect(FURNITURE_SPECS.regal).toEqual({ label: "Regal", w: 100, h: 35, seats: 0 });
+    expect(FURNITURE_SPECS.waschbecken).toEqual({ label: "Waschbecken", w: 60, h: 45, seats: 0 });
+  });
+  it("liefert für die neuen Typen keine Sitzpositionen", () => {
+    expect(seatPositions("schrank")).toEqual([]);
+    expect(seatPositions("regal")).toEqual([]);
+    expect(seatPositions("waschbecken")).toEqual([]);
+  });
+});

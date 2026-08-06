@@ -75,6 +75,17 @@ describe("Raumdokument — Hin- und Rückweg", () => {
     expect(ausRaumDokument(zuRaumDokument(möbel))).toEqual(möbel);
   });
 
+  it("übersteht die Rundreise mit Schrank, Regal und Waschbecken", () => {
+    const moebel = [
+      makeFurniture("schrank", 0, 0),
+      makeFurniture("regal", 200, 0),
+      makeFurniture("waschbecken", 400, 0),
+    ];
+    const doc = zuRaumDokument(moebel);
+    expect(doc.objekte.map((o) => o.typ)).toEqual(["cabinet", "shelf", "sink"]);
+    expect(ausRaumDokument(doc)).toEqual(moebel);
+  });
+
   it("schreibt die Maße aus der Möbelspezifikation ins Dokument", () => {
     const doc = zuRaumDokument([makeFurniture("doppeltisch", 10, 20)]);
     expect(doc.objekte[0]).toMatchObject({

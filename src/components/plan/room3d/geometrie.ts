@@ -62,6 +62,9 @@ export const MOEBEL_AUFBAU: Record<FurnitureKind, { hoehe: number; sockel: numbe
   tafel: { hoehe: 120, sockel: 90 },
   tuer: { hoehe: 205, sockel: 0 },
   fenster: { hoehe: 120, sockel: 90 },
+  schrank: { hoehe: 190, sockel: 0 },
+  regal: { hoehe: 120, sockel: 0 },
+  waschbecken: { hoehe: 85, sockel: 0 },
 };
 
 /** Maße eines einfachen Stuhls in Zentimetern. */

@@ -139,51 +139,6 @@ function pflanzeTeile(w: DekoWerkstoffe): Bauteil[] {
   ];
 }
 
-/** Großmöbel-Deko „Schrank": Korpus, Türfuge, zwei Griffe. */
-function schrankDekoTeile(w: DekoWerkstoffe): Bauteil[] {
-  const breite = cmZuEinheit(120);
-  const hoehe = cmZuEinheit(190);
-  const tiefe = cmZuEinheit(50);
-  return [
-    kasten(w.holz, [breite, hoehe, tiefe], [0, hoehe / 2, 0]),
-    kasten(w.dunkel, [cmZuEinheit(1), cmZuEinheit(170), cmZuEinheit(1)], [0, hoehe / 2, tiefe / 2]),
-    kasten(
-      w.metall,
-      [cmZuEinheit(2), cmZuEinheit(10), cmZuEinheit(2)],
-      [-cmZuEinheit(6), cmZuEinheit(100), tiefe / 2],
-    ),
-    kasten(
-      w.metall,
-      [cmZuEinheit(2), cmZuEinheit(10), cmZuEinheit(2)],
-      [cmZuEinheit(6), cmZuEinheit(100), tiefe / 2],
-    ),
-  ];
-}
-
-/** Großmöbel-Deko „Regal": zwei Wangen, vier Böden, drei Bücherreihen. */
-function regalDekoTeile(w: DekoWerkstoffe): Bauteil[] {
-  const breite = cmZuEinheit(100);
-  const tiefe = cmZuEinheit(30);
-  const hoehe = cmZuEinheit(120);
-  const staerke = cmZuEinheit(3);
-  const teile: Bauteil[] = [
-    kasten(w.holz, [staerke, hoehe, tiefe], [-(breite - staerke) / 2, hoehe / 2, 0]),
-    kasten(w.holz, [staerke, hoehe, tiefe], [(breite - staerke) / 2, hoehe / 2, 0]),
-  ];
-  for (const h of [0, 39, 78, 117]) {
-    teile.push(kasten(w.holz, [breite, staerke, tiefe], [0, cmZuEinheit(h), 0]));
-  }
-  const faecher: [number, THREE.Material][] = [
-    [cmZuEinheit(19.5), w.papierA],
-    [cmZuEinheit(58.5), w.papierB],
-    [cmZuEinheit(97.5), w.papierA],
-  ];
-  for (const [h, material] of faecher) {
-    teile.push(kasten(material, [cmZuEinheit(80), cmZuEinheit(22), cmZuEinheit(22)], [0, h, 0]));
-  }
-  return teile;
-}
-
 /** Poster-Fläche + Rahmen, dreimal — je Variante ein anderes Werkstoff, geteilte Geometrie. */
 function posterTeile(w: DekoWerkstoffe): [Bauteil[], Bauteil[], Bauteil[]] {
   const posterGeo = new THREE.BoxGeometry(cmZuEinheit(60), cmZuEinheit(80), cmZuEinheit(1));
@@ -229,8 +184,6 @@ function ausstattungBauen(farben: Szenenfarben): {
     kreide: kreideTeile(werkstoffe),
     papierkorb: papierkorbTeile(werkstoffe),
     pflanze: pflanzeTeile(werkstoffe),
-    schrankDeko: schrankDekoTeile(werkstoffe),
-    regalDeko: regalDekoTeile(werkstoffe),
     fensterTopf: fensterTopfTeile(werkstoffe),
     leuchte: leuchteTeile(werkstoffe),
   };
