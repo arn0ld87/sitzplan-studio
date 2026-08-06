@@ -31,7 +31,14 @@ function raumMitZweiDoppeltischen() {
   const rechtsT = makeFurniture("doppeltisch", 200, 0);
   const einzelT = makeFurniture("einzeltisch", 0, 200);
   return {
-    room: { name: "7b", width: 600, height: 400, grid: 10, furniture: [linksT, rechtsT, einzelT] },
+    room: {
+      name: "7b",
+      width: 600,
+      height: 400,
+      grid: 10,
+      vorn: "oben" as const,
+      furniture: [linksT, rechtsT, einzelT],
+    },
     linksA: sitz(linksT, 1),
     linksB: sitz(linksT, 2),
     rechtsA: sitz(rechtsT, 1),
@@ -298,7 +305,7 @@ describe("Randfälle des Plans", () => {
   it("meldet für einen leeren Raum ohne Möbel und ohne Schüler keinen Konflikt", () => {
     const leer: PlanAusschnitt = {
       classId: KLASSE,
-      room: { name: "leer", width: 400, height: 300, grid: 10, furniture: [] },
+      room: { name: "leer", width: 400, height: 300, grid: 10, vorn: "oben", furniture: [] },
       assignments: {},
     };
     expect(leer.room.furniture).toHaveLength(0);

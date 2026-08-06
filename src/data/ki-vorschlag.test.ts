@@ -27,7 +27,14 @@ const ALLE = [ANNA, BEN, CEM, DANA];
 
 const PLAN: PlanAusschnitt = {
   classId: KLASSE,
-  room: { name: "R1", width: 600, height: 400, grid: 25, furniture: [tischA, tischB] },
+  room: {
+    name: "R1",
+    width: 600,
+    height: 400,
+    grid: 25,
+    vorn: "oben",
+    furniture: [tischA, tischB],
+  },
   assignments: {},
 };
 

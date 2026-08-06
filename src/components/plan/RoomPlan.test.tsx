@@ -10,6 +10,7 @@ function raumMit(rotation: 0 | 90 | 180 | 270): RoomGeometry {
     width: 800,
     height: 600,
     grid: 25,
+    vorn: "oben",
     furniture: [{ ...tisch, rotation }],
   };
 }

@@ -8,6 +8,7 @@ import {
   type Furniture,
   type RoomGeometry,
   type Student,
+  type VornSeite,
 } from "@/data/types";
 import { aufRasterPunkt, rasterWeite } from "@/lib/raster";
 
@@ -216,6 +217,53 @@ function Seat({
   );
 }
 
+const VORN_INSET = 14;
+const VORN_LAENGE_ANTEIL = 0.28;
+
+/**
+ * Geometrie der Vorn-Markierung: eine kurze Linie innen an der Kante, an der
+ * die Klasse „vorn" hat, plus Textanker für das Label „vorn". Bei „links" und
+ * „rechts" steht der Text gedreht, damit er der Kante folgt.
+ */
+function vornMarkerGeometrie(width: number, height: number, vorn: VornSeite) {
+  switch (vorn) {
+    case "oben": {
+      const cx = width / 2;
+      const len = width * VORN_LAENGE_ANTEIL;
+      return {
+        line: { x1: cx - len / 2, y1: VORN_INSET, x2: cx + len / 2, y2: VORN_INSET },
+        text: { x: cx, y: VORN_INSET + 16, rotate: 0 },
+      };
+    }
+    case "unten": {
+      const cx = width / 2;
+      const len = width * VORN_LAENGE_ANTEIL;
+      const y = height - VORN_INSET;
+      return {
+        line: { x1: cx - len / 2, y1: y, x2: cx + len / 2, y2: y },
+        text: { x: cx, y: y - 8, rotate: 0 },
+      };
+    }
+    case "links": {
+      const cy = height / 2;
+      const len = height * VORN_LAENGE_ANTEIL;
+      return {
+        line: { x1: VORN_INSET, y1: cy - len / 2, x2: VORN_INSET, y2: cy + len / 2 },
+        text: { x: VORN_INSET + 16, y: cy, rotate: -90 },
+      };
+    }
+    case "rechts": {
+      const cy = height / 2;
+      const len = height * VORN_LAENGE_ANTEIL;
+      const x = width - VORN_INSET;
+      return {
+        line: { x1: x, y1: cy - len / 2, x2: x, y2: cy + len / 2 },
+        text: { x: x - 16, y: cy, rotate: 90 },
+      };
+    }
+  }
+}
+
 /**
  * SVG-Grundriss mit optionalem Raster, Möbelauswahl, Ziehen und Sitzplatzbelegung.
  *
@@ -352,6 +400,38 @@ export function RoomPlan({
           {room.height} cm
         </text>
       </g>
+
+      {/* Vorn-Markierung: Linie und Label „vorn" an der Kante, an der die Klasse vorn hat. */}
+      {(() => {
+        const marker = vornMarkerGeometrie(room.width, room.height, room.vorn);
+        return (
+          <g aria-hidden="true">
+            <line
+              x1={marker.line.x1}
+              y1={marker.line.y1}
+              x2={marker.line.x2}
+              y2={marker.line.y2}
+              stroke="var(--line-strong)"
+              strokeWidth="2"
+            />
+            <text
+              x={marker.text.x}
+              y={marker.text.y}
+              textAnchor="middle"
+              fontFamily="var(--font-mono)"
+              fontSize="11"
+              fill="var(--ink-3)"
+              transform={
+                marker.text.rotate
+                  ? `rotate(${marker.text.rotate} ${marker.text.x} ${marker.text.y})`
+                  : undefined
+              }
+            >
+              vorn
+            </text>
+          </g>
+        );
+      })()}
 
       {room.furniture.map((f) => {
         const spec = FURNITURE_SPECS[f.kind];

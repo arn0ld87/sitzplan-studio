@@ -4,6 +4,7 @@ import {
   FURNITURE_SPECS,
   initials,
   seatId,
+  vornSeite,
   type Furniture,
   type FurnitureKind,
   type Room,
@@ -14,6 +15,7 @@ import {
   type PlanStatus,
   type RuleKind,
   type SeatRule,
+  type VornSeite,
 } from "./types";
 
 export const RAUM_DOKUMENT_VERSION = 3;
@@ -55,7 +57,12 @@ export type CanvasSitzplatz = {
   bezeichnung: string;
 };
 
-export type RaumDokument = { objekte: CanvasObjekt[]; sitzplaetze: CanvasSitzplatz[] };
+export type RaumDokument = {
+  objekte: CanvasObjekt[];
+  sitzplaetze: CanvasSitzplatz[];
+  /** Fehlt bei Dokumenten, die vor dem Vorn-Feld entstanden sind — dann „oben". */
+  vorn?: VornSeite;
+};
 
 /** Anker der Sitzplätze: Stirnseite des Tisches, gleichmäßig über die Breite verteilt. */
 export function sitzplaetzeFuer(f: Furniture): CanvasSitzplatz[] {
@@ -111,6 +118,8 @@ export type PlanDokument = {
     breiteCm: number;
     laengeCm: number;
     rasterCm: number;
+    /** Fehlt bei Dokumenten, die vor dem Vorn-Feld entstanden sind — dann „oben". */
+    vorn?: VornSeite;
     objekte: CanvasObjekt[];
     sitzplaetze: CanvasSitzplatz[];
   };
@@ -125,6 +134,7 @@ export function zuPlanDokument(plan: SeatingPlan): PlanDokument {
       breiteCm: plan.room.width,
       laengeCm: plan.room.height,
       rasterCm: plan.room.grid,
+      vorn: plan.room.vorn,
       objekte: doc.objekte,
       sitzplaetze: doc.sitzplaetze,
     },
@@ -158,6 +168,7 @@ export function ausPlanDokument(
       width: Number(g.breiteCm) || 0,
       height: Number(g.laengeCm) || 0,
       grid: Number(g.rasterCm) || 10,
+      vorn: vornSeite(g.vorn),
       furniture: ausRaumDokument({ objekte: g.objekte ?? [], sitzplaetze: g.sitzplaetze ?? [] }),
     },
     assignments,
@@ -272,7 +283,7 @@ export function raumZuRow(r: Room, userId: string, deletedAt: string | null): Ra
     breite_cm: r.width,
     laenge_cm: r.height,
     raster_cm: r.grid,
-    canvas_document: zuRaumDokument(r.furniture),
+    canvas_document: { ...zuRaumDokument(r.furniture), vorn: r.vorn },
     dokument_version: RAUM_DOKUMENT_VERSION,
     created_at: r.createdAt,
     deleted_at: deletedAt,
@@ -323,6 +334,7 @@ export function rowZuRaum(row: RaumRow): Room {
     width: Number(row.breite_cm),
     height: Number(row.laenge_cm),
     grid: Number(row.raster_cm),
+    vorn: vornSeite(row.canvas_document?.vorn),
     furniture: ausRaumDokument(row.canvas_document),
     createdAt: row.created_at,
   };

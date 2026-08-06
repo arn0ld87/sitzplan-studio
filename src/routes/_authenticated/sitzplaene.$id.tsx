@@ -25,7 +25,16 @@ import { ConfirmDialog } from "@/components/ui-kit/ConfirmDialog";
 import { Field, Modal, inputClass } from "@/components/ui-kit/Modal";
 import { SearchField } from "@/components/ui-kit/SearchField";
 import { RoomPlan } from "@/components/plan/RoomPlan";
-import { allSeats, seatCount, studentName, type PlanStatus, type Student } from "@/data/types";
+import {
+  allSeats,
+  seatCount,
+  studentName,
+  VORN_LABEL,
+  VORN_SEITEN,
+  type PlanStatus,
+  type Student,
+  type VornSeite,
+} from "@/data/types";
 import { nachbarplaetze, pruefeSitzregeln } from "@/data/sitzregeln";
 import { useStore } from "@/store/app";
 import { supabase } from "@/integrations/supabase/client";
@@ -356,6 +365,24 @@ function SitzplanEditor() {
               {STATUS.map((s) => (
                 <option key={s.value} value={s.value}>
                   {s.label}
+                </option>
+              ))}
+            </select>
+            <select
+              aria-label="Wo im Raum ist vorn"
+              className="h-10 rounded-[6px] border border-line-control bg-elevated px-2.5 text-[13px]"
+              value={plan.room.vorn}
+              onChange={(e) =>
+                dispatch({
+                  type: "plan/vorn",
+                  id: plan.id,
+                  vorn: e.target.value as VornSeite,
+                })
+              }
+            >
+              {VORN_SEITEN.map((s) => (
+                <option key={s} value={s}>
+                  vorn: {VORN_LABEL[s]}
                 </option>
               ))}
             </select>

@@ -48,6 +48,7 @@ const raum: Room = {
   width: 800,
   height: 600,
   grid: 10,
+  vorn: "oben",
   furniture: [makeFurniture("doppeltisch", 100, 100)],
   createdAt: "2026-01-15T08:00:00Z",
 };
@@ -57,7 +58,14 @@ const plan: SeatingPlan = {
   title: "Klassenarbeit",
   classId: "k1",
   roomId: "r1",
-  room: { name: "Raum 204", width: 800, height: 600, grid: 10, furniture: raum.furniture },
+  room: {
+    name: "Raum 204",
+    width: 800,
+    height: 600,
+    grid: 10,
+    vorn: "oben",
+    furniture: raum.furniture,
+  },
   status: "aktiv",
   updated: "2026-08-01T10:00:00Z",
   assignments: {},

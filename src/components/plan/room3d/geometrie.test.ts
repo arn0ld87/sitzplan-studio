@@ -253,6 +253,38 @@ describe("startKamera", () => {
       startKamera({ width: 400, height: 900 }),
     );
   });
+
+  it("bleibt bei fehlendem vorn wie bisher von +Z ausgerichtet", () => {
+    const k = startKamera({ width: 800, height: 600 });
+    expect(k.position[2]).toBeGreaterThan(0);
+  });
+
+  it.each([
+    ["oben", "z", 1] as const,
+    ["unten", "z", -1] as const,
+    ["links", "x", 1] as const,
+    ["rechts", "x", -1] as const,
+  ])("blickt bei vorn=%s längs der %s-Achse in Richtung %i", (vorn, achse, vorzeichen) => {
+    const k = startKamera({ width: 800, height: 600, vorn });
+    const [x, , z] = k.position;
+    // Die Hauptkomponente (lang) liegt in der Achse der Vorn-Richtung,
+    // die Nebenkomponente (quer) in der jeweils anderen Horizontalachse.
+    if (achse === "z") {
+      expect(Math.abs(z)).toBeGreaterThan(Math.abs(x));
+      expect(Math.sign(z)).toBe(vorzeichen);
+    } else {
+      expect(Math.abs(x)).toBeGreaterThan(Math.abs(z));
+      expect(Math.sign(x)).toBe(vorzeichen);
+    }
+  });
+
+  it("behält Höhe und Blickziel über alle vier Ausrichtungen bei", () => {
+    const varianten = (["oben", "rechts", "unten", "links"] as const).map((vorn) =>
+      startKamera({ width: 800, height: 600, vorn }),
+    );
+    expect(varianten.every((k) => k.position[1] === varianten[0]!.position[1])).toBe(true);
+    expect(varianten.every((k) => k.ziel[0] === 0 && k.ziel[2] === 0)).toBe(true);
+  });
 });
 
 describe("draufsichtKamera", () => {

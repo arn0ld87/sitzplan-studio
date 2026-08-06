@@ -81,6 +81,7 @@ const RAUM: Room = {
   width: 800,
   height: 600,
   grid: 10,
+  vorn: "oben",
   furniture: [TISCH],
   createdAt: "2026-07-02T08:00:00.000Z",
 };
@@ -95,6 +96,7 @@ const PLAN: SeatingPlan = {
     width: RAUM.width,
     height: RAUM.height,
     grid: RAUM.grid,
+    vorn: RAUM.vorn,
     furniture: [TISCH],
   },
   status: "aktiv",
