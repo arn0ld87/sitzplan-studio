@@ -155,6 +155,8 @@ Konventionen des Moduls (in den Dateikopf-Kommentar übernehmen):
 - „Wandgebunden“ heißt: `kind` ist `tafel`, `tuer` oder `fenster` **und** der Abstand der nächsten Wand < 40 cm.
 - Jede Deko, deren Platz nicht frei ist, wird **weggelassen** statt erzwungen.
 
+„Frei" ist dabei definiert: Bodenstehende Deko (papierkorb 28×28 cm, pflanze 40×40, schrankDeko 120×50, regalDeko 100×30; fensterTopf ausgenommen) hat eine achsenparallele Grundfläche um ihren Mittelpunkt. Sie wird nur platziert, wenn diese Grundfläche weder ein Möbel-Rechteck aus `raum.furniture` (Grundfläche nach Drehung) noch die Grundfläche bereits platzierter Boden-Deko überlappt. Die Pflanze probiert vorher die übrigen Ecken-Kandidaten in absteigender Türferne. Tests dazu: Papierkorb entfällt bei belegter Position, Pflanze weicht in die nächstbeste Ecke aus.
+
 Platzierungsregeln (exakt so implementieren):
 
 | Deko | Regel |
@@ -324,7 +326,7 @@ git commit -m "feat: Platzierungslogik für die 3D-Ausstattung"
 
 **Interfaces:**
 - Consumes: `ausstattungPlatzierungen`, `DekoPlatzierung`, `DekoArt` aus `./ausstattung`; `kasten`, `flaeche`, `Bauteil` aus `./bausatz`; `cmZuEinheit`, `raumMasse` aus `./geometrie`; `Szenenfarben` aus `./farben`.
-- Produces: `export function Ausstattung3D({ raum, farben }: { raum: RoomGeometry; farben: Szenenfarben }): JSX.Element` — Task 4 bindet genau diese Signatur in `Szene.tsx` ein.
+- Produces: `export function Ausstattung3D({ raum, farben }: { raum: RoomGeometry; farben: Szenenfarben })` (Rückgabetyp inferieren lassen — React 19 hat keinen globalen `JSX`-Namespace mehr) — Task 4 bindet genau diese Signatur in `Szene.tsx` ein.
 
 Aufbau der Datei (Muster: `Moebel3D.tsx` + `useBausatz`):
 
@@ -336,7 +338,7 @@ Aufbau der Datei (Muster: `Moebel3D.tsx` + `useBausatz`):
    - `weiss = flaeche(farben["--elevated"], 0.6)`
    - `dunkel = flaeche(farben["--line-plan"], 0.8)`
    - `kante = flaeche(farben["--line-strong"], 0.9)`
-   - `leuchtend = new THREE.MeshStandardMaterial({ color: farben["--elevated"], emissive: new THREE.Color("#ffffff"), emissiveIntensity: 0.35, roughness: 0.4, metalness: 0 })`
+   - `leuchtend = new THREE.MeshStandardMaterial({ color: farben["--elevated"], emissive: new THREE.Color(farben["--elevated"]), emissiveIntensity: 0.35, roughness: 0.4, metalness: 0 })`
 2. **Bauteil-Listen je `DekoArt`** per `useMemo`, alle Maße in cm über `cmZuEinheit`:
    - `uhr`: flacher Zylinder als Zifferblatt (`CylinderGeometry(r=15, r=15, 3, 24)`, um 90° zur Wand gekippt, `weiss`), Ring dahinter (`r=17`, Dicke 2, `metall`), zwei Zeiger-Kästen (`kasten(dunkel, [1.5, 10, 1], …)` und `[1.5, 7, 1]` um 60° gedreht).
    - `schwamm`: `kasten(farben → sunken über flaeche(farben["--sunken"], 0.95), [12, 5, 6], …)` — Werkstoff `schwammStoff` ergänzen.
@@ -636,6 +638,8 @@ it("enthält keine Großmöbel-Deko mehr — Schrank und Regal sind jetzt platzi
   expect(arten).not.toContain("regalDeko");
 });
 ```
+
+Beim Rückbau wird `WANDGEBUNDEN` in ausstattung.ts um `"schrank"` und `"regal"` erweitert, damit wandnah platzierte echte Schränke/Regale Wandabschnitte für Poster blockieren; dazu ein Regressionstest („Poster erscheint nicht auf einem Wandabschnitt, den ein echter Schrank belegt").
 
 - [ ] **Step 6: Gate**
 
