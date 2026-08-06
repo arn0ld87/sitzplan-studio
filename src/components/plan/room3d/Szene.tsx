@@ -5,14 +5,16 @@
 // keine Bildschleife. `flat` schaltet das Tone-Mapping ab, damit die Farben
 // exakt den Tokens aus dem Designsystem entsprechen.
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
 import type { RoomGeometry, SeatAssignment } from "@/data/types";
 import { Ausstattung3D } from "./Ausstattung3D";
 import { useBausatz } from "./bausatz";
 import { leseSzenenfarben, type Szenenfarben } from "./farben";
 import { Kamerasteuerung, type Ansichtsmodus } from "./Kamerasteuerung";
+import { useKinderBausatz } from "./kinderBausatz";
 import { Moebel3D } from "./Moebel3D";
+import { lehrerinnenPultId } from "./lehrerin";
 import { Raumhuelle } from "./Raumhuelle";
 import { raumMasse, startKamera } from "./geometrie";
 
@@ -105,8 +107,10 @@ export default function Szene({
   const start = startKamera(raum);
   const farben = useMemo(() => leseSzenenfarben(), []);
   const bausatz = useBausatz(farben);
+  const kinderBausatz = useKinderBausatz(8);
   const waehlen = useCallback((id: string) => onSelect(id), [onSelect]);
   const animieren = (belegung ?? []).length > 0;
+  const pultId = lehrerinnenPultId(raum.furniture);
 
   return (
     <Canvas
@@ -132,9 +136,11 @@ export default function Szene({
           moebel={moebel}
           raum={raum}
           bausatz={bausatz}
+          kinderBausatz={kinderBausatz}
           farben={farben}
           ausgewaehlt={selectedId === moebel.id}
           belegung={belegung}
+          lehrerinAnzeigen={moebel.id === pultId}
           onSelect={waehlen}
         />
       ))}

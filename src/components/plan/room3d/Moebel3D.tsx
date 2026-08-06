@@ -9,8 +9,16 @@ import * as THREE from "three";
 import type { Furniture, RoomGeometry, SeatAssignment } from "@/data/types";
 import type { Bausatz, Bauteil } from "./bausatz";
 import type { Szenenfarben } from "./farben";
-import { cmZuEinheit, moebelPlatzierung, stuhlPlatzierung, kindPlatzierung } from "./geometrie";
+import {
+  cmZuEinheit,
+  kindPlatzierung,
+  lehrerinPlatzierung,
+  moebelPlatzierung,
+  stuhlPlatzierung,
+} from "./geometrie";
+import type { KinderBausatz } from "./kinderBausatz";
 import { Kind3D } from "./Kind3D";
+import { Lehrerin3D } from "./Lehrerin3D";
 import { belegungFuerMoebel } from "./kinder";
 
 /** Rendert die Bauteile eines Möbelstücks als Three.js-Meshes mit ihrer vorgegebenen Geometrie, ihrem Material und ihrer Position. */
@@ -66,17 +74,21 @@ export function Moebel3D({
   moebel,
   raum,
   bausatz,
+  kinderBausatz,
   farben,
   ausgewaehlt,
   belegung,
+  lehrerinAnzeigen,
   onSelect,
 }: {
   moebel: Furniture;
   raum: Pick<RoomGeometry, "width" | "height">;
   bausatz: Bausatz;
+  kinderBausatz: KinderBausatz;
   farben: Szenenfarben;
   ausgewaehlt: boolean;
   belegung?: SeatAssignment[] | undefined;
+  lehrerinAnzeigen?: boolean;
   onSelect?: ((id: string) => void) | undefined;
 }) {
   const { position, drehung, masse } = moebelPlatzierung(moebel, raum);
@@ -84,6 +96,7 @@ export function Moebel3D({
     .map((_, i) => stuhlPlatzierung(moebel.kind, i))
     .filter((s): s is NonNullable<typeof s> => s !== null);
   const stuhlBelegung = belegungFuerMoebel(belegung, moebel);
+  const lehrerinPlatz = lehrerinAnzeigen ? lehrerinPlatzierung(moebel.kind) : null;
 
   return (
     <group
@@ -99,6 +112,11 @@ export function Moebel3D({
         : {})}
     >
       <Bauteile teile={bausatz.moebel[moebel.kind]} />
+      {lehrerinPlatz && (
+        <group position={lehrerinPlatz.position} rotation={[0, lehrerinPlatz.drehung, 0]}>
+          <Lehrerin3D farben={farben} />
+        </group>
+      )}
       {stuehle.map((stuhl, i) => {
         const kindPlatz = kindPlatzierung(moebel.kind, i);
         const student = stuhlBelegung.find((b) => b.seatIndex === i)?.student;
@@ -107,7 +125,11 @@ export function Moebel3D({
             <Bauteile teile={bausatz.stuhl} />
             {student && kindPlatz && (
               <group position={kindPlatz.position} rotation={[0, kindPlatz.drehung, 0]}>
-                <Kind3D colorIndex={student.colorIndex} ausgewaehlt={ausgewaehlt} />
+                <Kind3D
+                  colorIndex={student.colorIndex}
+                  ausgewaehlt={ausgewaehlt}
+                  bausatz={kinderBausatz}
+                />
               </group>
             )}
           </group>

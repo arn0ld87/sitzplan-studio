@@ -98,9 +98,18 @@ function SitzplanEditor() {
     [cls],
   );
 
+  // Sichtbare Zuordnung ohne Vorgriff auf Plan/Editor-Effects — auch leer,
+  // wenn kein Plan vorhanden ist. Memo, damit das `sitzplanBelegung`-Memo
+  // darunter nicht bei jedem Render neue Abhängigkeiten sieht.
+  const sichtbareZuordnung = useMemo<Record<string, string>>(
+    () => kiVorschau?.assignments ?? plan?.assignments ?? {},
+    [kiVorschau, plan],
+  );
+
+  // Belegung für die 3D-Ansicht, abgeleitet aus der **sichtbaren** Zuordnung
+  // (Plan oder KI-Vorschau). 2D und 3D zeigen damit dieselben Sitzplätze.
   const sitzplanBelegung = useMemo<SeatAssignment[]>(() => {
-    if (!plan) return [];
-    return Object.entries(plan.assignments)
+    return Object.entries(sichtbareZuordnung)
       .map(([seatId, studentId]) => {
         const student = studentsById[studentId];
         if (!student) return null;
@@ -113,7 +122,7 @@ function SitzplanEditor() {
         } satisfies SeatAssignment;
       })
       .filter((e): e is NonNullable<typeof e> => e !== null);
-  }, [plan, studentsById]);
+  }, [sichtbareZuordnung, studentsById]);
 
   const setAssignments = useCallback(
     (next: Record<string, string>) => {
@@ -268,8 +277,8 @@ function SitzplanEditor() {
   // Solange eine KI-Vorschau offen ist, zeigt die Ansicht durchgängig sie:
   // Zeichnung, Ablage und Zähler. Ein halb umgestellter Bildschirm wäre
   // schlimmer als gar keine Vorschau.
-  const sichtbareZuordnung = kiVorschau?.assignments ?? plan.assignments;
   const belegteIds = new Set(Object.values(sichtbareZuordnung));
+
   const offen = (cls?.students ?? []).filter((s) => !belegteIds.has(s.id));
   const gefiltert = q.trim()
     ? offen.filter((s) => studentName(s).toLowerCase().includes(q.trim().toLowerCase()))
