@@ -372,13 +372,14 @@ function SitzplanEditor() {
               aria-label="Wo im Raum ist vorn"
               className="h-10 rounded-[6px] border border-line-control bg-elevated px-2.5 text-[13px]"
               value={plan.room.vorn}
-              onChange={(e) =>
+              onChange={(e) => {
+                setKiVorschau(null);
                 dispatch({
                   type: "plan/vorn",
                   id: plan.id,
                   vorn: e.target.value as VornSeite,
-                })
-              }
+                });
+              }}
             >
               {VORN_SEITEN.map((s) => (
                 <option key={s} value={s}>
