@@ -99,6 +99,12 @@ describe("ausstattungPlatzierungen", () => {
     const arten = ausstattungPlatzierungen(raumMit([pult, tisch])).map((p) => p.art);
     expect(arten).not.toContain("papierkorb");
   });
+  it("lässt den Papierkorb weg, wenn das Pult an der Ostwand steht", () => {
+    // Rechte Pult-Kante bei x=900: die 28×28-Fläche um (925, 340) ragt aus dem Raum.
+    const pult = moebel("pult", 740, 300);
+    const arten = ausstattungPlatzierungen(raumMit([pult])).map((p) => p.art);
+    expect(arten).not.toContain("papierkorb");
+  });
   it("weicht mit der Pflanze in die nächstbeste Ecke aus, wenn die türfernste belegt ist", () => {
     const tuer = moebel("tuer", 0, 680); // unten links — türfernste Ecke ist oben rechts (865, 35)
     // Tisch überlappt die 40×40-Fläche um (865,35): spannt x:[845,905], y:[15,65].

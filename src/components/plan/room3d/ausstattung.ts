@@ -193,19 +193,28 @@ function moebelRechteck(f: Furniture): Rechteck {
 
 /**
  * Prüft, ob die achsenparallele Grundfläche einer Boden-Deko (Mittelpunkt
- * `xCm`/`yCm`, Maße `w`×`h` nach Drehung) mit einem Möbelstück aus
- * `furniture` oder einer bereits platzierten Boden-Deko kollidiert.
+ * `xCm`/`yCm`, Maße `w`×`h` nach Drehung) vollständig im Raum liegt und
+ * weder mit einem Möbelstück aus `raum.furniture` noch mit einer bereits
+ * platzierten Boden-Deko kollidiert.
  */
 function bodenflaecheFrei(
   xCm: number,
   yCm: number,
   w: number,
   h: number,
-  furniture: Furniture[],
+  raum: Pick<RoomGeometry, "width" | "height" | "furniture">,
   bereitsPlatziert: Rechteck[],
 ): boolean {
   const kandidat = rechteckAusMitte(xCm, yCm, w, h);
-  for (const f of furniture) {
+  if (
+    kandidat.xVon < 0 ||
+    kandidat.xBis > raum.width ||
+    kandidat.yVon < 0 ||
+    kandidat.yBis > raum.height
+  ) {
+    return false;
+  }
+  for (const f of raum.furniture) {
     if (rechteckeUeberlappen(kandidat, moebelRechteck(f))) return false;
   }
   for (const r of bereitsPlatziert) {
@@ -307,7 +316,7 @@ export function ausstattungPlatzierungen(raum: RoomGeometry): DekoPlatzierung[] 
       xCm = 40;
       yCm = 40;
     }
-    if (bodenflaecheFrei(xCm, yCm, PAPIERKORB, PAPIERKORB, raum.furniture, bodenRechtecke)) {
+    if (bodenflaecheFrei(xCm, yCm, PAPIERKORB, PAPIERKORB, raum, bodenRechtecke)) {
       const rechteck = rechteckAusMitte(xCm, yCm, PAPIERKORB, PAPIERKORB);
       bodenRechtecke.push(rechteck);
       ergebnis.push({ art: "papierkorb", xCm, yCm, zCm: 0, drehungGrad: 0 });
@@ -335,7 +344,7 @@ export function ausstattungPlatzierungen(raum: RoomGeometry): DekoPlatzierung[] 
         : Math.min(...tuerMitten.map((t) => Math.hypot(ecke.x - t.x, ecke.y - t.y)));
     const kandidaten = [...ecken].sort((a, b) => mindestabstand(b) - mindestabstand(a));
     for (const ecke of kandidaten) {
-      if (bodenflaecheFrei(ecke.x, ecke.y, PFLANZE, PFLANZE, raum.furniture, bodenRechtecke)) {
+      if (bodenflaecheFrei(ecke.x, ecke.y, PFLANZE, PFLANZE, raum, bodenRechtecke)) {
         const rechteck = rechteckAusMitte(ecke.x, ecke.y, PFLANZE, PFLANZE);
         bodenRechtecke.push(rechteck);
         ergebnis.push({ art: "pflanze", xCm: ecke.x, yCm: ecke.y, zCm: 0, drehungGrad: 0 });
@@ -403,7 +412,7 @@ export function ausstattungPlatzierungen(raum: RoomGeometry): DekoPlatzierung[] 
         const quer = seite === "west" || seite === "ost";
         const w = quer ? SCHRANK_TIEFE : SCHRANK_BREITE;
         const h = quer ? SCHRANK_BREITE : SCHRANK_TIEFE;
-        if (!bodenflaecheFrei(xCm, yCm, w, h, raum.furniture, bodenRechtecke)) continue;
+        if (!bodenflaecheFrei(xCm, yCm, w, h, raum, bodenRechtecke)) continue;
         bodenRechtecke.push(rechteckAusMitte(xCm, yCm, w, h));
         ergebnis.push({
           art: "schrankDeko",
@@ -447,7 +456,7 @@ export function ausstattungPlatzierungen(raum: RoomGeometry): DekoPlatzierung[] 
         const quer = seite === "west" || seite === "ost";
         const w = quer ? REGAL_TIEFE : REGAL_BREITE;
         const h = quer ? REGAL_BREITE : REGAL_TIEFE;
-        if (!bodenflaecheFrei(xCm, yCm, w, h, raum.furniture, bodenRechtecke)) continue;
+        if (!bodenflaecheFrei(xCm, yCm, w, h, raum, bodenRechtecke)) continue;
         bodenRechtecke.push(rechteckAusMitte(xCm, yCm, w, h));
         ergebnis.push({
           art: "regalDeko",
