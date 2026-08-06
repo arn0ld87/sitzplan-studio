@@ -127,6 +127,7 @@ export function RoomPlan3D({
   const [imBrowser, setImBrowser] = useState(false);
   const [webgl, setWebgl] = useState(true);
   const [modus, setModus] = useState<Ansichtsmodus>("perspektive");
+  const [ausstattung, setAusstattung] = useState(true);
   const [zuruecksetzen, setZuruecksetzen] = useState(0);
   const [fehlerZaehler, setFehlerZaehler] = useState(0);
 
@@ -187,12 +188,29 @@ export function RoomPlan3D({
               modus={modus}
               zuruecksetzen={zuruecksetzen}
               beschriftung={raumBeschreiben(room)}
+              ausstattungZeigen={ausstattung}
               onFehler={() => setFehlerZaehler((n) => n + 1)}
             />
           </Suspense>
         </SzeneGrenze>
 
         <div className="absolute right-3 top-3 flex gap-1.5">
+          {/* Schaltknopf mit festem Namen: `aria-pressed` sagt, ob die
+              Ausstattung sichtbar ist. Ein wechselnder Name würde das
+              Gegenteil behaupten. */}
+          <Button
+            variant="secondary"
+            size="sm"
+            aria-pressed={ausstattung}
+            onClick={() => setAusstattung((a) => !a)}
+          >
+            {ausstattung ? (
+              <SquareCheckBig size={16} strokeWidth={1.5} aria-hidden />
+            ) : (
+              <Square size={16} strokeWidth={1.5} aria-hidden />
+            )}
+            Ausstattung
+          </Button>
           {/* Schaltknopf mit festem Namen: `aria-pressed` sagt, ob die
               Draufsicht aktiv ist. Ein wechselnder Name würde das Gegenteil
               behaupten. */}
