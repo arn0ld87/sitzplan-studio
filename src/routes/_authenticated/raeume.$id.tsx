@@ -17,6 +17,9 @@ import {
   PanelTop,
   DoorClosed,
   Blinds,
+  Archive,
+  Rows3,
+  Droplets,
 } from "lucide-react";
 import { Button } from "@/components/ui-kit/Button";
 import { PageHeader } from "@/components/PageHeader";
@@ -62,6 +65,9 @@ const PALETTE: { kind: FurnitureKind; icon: typeof Square }[] = [
   { kind: "tafel", icon: Presentation },
   { kind: "tuer", icon: DoorClosed },
   { kind: "fenster", icon: Blinds },
+  { kind: "schrank", icon: Archive },
+  { kind: "regal", icon: Rows3 },
+  { kind: "waschbecken", icon: Droplets },
 ];
 
 /**

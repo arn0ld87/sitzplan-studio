@@ -84,7 +84,16 @@ export type SchoolClass = {
   createdAt: string;
 };
 
-export type FurnitureKind = "einzeltisch" | "doppeltisch" | "pult" | "tafel" | "tuer" | "fenster";
+export type FurnitureKind =
+  | "einzeltisch"
+  | "doppeltisch"
+  | "pult"
+  | "tafel"
+  | "tuer"
+  | "fenster"
+  | "schrank"
+  | "regal"
+  | "waschbecken";
 
 export type Furniture = {
   id: string;
@@ -105,6 +114,9 @@ export const FURNITURE_SPECS: Record<
   tafel: { label: "Tafel", w: 400, h: 15, seats: 0 },
   tuer: { label: "Tür", w: 90, h: 20, seats: 0 },
   fenster: { label: "Fenster", w: 15, h: 180, seats: 0 },
+  schrank: { label: "Schrank", w: 120, h: 50, seats: 0 },
+  regal: { label: "Regal", w: 100, h: 35, seats: 0 },
+  waschbecken: { label: "Waschbecken", w: 60, h: 45, seats: 0 },
 };
 
 /**

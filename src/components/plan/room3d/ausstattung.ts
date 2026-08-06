@@ -9,23 +9,22 @@
 // - „Wandgebunden" heißt: `kind` ist `tafel`, `tuer` oder `fenster` **und**
 //   der Abstand zur nächsten Wand < 40 cm.
 // - Jede Deko, deren Platz nicht frei ist, wird **weggelassen** statt erzwungen.
-// - Schrank/Regal/Poster teilen sich einen Wand-Belegungs-Tracker
-//   (`Map<Wandseite, {von,bis}[]>`): Regal darf nicht in den Schrank-Abschnitt,
-//   Poster nicht auf Schrank- oder Regal-Abschnitte.
+// - Poster teilen sich einen Wand-Belegungs-Tracker mit den wandgebundenen
+//   Möbeln; Schrank und Regal sind jetzt platzierbare Möbel und blockieren als
+//   solche Wandabschnitte.
 // - Poster: nie auf der Wand der ersten Tafel, max. 3, je Wand höchstens
 //   eines, `variante` zählt 0, 1, 2 in Fundreihenfolge.
 //
 // Zusatzvertrag (Review-Finding, Kollisionsprüfung für Boden-Deko):
 // Bodenstehende Deko hat eine achsenparallele Grundfläche in cm (Mittelpunkt
 // = xCm/yCm, nach Drehung ggf. getauscht): `papierkorb` 28×28, `pflanze`
-// 40×40, `schrankDeko` 120×50, `regalDeko` 100×30. `fensterTopf` ist
-// ausgenommen (steht auf der Fensterbank). Vor dem Aufnehmen einer solchen
-// Platzierung wird geprüft, ob die Grundfläche ein Möbel-Rechteck aus
-// `raum.furniture` (Grundfläche nach Drehung, wie `flaecheCm`) oder die
-// Grundfläche einer bereits platzierten Boden-Deko überlappt. Überlappt sie,
-// entfällt die Platzierung — Ausnahme Pflanze: dort werden zuerst die
-// übrigen Ecken-Kandidaten in absteigender Türferne probiert, erst wenn
-// keiner frei ist, entfällt sie ganz.
+// 40×40. `fensterTopf` ist ausgenommen (steht auf der Fensterbank). Vor dem
+// Aufnehmen einer solchen Platzierung wird geprüft, ob die Grundfläche ein
+// Möbel-Rechteck aus `raum.furniture` (Grundfläche nach Drehung, wie
+// `flaecheCm`) oder die Grundfläche einer bereits platzierten Boden-Deko
+// überlappt. Überlappt sie, entfällt die Platzierung — Ausnahme Pflanze: dort
+// werden zuerst die übrigen Ecken-Kandidaten in absteigender Türferne
+// probiert, erst wenn keiner frei ist, entfällt sie ganz.
 
 import {
   FURNITURE_SPECS,
@@ -36,7 +35,7 @@ import {
 import { WANDSEITEN, type Wandseite } from "./geometrie";
 
 const WANDNAEHE_CM = 40;
-const WANDGEBUNDEN = new Set<FurnitureKind>(["tafel", "tuer", "fenster"]);
+const WANDGEBUNDEN = new Set<FurnitureKind>(["tafel", "tuer", "fenster", "schrank", "regal"]);
 
 export type DekoArt =
   | "uhr"
@@ -44,8 +43,6 @@ export type DekoArt =
   | "kreide"
   | "papierkorb"
   | "pflanze"
-  | "schrankDeko"
-  | "regalDeko"
   | "poster"
   | "fensterTopf"
   | "leuchte"
@@ -353,13 +350,10 @@ export function ausstattungPlatzierungen(raum: RoomGeometry): DekoPlatzierung[] 
     }
   }
 
-  // Wand-Belegungs-Tracker für Schrank/Regal/Poster.
+  // Wand-Belegungs-Tracker für Poster; wandgebundene Möbel wie Schrank/Regal
+  // blockieren ihre Abschnitte bereits über `wandFreieAbschnitte`.
   const belegt = new Map<Wandseite, Intervall[]>();
   for (const seite of WANDSEITEN) belegt.set(seite, []);
-
-  function belegeAbschnitt(seite: Wandseite, intervall: Intervall) {
-    belegt.get(seite)!.push(intervall);
-  }
 
   function freieAbschnitteMitTracker(seite: Wandseite): Intervall[] {
     const basis = wandFreieAbschnitte(raum, seite);
@@ -384,92 +378,6 @@ export function ausstattungPlatzierungen(raum: RoomGeometry): DekoPlatzierung[] 
       ergebnisse.push(...stuecke);
     }
     return ergebnisse;
-  }
-
-  // schrankDeko — erster freier Abschnitt ≥ 130 cm, Suche sued → ost → west.
-  {
-    const SCHRANK_BREITE = 120;
-    const SCHRANK_TIEFE = 50;
-    const MIN_BREITE = 130;
-    aussen: for (const seite of ["sued", "ost", "west"] as const) {
-      for (const abschnitt of freieAbschnitteMitTracker(seite)) {
-        if (abschnitt.bis - abschnitt.von < MIN_BREITE) continue;
-        const mitte = (abschnitt.von + abschnitt.bis) / 2;
-        const wandversatz = 2 + SCHRANK_TIEFE / 2; // 27 cm vor der Wand
-        let xCm: number;
-        let yCm: number;
-        if (seite === "sued") {
-          xCm = mitte;
-          yCm = raum.height - wandversatz;
-        } else if (seite === "west") {
-          xCm = wandversatz;
-          yCm = mitte;
-        } else {
-          xCm = raum.width - wandversatz;
-          yCm = mitte;
-        }
-        // Grundfläche nach Drehung: an West/Ost stehen Breite und Tiefe quer.
-        const quer = seite === "west" || seite === "ost";
-        const w = quer ? SCHRANK_TIEFE : SCHRANK_BREITE;
-        const h = quer ? SCHRANK_BREITE : SCHRANK_TIEFE;
-        if (!bodenflaecheFrei(xCm, yCm, w, h, raum, bodenRechtecke)) continue;
-        bodenRechtecke.push(rechteckAusMitte(xCm, yCm, w, h));
-        ergebnis.push({
-          art: "schrankDeko",
-          xCm,
-          yCm,
-          zCm: 0,
-          drehungGrad: wandparalleleDrehung(seite),
-        });
-        const halbeBreite = SCHRANK_BREITE / 2;
-        belegeAbschnitt(seite, { von: mitte - halbeBreite, bis: mitte + halbeBreite });
-        break aussen;
-      }
-    }
-  }
-
-  // regalDeko — wie schrankDeko, Mindestbreite 110, Tiefe 30 → 17 cm vor der Wand.
-  {
-    const REGAL_BREITE = 100;
-    const REGAL_TIEFE = 30;
-    const MIN_BREITE = 110;
-    // Gleiche Reihenfolge wie beim Schrank; der Tracker schließt dessen
-    // Abschnitt bereits aus, unabhängig davon, auf welcher Wand er steht.
-    aussen: for (const seite of ["sued", "ost", "west"] as const) {
-      for (const abschnitt of freieAbschnitteMitTracker(seite)) {
-        if (abschnitt.bis - abschnitt.von < MIN_BREITE) continue;
-        const mitte = (abschnitt.von + abschnitt.bis) / 2;
-        const wandversatz = 2 + REGAL_TIEFE / 2; // 17 cm vor der Wand
-        let xCm: number;
-        let yCm: number;
-        if (seite === "sued") {
-          xCm = mitte;
-          yCm = raum.height - wandversatz;
-        } else if (seite === "west") {
-          xCm = wandversatz;
-          yCm = mitte;
-        } else {
-          xCm = raum.width - wandversatz;
-          yCm = mitte;
-        }
-        // Grundfläche nach Drehung: an West/Ost stehen Breite und Tiefe quer.
-        const quer = seite === "west" || seite === "ost";
-        const w = quer ? REGAL_TIEFE : REGAL_BREITE;
-        const h = quer ? REGAL_BREITE : REGAL_TIEFE;
-        if (!bodenflaecheFrei(xCm, yCm, w, h, raum, bodenRechtecke)) continue;
-        bodenRechtecke.push(rechteckAusMitte(xCm, yCm, w, h));
-        ergebnis.push({
-          art: "regalDeko",
-          xCm,
-          yCm,
-          zCm: 0,
-          drehungGrad: wandparalleleDrehung(seite),
-        });
-        const halbeBreite = REGAL_BREITE / 2;
-        belegeAbschnitt(seite, { von: mitte - halbeBreite, bis: mitte + halbeBreite });
-        break aussen;
-      }
-    }
   }
 
   // poster — bis zu 3, auf allen Wänden außer der Tafelwand, je Wand höchstens eines.

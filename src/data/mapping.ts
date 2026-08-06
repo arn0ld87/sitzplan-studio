@@ -28,6 +28,9 @@ const TYP_ZU_KIND: Record<string, FurnitureKind> = {
   board: "tafel",
   door: "tuer",
   window: "fenster",
+  cabinet: "schrank",
+  shelf: "regal",
+  sink: "waschbecken",
 };
 
 const KIND_ZU_TYP: Record<FurnitureKind, string> = {
@@ -37,6 +40,9 @@ const KIND_ZU_TYP: Record<FurnitureKind, string> = {
   tafel: "board",
   tuer: "door",
   fenster: "window",
+  schrank: "cabinet",
+  regal: "shelf",
+  waschbecken: "sink",
 };
 
 export type CanvasObjekt = {
