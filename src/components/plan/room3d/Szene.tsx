@@ -7,12 +7,14 @@
 
 import { useCallback, useEffect, useMemo } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
-import type { RoomGeometry } from "@/data/types";
+import type { RoomGeometry, SeatAssignment } from "@/data/types";
 import { Ausstattung3D } from "./Ausstattung3D";
 import { useBausatz } from "./bausatz";
 import { leseSzenenfarben, type Szenenfarben } from "./farben";
 import { Kamerasteuerung, type Ansichtsmodus } from "./Kamerasteuerung";
+import { useKinderBausatz } from "./kinderBausatz";
 import { Moebel3D } from "./Moebel3D";
+import { lehrerinnenPultId } from "./lehrerin";
 import { Raumhuelle } from "./Raumhuelle";
 import { raumMasse, startKamera } from "./geometrie";
 
@@ -25,6 +27,7 @@ export type SzeneProps = {
   zuruecksetzen: number;
   beschriftung: string;
   ausstattungZeigen: boolean;
+  belegung?: SeatAssignment[] | undefined;
   onFehler?: () => void;
 };
 
@@ -33,6 +36,18 @@ export type SzeneProps = {
  *
  * @param onFehler - Callback bei Kontextverlust
  */
+/**
+ * Schaltet den Canvas-Frameloop auf "always", sobald belegte Sitzplätze
+ * animierte Figuren enthalten. Sonst bleibt es beim sparsamen "demand".
+ */
+function FrameloopRegler({ animieren }: { animieren: boolean }) {
+  const setFrameloop = useThree((s) => s.setFrameloop);
+  useEffect(() => {
+    setFrameloop(animieren ? "always" : "demand");
+  }, [animieren, setFrameloop]);
+  return null;
+}
+
 function KontextWaechter({ onFehler }: { onFehler?: () => void }) {
   const gl = useThree((s) => s.gl);
   useEffect(() => {
@@ -86,12 +101,16 @@ export default function Szene({
   zuruecksetzen,
   beschriftung,
   ausstattungZeigen,
+  belegung,
   onFehler,
 }: SzeneProps) {
   const start = startKamera(raum);
   const farben = useMemo(() => leseSzenenfarben(), []);
   const bausatz = useBausatz(farben);
+  const kinderBausatz = useKinderBausatz(8);
   const waehlen = useCallback((id: string) => onSelect(id), [onSelect]);
+  const animieren = (belegung ?? []).length > 0;
+  const pultId = lehrerinnenPultId(raum.furniture);
 
   return (
     <Canvas
@@ -99,13 +118,14 @@ export default function Szene({
       aria-label={beschriftung}
       shadows
       flat
-      frameloop="demand"
+      frameloop={animieren ? "always" : "demand"}
       dpr={[1, 2]}
       camera={{ position: start.position, fov: 42, near: 0.1, far: 400 }}
       onPointerMissed={() => onSelect(null)}
       style={{ background: farben["--plan"] }}
     >
       {onFehler && <KontextWaechter onFehler={onFehler} />}
+      <FrameloopRegler animieren={animieren} />
       <Kamerasteuerung raum={raum} modus={modus} zuruecksetzen={zuruecksetzen} />
       <Beleuchtung raum={raum} farben={farben} />
       <Raumhuelle raum={raum} farben={farben} rasterZeigen={rasterZeigen} />
@@ -116,8 +136,11 @@ export default function Szene({
           moebel={moebel}
           raum={raum}
           bausatz={bausatz}
+          kinderBausatz={kinderBausatz}
           farben={farben}
           ausgewaehlt={selectedId === moebel.id}
+          belegung={belegung}
+          lehrerinAnzeigen={moebel.id === pultId}
           onSelect={waehlen}
         />
       ))}

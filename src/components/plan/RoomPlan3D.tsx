@@ -10,7 +10,7 @@
 import { Component, Suspense, lazy, useEffect, useState, type ReactNode } from "react";
 import { Maximize2, Square, SquareCheckBig, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui-kit/Button";
-import { FURNITURE_SPECS, seatCount, type RoomGeometry } from "@/data/types";
+import { FURNITURE_SPECS, seatCount, type RoomGeometry, type SeatAssignment } from "@/data/types";
 import type { Ansichtsmodus } from "./room3d/Kamerasteuerung";
 
 const Szene = lazy(() => import("./room3d/Szene"));
@@ -34,7 +34,10 @@ function raumBeschreiben(raum: RoomGeometry): string {
   }
   const teile = [...anzahl].map(([label, n]) => `${n} × ${label}`);
   const inhalt = teile.length > 0 ? teile.join(", ") : "keine Einrichtung";
-  return `Räumliche Ansicht von ${raum.name}, ${raum.width} × ${raum.height} cm: ${inhalt}. ${seatCount(raum)} Sitzplätze.`;
+  const lehrerin = raum.furniture.some((f) => f.kind === "pult")
+    ? " Eine stilisierte Lehrerinnenfigur steht am ersten Lehrerpult."
+    : "";
+  return `Räumliche Ansicht von ${raum.name}, ${raum.width} × ${raum.height} cm: ${inhalt}. ${seatCount(raum)} Sitzplätze.${lehrerin}`;
 }
 
 /** Hinweisbox mit Titel, Text und optionaler Aktion — für Warn- und Fehlerzustände. */
@@ -116,6 +119,7 @@ export function RoomPlan3D({
   onSelect,
   showGrid = true,
   onZurueckZu2D,
+  belegung,
 }: {
   room: RoomGeometry;
   selectedId: string | null;
@@ -123,6 +127,8 @@ export function RoomPlan3D({
   showGrid?: boolean;
   /** Rückweg, wenn die Szene nicht dargestellt werden kann. */
   onZurueckZu2D: () => void;
+  /** Belegung der Sitzplätze für die 3D-Ansicht. */
+  belegung?: SeatAssignment[];
 }) {
   const [imBrowser, setImBrowser] = useState(false);
   const [webgl, setWebgl] = useState(true);
@@ -187,8 +193,9 @@ export function RoomPlan3D({
               rasterZeigen={showGrid}
               modus={modus}
               zuruecksetzen={zuruecksetzen}
-              beschriftung={raumBeschreiben(room)}
+              beschriftung={`${raumBeschreiben(room)} — ${belegung?.length ?? 0} von ${seatCount(room)} Sitzplätzen belegt`}
               ausstattungZeigen={ausstattung}
+              belegung={belegung}
               onFehler={() => setFehlerZaehler((n) => n + 1)}
             />
           </Suspense>

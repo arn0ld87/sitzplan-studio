@@ -77,6 +77,26 @@ export const STUHL = {
   abstand: 10,
 } as const;
 
+/** Maße einer stilisierten Kinderfigur in Zentimetern. */
+export const KIND = {
+  koerperhoehe: 35,
+  koerperbreite: 18,
+  koerpertiefe: 12,
+  kopfdurchmesser: 12,
+  oberschenkel: 16,
+  unterschenkel: 16,
+} as const;
+
+/** Maße der stilisierten, stehenden Lehrerinnenfigur in Zentimetern. */
+export const LEHRERIN = {
+  beinhoehe: 78,
+  koerperhoehe: 58,
+  koerperbreite: 34,
+  koerpertiefe: 22,
+  kopfdurchmesser: 22,
+  armlaenge: 56,
+} as const;
+
 export type Platzierung = {
   /** Weltposition des Möbelmittelpunkts; Y ist die **Unterkante**. */
   position: [number, number, number];
@@ -149,6 +169,40 @@ export function stuhlPlatzierung(
       0,
       cmZuEinheit(spec.h / 2 + STUHL.abstand + STUHL.tiefe / 2),
     ],
+  };
+}
+
+/**
+ * Position und Drehung einer sitzenden Kinderfigur im lokalen Koordinatensystem
+ * des Stuhls. Die Figur sitzt auf der Stuhlfläche und schaut vom Tisch weg.
+ */
+export function kindPlatzierung(
+  kind: FurnitureKind,
+  index: number,
+): { position: [number, number, number]; drehung: number } | null {
+  if (!stuhlPlatzierung(kind, index)) return null;
+  // Der Stuhl steht vor der Tischkante (positive Z). Die Figur sitzt in der
+  // Mitte des Stuhls, leicht nach vorne versetzt, und schaut vom Tisch weg.
+  return {
+    position: [0, cmZuEinheit(STUHL.sitzhoehe), cmZuEinheit(STUHL.tiefe / 6)],
+    drehung: 0,
+  };
+}
+
+/**
+ * Position der Lehrerinnenfigur hinter dem Lehrerpult. Die Figur blickt entlang
+ * der positiven Z-Achse in den Raum; an anderen Möbelarten erscheint sie nicht.
+ */
+export function lehrerinPlatzierung(kind: FurnitureKind): {
+  position: [number, number, number];
+  drehung: number;
+} | null {
+  if (kind !== "pult") return null;
+
+  const abstandZurPultmitte = FURNITURE_SPECS.pult.h / 2 + LEHRERIN.koerpertiefe / 2 + 6;
+  return {
+    position: [0, 0, -cmZuEinheit(abstandZurPultmitte)],
+    drehung: 0,
   };
 }
 

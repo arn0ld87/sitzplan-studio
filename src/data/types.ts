@@ -224,6 +224,15 @@ export type SeatingPlan = {
   assignments: Record<string, string>; // seatId -> studentId
 };
 
+/** Belegung eines Sitzplatzes für die 3D-Ansicht. */
+export type SeatAssignment = {
+  seatId: string;
+  studentId: string;
+  firstName: string;
+  lastName: string;
+  colorIndex: number;
+};
+
 export function seatCount(room: { furniture: Furniture[] }) {
   return room.furniture.reduce((n, f) => n + f.seats.length, 0);
 }
